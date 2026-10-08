@@ -24,11 +24,6 @@
     "blockingState": "blocked",
     "blockers": [
       {
-        "id": "BLK-002",
-        "description": "Accountable owner/authority assignments are unfilled (all TBD).",
-        "owner": "Project owner — TBD"
-      },
-      {
         "id": "BLK-003",
         "description": "First sprint not prepared or approved; currentAuthorizedWork is null, so implementation is not authorized.",
         "owner": "Project owner — TBD"
@@ -54,16 +49,15 @@
     },
     "summary": {
       "outcome": "TBD — owner decision required.",
-      "accountableOwner": null,
-      "nextMilestone": "Accountable authority assignments and first sprint approval",
-      "nextRequiredDecision": "Assign accountable owners (TBD-DEC-001..011); then approve first sprint",
+      "accountableOwner": "Jessica Solis (product owner)",
+      "nextMilestone": "First sprint preparation and approval",
+      "nextRequiredDecision": "Approve first sprint (BLK-003); confirm business purpose, intended users, and data classification",
       "decisionsRequired": [
-        "Assign all accountable authorities (product, business/outcome, technical, governance, QA, security/privacy, UX/accessibility, documentation, release, operations)",
         "Confirm business purpose, intended users, and data classification",
         "Confirm SGK applicability decision for CJISTracker work",
         "Approve first sprint before implementation"
       ],
-      "lastUpdated": "2026-10-08T15:00:00-06:00"
+      "lastUpdated": "2026-10-08T15:30:00-06:00"
     }
   },
   "release": {
@@ -96,17 +90,17 @@
     ]
   },
   "authorities": {
-    "productOwner": { "role": "Product owner", "name": null, "notes": "TBD-DEC-001" },
-    "businessOutcomeOwner": { "role": "Business/outcome owner and outcome-acceptance authority", "name": null, "notes": "TBD-DEC-002" },
-    "technicalOwner": { "role": "Technical owner", "name": null, "notes": "TBD-DEC-003" },
-    "governanceAuthority": { "role": "Governance and approval authority", "name": null, "notes": "TBD-DEC-004" },
-    "coordinationOwner": { "role": "Program/project coordination owner", "name": null, "notes": "TBD-DEC-005; applicability undecided" },
-    "qaAuthority": { "role": "QA authority", "name": null, "notes": "TBD-DEC-006" },
-    "securityPrivacyAuthority": { "role": "Security/privacy authority", "name": null, "notes": "TBD-DEC-007" },
-    "uxAccessibilityAuthority": { "role": "UX/accessibility authority", "name": null, "notes": "TBD-DEC-008" },
-    "documentationAuthority": { "role": "Documentation authority", "name": null, "notes": "TBD-DEC-009" },
-    "releaseAuthority": { "role": "Release authority (candidate acceptance and final release authorization are separately recorded decisions)", "name": null, "notes": "TBD-DEC-010" },
-    "operationsAuthority": { "role": "Operations authority", "name": null, "notes": "TBD-DEC-011" }
+    "productOwner": { "role": "Product owner", "name": "Jessica Solis", "notes": "Assigned by project owner 2026-10-08 (DEC-001)" },
+    "businessOutcomeOwner": { "role": "Business/outcome owner and outcome-acceptance authority", "name": "Jessica Solis and Annamarie Zambrano (joint)", "notes": "Assigned by project owner 2026-10-08 (DEC-002)" },
+    "technicalOwner": { "role": "Technical owner", "name": "Brett (project owner)", "notes": "Assigned by project owner 2026-10-08 (DEC-003)" },
+    "governanceAuthority": { "role": "Governance and approval authority", "name": "Jessica Solis and Annamarie Zambrano (joint)", "notes": "Assigned by project owner 2026-10-08 (DEC-004)" },
+    "coordinationOwner": { "role": "Program/project coordination owner", "name": "Brett (project owner)", "notes": "Assigned by project owner 2026-10-08 (DEC-005)" },
+    "qaAuthority": { "role": "QA authority", "name": "Annamarie Zambrano", "notes": "Assigned by project owner 2026-10-08 (DEC-006)" },
+    "securityPrivacyAuthority": { "role": "Security/privacy authority", "name": "Brett (project owner)", "notes": "Assigned by project owner 2026-10-08 (DEC-007)" },
+    "uxAccessibilityAuthority": { "role": "UX/accessibility authority", "name": "Brett (project owner)", "notes": "Assigned by project owner 2026-10-08 (DEC-008)" },
+    "documentationAuthority": { "role": "Documentation authority", "name": "Brett (project owner)", "notes": "Assigned by project owner 2026-10-08 (DEC-009)" },
+    "releaseAuthority": { "role": "Release authority (candidate acceptance and final release authorization are separately recorded decisions)", "name": "Jessica Solis and Annamarie Zambrano (joint)", "notes": "Assigned by project owner 2026-10-08 (DEC-010)" },
+    "operationsAuthority": { "role": "Operations authority", "name": "Brett (project owner)", "notes": "Assigned by project owner 2026-10-08 (DEC-011)" }
   },
   "gates": {
     "G-SCOPE": { "state": "pending", "owner": "Product + business/outcome owners (TBD)", "decisionDate": null, "evidence": null, "scope": "project" },
@@ -168,7 +162,8 @@
     { "timestamp": "2026-10-08T14:10:00-06:00", "actor": "Cursor primary agent", "event": "CJISTracker prototype copied into repository and pushed to main at owner direction.", "basis": "Direct user instruction" },
     { "timestamp": "2026-10-08T14:12:00-06:00", "actor": "Cursor primary agent (run 3)", "event": "Initialization preflight re-run; 15 foundational files missing; blocked.", "basis": "User-pasted SGK initialization prompt" },
     { "timestamp": "2026-10-08T14:55:00-06:00", "actor": "Cursor primary agent (run 4)", "event": "Project-authored governance baseline created at owner direction: schema, nine rules, project.json, NIST appendix (five official PDFs with SHA256SUMS), sprint template.", "basis": "Direct user instruction to create the foundational files" },
-    { "timestamp": "2026-10-08T15:00:00-06:00", "actor": "Project owner (via agent session, recorded by Cursor primary agent, run 5)", "event": "Governance baseline APPROVED: GOVERNANCE.md 0.2.0, rules 00-70, schema 3.0.0, project.json. BLK-001 cleared; owner assignments and first-sprint approval remain outstanding.", "basis": "Owner statement: 'I approve governance baseline'" }
+    { "timestamp": "2026-10-08T15:00:00-06:00", "actor": "Project owner (via agent session, recorded by Cursor primary agent, run 5)", "event": "Governance baseline APPROVED: GOVERNANCE.md 0.2.0, rules 00-70, schema 3.0.0, project.json. BLK-001 cleared; owner assignments and first-sprint approval remain outstanding.", "basis": "Owner statement: 'I approve governance baseline'" },
+    { "timestamp": "2026-10-08T15:30:00-06:00", "actor": "Project owner (via agent session, recorded by Cursor primary agent, run 6)", "event": "Authority assignments recorded (DEC-001..011): Jessica Solis — product owner; Jessica Solis + Annamarie Zambrano (joint) — business/outcome, governance, release; Annamarie Zambrano — QA; Brett — technical, coordination, security/privacy, UX/accessibility, documentation, operations. BLK-002 cleared.", "basis": "Owner selections in agent session question form" }
   ],
   "validation": {
     "validator": "python-jsonschema (Draft202012Validator), Python 3.14.0",
