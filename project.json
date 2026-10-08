@@ -50,8 +50,8 @@
     "summary": {
       "outcome": "TBD — owner decision required.",
       "accountableOwner": "Jessica Solis (product owner)",
-      "nextMilestone": "First sprint preparation and approval",
-      "nextRequiredDecision": "Approve first sprint (BLK-003); confirm business purpose, intended users, and data classification",
+      "nextMilestone": "SPRINT-001 approval by Jessica Solis and Annamarie Zambrano (joint governance)",
+      "nextRequiredDecision": "Approve SPRINT-001 (docs/planning/sprints/sprint-001-product-definition-and-security-baseline.md) to clear BLK-003",
       "decisionsRequired": [
         "Confirm business purpose, intended users, and data classification",
         "Confirm SGK applicability decision for CJISTracker work",
@@ -163,7 +163,8 @@
     { "timestamp": "2026-10-08T14:12:00-06:00", "actor": "Cursor primary agent (run 3)", "event": "Initialization preflight re-run; 15 foundational files missing; blocked.", "basis": "User-pasted SGK initialization prompt" },
     { "timestamp": "2026-10-08T14:55:00-06:00", "actor": "Cursor primary agent (run 4)", "event": "Project-authored governance baseline created at owner direction: schema, nine rules, project.json, NIST appendix (five official PDFs with SHA256SUMS), sprint template.", "basis": "Direct user instruction to create the foundational files" },
     { "timestamp": "2026-10-08T15:00:00-06:00", "actor": "Project owner (via agent session, recorded by Cursor primary agent, run 5)", "event": "Governance baseline APPROVED: GOVERNANCE.md 0.2.0, rules 00-70, schema 3.0.0, project.json. BLK-001 cleared; owner assignments and first-sprint approval remain outstanding.", "basis": "Owner statement: 'I approve governance baseline'" },
-    { "timestamp": "2026-10-08T15:30:00-06:00", "actor": "Project owner (via agent session, recorded by Cursor primary agent, run 6)", "event": "Authority assignments recorded (DEC-001..011): Jessica Solis — product owner; Jessica Solis + Annamarie Zambrano (joint) — business/outcome, governance, release; Annamarie Zambrano — QA; Brett — technical, coordination, security/privacy, UX/accessibility, documentation, operations. BLK-002 cleared.", "basis": "Owner selections in agent session question form" }
+    { "timestamp": "2026-10-08T15:30:00-06:00", "actor": "Project owner (via agent session, recorded by Cursor primary agent, run 6)", "event": "Authority assignments recorded (DEC-001..011): Jessica Solis — product owner; Jessica Solis + Annamarie Zambrano (joint) — business/outcome, governance, release; Annamarie Zambrano — QA; Brett — technical, coordination, security/privacy, UX/accessibility, documentation, operations. BLK-002 cleared.", "basis": "Owner selections in agent session question form" },
+    { "timestamp": "2026-10-08T15:35:00-06:00", "actor": "Cursor primary agent (run 7)", "event": "SPRINT-001 (product definition and security baseline) prepared from template, status PROPOSED / NOT READY. Approval by Jessica Solis + Annamarie Zambrano required to clear BLK-003. currentAuthorizedWork remains null.", "basis": "Project owner instruction to proceed" }
   ],
   "validation": {
     "validator": "python-jsonschema (Draft202012Validator), Python 3.14.0",
