@@ -226,7 +226,22 @@
         "exceptions": { "type": "array", "items": { "type": "object" } },
         "nistBaseline": { "type": "object" },
         "threatModel": { "$ref": "#/$defs/nullableString" },
-        "privacyImpactAssessment": { "$ref": "#/$defs/nullableString" }
+        "privacyImpactAssessment": { "$ref": "#/$defs/nullableString" },
+        "openFindings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "severity", "description", "owner", "disposition"],
+            "properties": {
+              "id": { "type": "string" },
+              "severity": { "type": "string" },
+              "description": { "type": "string" },
+              "owner": { "type": "string" },
+              "disposition": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        }
       },
       "additionalProperties": false
     },

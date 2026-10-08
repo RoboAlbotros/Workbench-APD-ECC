@@ -1,9 +1,9 @@
 # Sprint 001 — CJISTracker product definition and security baseline
 
-Status: PROPOSED
+Status: ACTIVE
 Owner: Jessica Solis (product owner); prepared by Cursor primary agent at project owner direction
 Version: 0.1.0
-Approval: Pending — requires Jessica Solis + Annamarie Zambrano (governance, joint) per GOVERNANCE.md
+Approval: Approved 2026-10-08 — relayed in agent session by project owner Brett on behalf of the joint governance authorities Jessica Solis and Annamarie Zambrano. Limitation: approval was relayed, not recorded directly by the named authorities; they may ratify or amend.
 Date: 2026-10-08
 Controlling work ID: SPRINT-001
 
@@ -85,6 +85,6 @@ Drafts presented in-session to the accountable owners; decisions recorded in `pr
 
 ## Readiness decision and evidence
 
-Readiness: NOT READY — pending joint approval by Jessica Solis and Annamarie Zambrano.
-Decided by: (pending)
-Evidence: project.json history run 7 (sprint proposed); approval to be recorded here and in project.json when given.
+Readiness: READY — approved as relayed by the project owner (see Approval above).
+Decided by: Jessica Solis + Annamarie Zambrano (joint governance), relayed by Brett, 2026-10-08
+Evidence: project.json history runs 7-8; currentAuthorizedWork = SPRINT-001.
