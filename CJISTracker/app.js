@@ -1,13 +1,30 @@
 const STORAGE_KEYS = {
   records: "cjisApplicantTracker.records",
   changeLog: "cjisApplicantTracker.changeLog",
+  accessCodes: "cjisApplicantTracker.accessCodes",
 };
 
-const ACCESS_CODES = {
-  limited: "1111",
-  records: "2222",
-  admin: "2468",
-};
+// Access codes are operator-configured on first run (SPRINT-002).
+// No default codes ship with the application.
+const FORBIDDEN_CODES = new Set(["1111", "2222", "2468", "0000", "1234"]);
+let accessCodes = loadAccessCodes();
+
+function loadAccessCodes() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.accessCodes);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && parsed.limited && parsed.records && parsed.admin) return parsed;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function saveAccessCodes(codes) {
+  localStorage.setItem(STORAGE_KEYS.accessCodes, JSON.stringify(codes));
+  accessCodes = codes;
+}
 
 const ACCESS_LABELS = {
   limited: "Limited View",
@@ -358,7 +375,42 @@ const vendorOptions = document.querySelector("#vendorOptions");
 const documentUpload = document.querySelector("#documentUpload");
 const documentList = document.querySelector("#documentList");
 
+const accessSetupForm = document.querySelector("#accessSetupForm");
+const setupMessage = document.querySelector("#setupMessage");
+
 accessForm.addEventListener("submit", signInManagementUser);
+accessSetupForm.addEventListener("submit", completeAccessSetup);
+
+function updateSetupVisibility() {
+  const needsSetup = !accessCodes;
+  accessSetupForm.classList.toggle("hidden", !needsSetup);
+  accessForm.classList.toggle("hidden", needsSetup);
+}
+
+function completeAccessSetup(event) {
+  event.preventDefault();
+  const limited = document.querySelector("#setupLimitedCode").value.trim();
+  const recordsCode = document.querySelector("#setupRecordsCode").value.trim();
+  const admin = document.querySelector("#setupAdminCode").value.trim();
+
+  if ([limited, recordsCode, admin].some((code) => code.length < 4)) {
+    showMessage(setupMessage, "Each access code must be at least 4 characters.", true);
+    return;
+  }
+  if (new Set([limited, recordsCode, admin]).size !== 3) {
+    showMessage(setupMessage, "The three access codes must all be different.", true);
+    return;
+  }
+  if ([limited, recordsCode, admin].some((code) => FORBIDDEN_CODES.has(code))) {
+    showMessage(setupMessage, "Choose codes that are not former defaults or trivial sequences.", true);
+    return;
+  }
+
+  saveAccessCodes({ limited, records: recordsCode, admin });
+  accessSetupForm.reset();
+  updateSetupVisibility();
+  showMessage(accessMessage, "Access codes saved. Sign in to continue.");
+}
 signOutButton.addEventListener("click", signOutManagementUser);
 limitedViewButton.addEventListener("click", () => setView("limited"));
 recordsViewButton.addEventListener("click", () => setView("records"));
@@ -523,11 +575,16 @@ function mergeMissingSampleRecords(existingRecords) {
 
 function signInManagementUser(event) {
   event.preventDefault();
+  if (!accessCodes) {
+    showMessage(accessMessage, "Access codes are not configured. Complete initial setup first.", true);
+    return;
+  }
+
   const name = managementUserName.value.trim();
   const role = managementAccessLevel.value;
   const code = managementAccessCode.value;
 
-  if (!name || !role || ACCESS_CODES[role] !== code) {
+  if (!name || !role || accessCodes[role] !== code) {
     showMessage(accessMessage, "Invalid management access.", true);
     return;
   }
@@ -1254,5 +1311,6 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
+updateSetupVisibility();
 updateAccessControls();
 setView("limited");

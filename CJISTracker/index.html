@@ -58,6 +58,28 @@
           </div>
           <p id="accessMessage" class="form-message" role="status"></p>
         </form>
+        <form id="accessSetupForm" class="record-form compact-form hidden" aria-label="Initial access code setup">
+          <p class="field-caption">
+            First-run setup: create the access codes for each view level. Codes must be at least 4 characters,
+            all different, and are stored only in this browser.
+          </p>
+          <label>
+            Limited View Code
+            <input id="setupLimitedCode" type="password" minlength="4" autocomplete="new-password" required />
+          </label>
+          <label>
+            Records View Code
+            <input id="setupRecordsCode" type="password" minlength="4" autocomplete="new-password" required />
+          </label>
+          <label>
+            Full Admin Code
+            <input id="setupAdminCode" type="password" minlength="4" autocomplete="new-password" required />
+          </label>
+          <div class="form-actions">
+            <button class="primary-action" type="submit">Save Access Codes</button>
+          </div>
+          <p id="setupMessage" class="form-message" role="status"></p>
+        </form>
       </section>
 
       <section class="summary-grid" aria-label="Applicant summary">

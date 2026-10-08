@@ -8,19 +8,17 @@ Open `index.html` in a browser to use the CJIS Applicant Tracker.
 - Records View uses the Limited View table style and allows applicant view/edit actions without delete access.
 - Full Admin View requires the admin PIN and can create, view, edit, delete, filter, and export applicant records.
 
-Default local access codes:
-
-```text
-Limited View: 1111
-Records View: 2222
-Full Admin: 2468
-```
+No default access codes ship with the application. On first run, the app shows a
+one-time setup form where the operator creates the Limited, Records, and Full Admin
+codes (minimum 4 characters, all different; former defaults and trivial sequences are
+rejected). Codes are stored only in the browser's local storage. To reset them, clear
+the browser's local storage for this page (this also clears applicant records).
 
 Full Admin includes a change log for created, updated, and deleted applicant records.
 Notes remain editable on applicant records but are hidden from list tables.
 Applicant list tables are grouped by Clearance Type.
 
-These access codes are local prototype controls. For production use, replace them with server-side authentication, authorization, and audit logging.
+These access codes are local prototype controls. For production use, replace them with server-side authentication, authorization, and audit logging (recorded direction: City SSO / Entra ID with server-side role-based access, decision DEC-015).
 
 Vendor uses suggestions from existing records. Search checks name, vendor, and Applicant Email Address.
 Applicant document data remains in the data model, but the Applicant Documents field is hidden in the UI.

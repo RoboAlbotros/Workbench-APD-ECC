@@ -18,9 +18,9 @@
     "publicContract": "TBD — not yet defined. No public contract exists; the prototype's behavior is not a supported contract. 1.0.0 requires a documented stable public contract per Rule 60."
   },
   "state": {
-    "lifecycleStage": "definition",
-    "frameworkPhase": "SPRINT-001",
-    "workStatus": "paused",
+    "lifecycleStage": "development",
+    "frameworkPhase": "SPRINT-002",
+    "workStatus": "active",
     "blockingState": "clear",
     "blockers": [],
     "health": {
@@ -44,12 +44,14 @@
     "summary": {
       "outcome": "TBD — owner decision required.",
       "accountableOwner": "Jessica Solis (product owner)",
-      "nextMilestone": "SPRINT-002 approval (adopt and harden prototype; FIND-001 PII-field removal)",
-      "nextRequiredDecision": "Jessica Solis + Annamarie Zambrano (joint governance) approve SPRINT-002",
+      "nextMilestone": "SPRINT-002 close: FIND-001 closure decision, G-TEST acceptance, approval ratification (implementation and test evidence complete)",
+      "nextRequiredDecision": "Brett (security/privacy): FIND-001 closure and disposition of remaining identity/contact fields (name, phone, email, notes, documents) under DEC-012",
       "decisionsRequired": [
-        "Approve SPRINT-002 (docs/planning/sprints/sprint-002-adopt-and-harden-prototype.md)"
+        "FIND-001 closure and disposition of remaining identity/contact fields (name, phone, email, notes, document upload) under DEC-012 (Brett)",
+        "G-TEST acceptance of docs/reviews/sprint-002-test-evidence.md (Annamarie Zambrano)",
+        "Ratification of relayed SPRINT-002 approval (Jessica Solis + Annamarie Zambrano)"
       ],
-      "lastUpdated": "2026-10-08T16:20:00-06:00"
+      "lastUpdated": "2026-10-08T17:10:00-06:00"
     }
   },
   "release": {
@@ -104,7 +106,7 @@
   },
   "security": {
     "classification": "Internal use only — DEC-012 (security/privacy authority Brett, 2026-10-08): no PII and no CJI/CJIS data will be stored in the system. See openFindings FIND-001 for the field-dictionary conflict this creates.",
-    "sensitiveData": "None permitted — DEC-012. The prototype's field dictionary currently includes PII fields (DOB, SSN, driver's license) that MUST be removed from the data model before real use (FIND-001, assigned to SPRINT-002 scope). No applicant records exist in the repository.",
+    "sensitiveData": "None permitted — DEC-012. SPRINT-002 verification (2026-10-08): the committed prototype contains no DOB/SSN/driver's-license fields anywhere; app.js strips them from legacy records and database-schema.sql documents their intentional exclusion. Remaining identity/contact fields (name, phone, email, notes, document upload) await disposition under DEC-012 (FIND-001). No applicant records exist in the repository.",
     "authentication": "DEC-015 (security/privacy authority Brett, 2026-10-08): production direction is City SSO (Entra ID) with server-side role-based access mirroring the three view levels (Limited/Records/Admin), targeted at a future release. Prototype local PINs are never production controls.",
     "authorization": "TBD. Prototype has three local views (Limited, Records, Full Admin); production model undecided.",
     "secretsManagement": "No credentials, tokens, personal information, or production secrets in repository files (Rule 50).",
@@ -130,9 +132,9 @@
       {
         "id": "FIND-001",
         "severity": "blocking-for-real-use",
-        "description": "DEC-012 (no PII / no CJIS data) conflicts with the prototype field dictionary, which includes DOB, SSN, driver's license, and other personal fields. These fields must be removed or replaced with non-PII references (e.g., control ID only) before the tool is used with real applicants.",
+        "description": "DEC-012 (no PII / no CJIS data) vs. prototype data model. SPRINT-002 verification (2026-10-08) found the committed prototype already excludes DOB, SSN, and driver's-license fields entirely (data model, forms, exports, field dictionary, SQL schema; app.js strips them from legacy records). Remaining open scope: disposition of applicant name, phone, email, notes, and document-upload fields under DEC-012. Evidence: docs/reviews/sprint-002-test-evidence.md §1.",
         "owner": "Brett (technical owner); product impact approval Jessica Solis",
-        "disposition": "Assigned to SPRINT-002 scope"
+        "disposition": "Verification complete in SPRINT-002; awaiting security/privacy authority closure decision and disposition of remaining identity/contact fields"
       }
     ]
   },
@@ -156,7 +158,7 @@
     "nistAppendix": "docs/appendices/nist/README.md",
     "prototype": "CJISTracker/README.md"
   },
-  "currentAuthorizedWork": null,
+  "currentAuthorizedWork": "SPRINT-002",
   "history": [
     { "timestamp": "2026-10-05", "actor": "Codex primary agent (run 1)", "event": "Draft governing documents created in empty directory.", "basis": "User-pasted SGK initialization request" },
     { "timestamp": "2026-10-07", "actor": "Cursor primary agent (run 2)", "event": "SGK location preflight; authoritative package not found; repo initialized and pushed to GitHub.", "basis": "User continuation request" },
@@ -168,14 +170,16 @@
     { "timestamp": "2026-10-08T15:35:00-06:00", "actor": "Cursor primary agent (run 7)", "event": "SPRINT-001 (product definition and security baseline) prepared from template, status PROPOSED / NOT READY. Approval by Jessica Solis + Annamarie Zambrano required to clear BLK-003. currentAuthorizedWork remains null.", "basis": "Project owner instruction to proceed" },
     { "timestamp": "2026-10-08T15:55:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 8)", "event": "SPRINT-001 approved as relayed by project owner on behalf of joint governance authorities Jessica Solis and Annamarie Zambrano (limitation: relayed, ratification open). BLK-003 cleared; currentAuthorizedWork = SPRINT-001; lifecycle definition/active. Security decisions recorded: DEC-012 no PII and no CJIS data stored (classification internal); DEC-013 CJIS Security Policy not directly applicable under that scope; DEC-014 PIA not required under that scope, revisit on scope change. FIND-001 opened: prototype PII fields conflict with DEC-012, assigned to SPRINT-002. Deliverables drafted: product-definition, product-concept, roadmap, PR template.", "basis": "Owner statements 'go' and 'B non PII and non CJIS data will be stored in the system'" },
     { "timestamp": "2026-10-08T16:10:00-06:00", "actor": "Project owner (via agent session, recorded by Cursor primary agent, run 9)", "event": "SPRINT-001 relayed approval ratified; product-definition.md 0.1.0 and roadmap approved by Jessica Solis with joint outcome acceptance; G-SCOPE satisfied. Remaining in sprint: authentication direction and NIST applicability decisions (owner Brett).", "basis": "Owner statement: 'go review and confirmed'" },
-    { "timestamp": "2026-10-08T16:20:00-06:00", "actor": "Security/privacy authority Brett (via agent session, recorded by Cursor primary agent, run 10)", "event": "DEC-015 recorded (production auth: City SSO/Entra ID, server-side RBAC, future release) and DEC-016 recorded (NIST applicability: CSF 2.0 applicable-lightweight, SSDF 1.1 applicable, Privacy Framework 1.0 not applicable under DEC-012, SP 800-218A not applicable, SP 800-204D applicable-minimal). SPRINT-001 COMPLETE, all acceptance criteria met; FIND-001 carried to SPRINT-002. SPRINT-002 (adopt and harden prototype) PROPOSED; currentAuthorizedWork null pending its approval.", "basis": "Owner statement: 'accept both'" }
+    { "timestamp": "2026-10-08T16:20:00-06:00", "actor": "Security/privacy authority Brett (via agent session, recorded by Cursor primary agent, run 10)", "event": "DEC-015 recorded (production auth: City SSO/Entra ID, server-side RBAC, future release) and DEC-016 recorded (NIST applicability: CSF 2.0 applicable-lightweight, SSDF 1.1 applicable, Privacy Framework 1.0 not applicable under DEC-012, SP 800-218A not applicable, SP 800-204D applicable-minimal). SPRINT-001 COMPLETE, all acceptance criteria met; FIND-001 carried to SPRINT-002. SPRINT-002 (adopt and harden prototype) PROPOSED; currentAuthorizedWork null pending its approval.", "basis": "Owner statement: 'accept both'" },
+    { "timestamp": "2026-10-08T16:25:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 11)", "event": "SPRINT-002 approved as relayed by project owner on behalf of joint governance authorities (ratification open). currentAuthorizedWork = SPRINT-002; lifecycle development/active. Implementation begins: FIND-001 PII-field removal, PIN hardening, field dictionary alignment, test data and evidence.", "basis": "Owner statement: 'go'" },
+    { "timestamp": "2026-10-08T17:10:00-06:00", "actor": "Cursor primary agent (run 12)", "event": "SPRINT-002 implementation complete. FIND-001 verification: committed prototype already excludes DOB/SSN/driver's-license everywhere; no field removal needed; remaining identity/contact fields await DEC-012 disposition. PIN hardening implemented: hardcoded defaults (1111/2222/2468) removed; operator-configured first-run setup added (min 4 chars, distinct, trivial/former-default codes rejected); README updated. Browser acceptance tests passed (setup, old-default rejection, new-code sign-in, reload persistence); evidence in docs/reviews/sprint-002-test-evidence.md. Open to close sprint: FIND-001 closure decision (Brett), G-TEST (Annamarie Zambrano), approval ratification.", "basis": "SPRINT-002 authorized scope (history run 11)" }
   ],
   "validation": {
     "validator": "python-jsonschema (Draft202012Validator), Python 3.14.0",
     "validatorVersion": "4.26.0",
     "schemaVersion": "3.0.0",
     "result": "pass",
-    "timestamp": "2026-10-08T14:58:00-06:00",
+    "timestamp": "2026-10-08T17:10:00-06:00",
     "limitations": "Structural conformance only; proves canonical values and shape, not factual accuracy, evidence sufficiency, approvals, gate satisfaction, or policy compliance. Schema is the project-authored profile, not an official SGK schema."
   },
   "extensions": {

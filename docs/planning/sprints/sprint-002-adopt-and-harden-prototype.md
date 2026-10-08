@@ -1,9 +1,9 @@
 # Sprint 002 — Adopt and harden the CJISTracker prototype
 
-Status: PROPOSED
+Status: ACTIVE
 Owner: Brett (technical owner); product impact approvals Jessica Solis
 Version: 0.1.0
-Approval: Pending — Jessica Solis + Annamarie Zambrano (governance, joint)
+Approval: Approved 2026-10-08 — relayed in agent session by project owner Brett on behalf of the joint governance authorities Jessica Solis and Annamarie Zambrano (consistent with their ratified handling of SPRINT-001); ratification may be recorded when they review.
 Date: 2026-10-08
 Controlling work ID: SPRINT-002
 
@@ -84,6 +84,31 @@ Changes integrated via reviewed change referencing SPRINT-002 with Conventional 
 
 ## Readiness decision and evidence
 
-Readiness: NOT READY — pending joint approval by Jessica Solis and Annamarie Zambrano.
-Decided by: (pending)
-Evidence: to be recorded at approval.
+Readiness: READY — approved as relayed by the project owner, 2026-10-08.
+Decided by: Jessica Solis + Annamarie Zambrano (joint governance), relayed by Brett
+Evidence: project.json history run 11; currentAuthorizedWork = SPRINT-002.
+
+## Execution record (2026-10-08)
+
+- **FIND-001 verification complete:** the committed prototype already contains no DOB,
+  SSN, or driver's-license fields anywhere (app.js data model, forms, views, exports,
+  field dictionary CSV, database-schema.sql). `app.js` actively strips those fields from
+  any legacy stored records, and the SQL schema documents their intentional exclusion.
+  No field removal was required. Evidence: `docs/reviews/sprint-002-test-evidence.md` §1.
+- **PIN hardening implemented:** hardcoded `ACCESS_CODES` (1111/2222/2468) removed from
+  `app.js`. Codes are now operator-configured via a first-run setup form (`index.html`),
+  stored in browser local storage; minimum 4 characters, all distinct, former defaults and
+  trivial sequences rejected. README updated (no default codes documented).
+- **Acceptance tests executed and passed** (browser run, 2026-10-08): first-run setup,
+  rejection of former default code, sign-in with configured code, persistence across
+  reload. Evidence: `docs/reviews/sprint-002-test-evidence.md` §2.
+
+### Remaining to close the sprint
+
+1. **FIND-001 closure decision (Brett, security/privacy):** confirm closure of the
+   DOB/SSN/DL portion and record the disposition of the remaining identity/contact
+   fields (name, phone, email, notes, document upload) under DEC-012.
+2. **G-TEST acceptance (Annamarie Zambrano, QA):** accept or supplement the recorded
+   test evidence.
+3. **Ratification** of the relayed sprint approval by Jessica Solis and Annamarie
+   Zambrano (open limitation from approval).
