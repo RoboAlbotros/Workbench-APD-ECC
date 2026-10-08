@@ -1,9 +1,9 @@
 # Rule 05 — Project State
 
-Status: DRAFT — project-authored baseline, pending owner approval
+Status: APPROVED — project-authored baseline
 Owner: Governance authority — TBD
 Version: 0.1.0
-Approval: Pending
+Approval: Approved by the project owner on 2026-10-08 (recorded via agent session; see docs/reviews/initialization-status.md, run 5)
 Date: 2026-10-08
 
 `project.json` is the machine-readable source of current project state, validated against `.governance/schemas/project.schema.json`. One project-state owner (or primary agent) reconciles updates; concurrent agents MUST return proposed changes instead of overwriting the file.

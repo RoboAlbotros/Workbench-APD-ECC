@@ -1,9 +1,9 @@
 # Rule 00 — Governance
 
-Status: DRAFT — project-authored baseline, pending owner approval
+Status: APPROVED — project-authored baseline
 Owner: Governance authority — TBD
 Version: 0.1.0
-Approval: Pending
+Approval: Approved by the project owner on 2026-10-08 (recorded via agent session; see docs/reviews/initialization-status.md, run 5)
 Date: 2026-10-08
 
 Provenance: Authored in-repository at the project owner's direction on 2026-10-08 because no authoritative SGK distribution was available. This is the project's governance baseline, not the official SGK Constitution. Normative terms (MUST, SHOULD, MAY, etc.) follow BCP 14 (RFC 2119 / RFC 8174).

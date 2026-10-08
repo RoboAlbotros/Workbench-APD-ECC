@@ -24,11 +24,6 @@
     "blockingState": "blocked",
     "blockers": [
       {
-        "id": "BLK-001",
-        "description": "Owner approval of the project-authored governance baseline (GOVERNANCE.md, .governance/rules, this file) is pending.",
-        "owner": "Project owner — TBD"
-      },
-      {
         "id": "BLK-002",
         "description": "Accountable owner/authority assignments are unfilled (all TBD).",
         "owner": "Project owner — TBD"
@@ -60,16 +55,15 @@
     "summary": {
       "outcome": "TBD — owner decision required.",
       "accountableOwner": null,
-      "nextMilestone": "Owner approval of governance baseline and authority assignments",
-      "nextRequiredDecision": "Approve or amend the project-authored governance baseline; assign accountable owners",
+      "nextMilestone": "Accountable authority assignments and first sprint approval",
+      "nextRequiredDecision": "Assign accountable owners (TBD-DEC-001..011); then approve first sprint",
       "decisionsRequired": [
-        "Approve governance baseline (GOVERNANCE.md, rules 00-70, this file, schema)",
         "Assign all accountable authorities (product, business/outcome, technical, governance, QA, security/privacy, UX/accessibility, documentation, release, operations)",
         "Confirm business purpose, intended users, and data classification",
         "Confirm SGK applicability decision for CJISTracker work",
         "Approve first sprint before implementation"
       ],
-      "lastUpdated": "2026-10-08T14:55:00-06:00"
+      "lastUpdated": "2026-10-08T15:00:00-06:00"
     }
   },
   "release": {
@@ -173,7 +167,8 @@
     { "timestamp": "2026-10-07", "actor": "Cursor primary agent (run 2)", "event": "SGK location preflight; authoritative package not found; repo initialized and pushed to GitHub.", "basis": "User continuation request" },
     { "timestamp": "2026-10-08T14:10:00-06:00", "actor": "Cursor primary agent", "event": "CJISTracker prototype copied into repository and pushed to main at owner direction.", "basis": "Direct user instruction" },
     { "timestamp": "2026-10-08T14:12:00-06:00", "actor": "Cursor primary agent (run 3)", "event": "Initialization preflight re-run; 15 foundational files missing; blocked.", "basis": "User-pasted SGK initialization prompt" },
-    { "timestamp": "2026-10-08T14:55:00-06:00", "actor": "Cursor primary agent (run 4)", "event": "Project-authored governance baseline created at owner direction: schema, nine rules, project.json, NIST appendix (five official PDFs with SHA256SUMS), sprint template.", "basis": "Direct user instruction to create the foundational files" }
+    { "timestamp": "2026-10-08T14:55:00-06:00", "actor": "Cursor primary agent (run 4)", "event": "Project-authored governance baseline created at owner direction: schema, nine rules, project.json, NIST appendix (five official PDFs with SHA256SUMS), sprint template.", "basis": "Direct user instruction to create the foundational files" },
+    { "timestamp": "2026-10-08T15:00:00-06:00", "actor": "Project owner (via agent session, recorded by Cursor primary agent, run 5)", "event": "Governance baseline APPROVED: GOVERNANCE.md 0.2.0, rules 00-70, schema 3.0.0, project.json. BLK-001 cleared; owner assignments and first-sprint approval remain outstanding.", "basis": "Owner statement: 'I approve governance baseline'" }
   ],
   "validation": {
     "validator": "python-jsonschema (Draft202012Validator), Python 3.14.0",

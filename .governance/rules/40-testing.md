@@ -1,9 +1,9 @@
 # Rule 40 — Testing
 
-Status: DRAFT — project-authored baseline, pending owner approval
+Status: APPROVED — project-authored baseline
 Owner: QA authority — TBD
 Version: 0.1.0
-Approval: Pending
+Approval: Approved by the project owner on 2026-10-08 (recorded via agent session; see docs/reviews/initialization-status.md, run 5)
 Date: 2026-10-08
 
 ## Test levels
