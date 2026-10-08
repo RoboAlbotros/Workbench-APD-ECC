@@ -20,7 +20,7 @@
   "state": {
     "lifecycleStage": "definition",
     "frameworkPhase": "SPRINT-001",
-    "workStatus": "active",
+    "workStatus": "paused",
     "blockingState": "clear",
     "blockers": [],
     "health": {
@@ -44,13 +44,12 @@
     "summary": {
       "outcome": "TBD — owner decision required.",
       "accountableOwner": "Jessica Solis (product owner)",
-      "nextMilestone": "Close SPRINT-001 (auth direction + NIST applicability decisions outstanding); then propose SPRINT-002",
-      "nextRequiredDecision": "Brett (security/privacy): production authentication direction and NIST CSF/SSDF/Privacy Framework applicability decisions",
+      "nextMilestone": "SPRINT-002 approval (adopt and harden prototype; FIND-001 PII-field removal)",
+      "nextRequiredDecision": "Jessica Solis + Annamarie Zambrano (joint governance) approve SPRINT-002",
       "decisionsRequired": [
-        "Authentication/authorization direction (deferred, owner Brett)",
-        "NIST CSF 2.0 / SSDF 1.1 / Privacy Framework applicability decisions (owner Brett)"
+        "Approve SPRINT-002 (docs/planning/sprints/sprint-002-adopt-and-harden-prototype.md)"
       ],
-      "lastUpdated": "2026-10-08T16:10:00-06:00"
+      "lastUpdated": "2026-10-08T16:20:00-06:00"
     }
   },
   "release": {
@@ -106,7 +105,7 @@
   "security": {
     "classification": "Internal use only — DEC-012 (security/privacy authority Brett, 2026-10-08): no PII and no CJI/CJIS data will be stored in the system. See openFindings FIND-001 for the field-dictionary conflict this creates.",
     "sensitiveData": "None permitted — DEC-012. The prototype's field dictionary currently includes PII fields (DOB, SSN, driver's license) that MUST be removed from the data model before real use (FIND-001, assigned to SPRINT-002 scope). No applicant records exist in the repository.",
-    "authentication": "TBD — deferred, owner Brett (security/privacy authority). Prototype local PIN gating is non-production per its README; production direction undecided.",
+    "authentication": "DEC-015 (security/privacy authority Brett, 2026-10-08): production direction is City SSO (Entra ID) with server-side role-based access mirroring the three view levels (Limited/Records/Admin), targeted at a future release. Prototype local PINs are never production controls.",
     "authorization": "TBD. Prototype has three local views (Limited, Records, Full Admin); production model undecided.",
     "secretsManagement": "No credentials, tokens, personal information, or production secrets in repository files (Rule 50).",
     "supplyChain": "No external dependencies currently. Additions require trusted-source decisions and recorded SP 800-204D practices.",
@@ -119,11 +118,11 @@
     "nistBaseline": {
       "appendixIntegrity": "SHA256SUMS generated 2026-10-08 from files downloaded directly from nvlpubs.nist.gov; verification procedure in docs/appendices/nist/README.md.",
       "editions": "CSF 2.0; SP 800-218 (SSDF 1.1); Privacy Framework 1.0; SP 800-218A; SP 800-204D",
-      "csf-2.0": { "applicability": "not-assessed", "assessor": null, "notes": "Profile/crosswalk pending security/privacy authority." },
-      "ssdf-1.1": { "applicability": "not-assessed", "assessor": null, "notes": "Pending security/privacy authority." },
-      "privacy-framework-1.0": { "applicability": "not-assessed", "assessor": null, "notes": "Likely applicable given PII field dictionary; decision pending." },
-      "sp-800-218a": { "applicability": "not-assessed", "assessor": null, "notes": "No delivered AI system is planned; AI-assisted coding alone does not trigger the profile. Decision pending." },
-      "sp-800-204d": { "applicability": "not-assessed", "assessor": null, "notes": "No CI/CD or dependencies yet; decision pending." }
+      "csf-2.0": { "applicability": "applicable", "assessor": "Brett (security/privacy authority)", "assessmentDate": "2026-10-08", "notes": "DEC-016: lightweight profile proportionate to an internal, non-PII tool. Review annually." },
+      "ssdf-1.1": { "applicability": "applicable", "assessor": "Brett (security/privacy authority)", "assessmentDate": "2026-10-08", "notes": "DEC-016: applies to development practices (reviewed change, no secrets in repo, dependency controls per Rule 50)." },
+      "privacy-framework-1.0": { "applicability": "not-applicable", "assessor": "Brett (security/privacy authority)", "assessmentDate": "2026-10-08", "notes": "DEC-016: not applicable under DEC-012 (no PII stored). MUST be revisited on any data-scope change." },
+      "sp-800-218a": { "applicability": "not-applicable", "assessor": "Brett (security/privacy authority)", "assessmentDate": "2026-10-08", "notes": "DEC-016: no delivered AI system; AI-assisted coding alone does not trigger the profile." },
+      "sp-800-204d": { "applicability": "applicable-minimal", "assessor": "Brett (security/privacy authority)", "assessmentDate": "2026-10-08", "notes": "DEC-016: trusted-source expectations only; no CI/CD or external dependencies exist. Expand the profile when a pipeline or dependencies are introduced." }
     },
     "threatModel": "Not started. Required before C4 or material C3 work (Rule 50).",
     "privacyImpactAssessment": "Not required under DEC-012 (no PII stored) — accountable decision by security/privacy authority Brett, 2026-10-08. MUST be revisited if data scope ever changes (DEC-014).",
@@ -157,7 +156,7 @@
     "nistAppendix": "docs/appendices/nist/README.md",
     "prototype": "CJISTracker/README.md"
   },
-  "currentAuthorizedWork": "SPRINT-001",
+  "currentAuthorizedWork": null,
   "history": [
     { "timestamp": "2026-10-05", "actor": "Codex primary agent (run 1)", "event": "Draft governing documents created in empty directory.", "basis": "User-pasted SGK initialization request" },
     { "timestamp": "2026-10-07", "actor": "Cursor primary agent (run 2)", "event": "SGK location preflight; authoritative package not found; repo initialized and pushed to GitHub.", "basis": "User continuation request" },
@@ -168,7 +167,8 @@
     { "timestamp": "2026-10-08T15:30:00-06:00", "actor": "Project owner (via agent session, recorded by Cursor primary agent, run 6)", "event": "Authority assignments recorded (DEC-001..011): Jessica Solis — product owner; Jessica Solis + Annamarie Zambrano (joint) — business/outcome, governance, release; Annamarie Zambrano — QA; Brett — technical, coordination, security/privacy, UX/accessibility, documentation, operations. BLK-002 cleared.", "basis": "Owner selections in agent session question form" },
     { "timestamp": "2026-10-08T15:35:00-06:00", "actor": "Cursor primary agent (run 7)", "event": "SPRINT-001 (product definition and security baseline) prepared from template, status PROPOSED / NOT READY. Approval by Jessica Solis + Annamarie Zambrano required to clear BLK-003. currentAuthorizedWork remains null.", "basis": "Project owner instruction to proceed" },
     { "timestamp": "2026-10-08T15:55:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 8)", "event": "SPRINT-001 approved as relayed by project owner on behalf of joint governance authorities Jessica Solis and Annamarie Zambrano (limitation: relayed, ratification open). BLK-003 cleared; currentAuthorizedWork = SPRINT-001; lifecycle definition/active. Security decisions recorded: DEC-012 no PII and no CJIS data stored (classification internal); DEC-013 CJIS Security Policy not directly applicable under that scope; DEC-014 PIA not required under that scope, revisit on scope change. FIND-001 opened: prototype PII fields conflict with DEC-012, assigned to SPRINT-002. Deliverables drafted: product-definition, product-concept, roadmap, PR template.", "basis": "Owner statements 'go' and 'B non PII and non CJIS data will be stored in the system'" },
-    { "timestamp": "2026-10-08T16:10:00-06:00", "actor": "Project owner (via agent session, recorded by Cursor primary agent, run 9)", "event": "SPRINT-001 relayed approval ratified; product-definition.md 0.1.0 and roadmap approved by Jessica Solis with joint outcome acceptance; G-SCOPE satisfied. Remaining in sprint: authentication direction and NIST applicability decisions (owner Brett).", "basis": "Owner statement: 'go review and confirmed'" }
+    { "timestamp": "2026-10-08T16:10:00-06:00", "actor": "Project owner (via agent session, recorded by Cursor primary agent, run 9)", "event": "SPRINT-001 relayed approval ratified; product-definition.md 0.1.0 and roadmap approved by Jessica Solis with joint outcome acceptance; G-SCOPE satisfied. Remaining in sprint: authentication direction and NIST applicability decisions (owner Brett).", "basis": "Owner statement: 'go review and confirmed'" },
+    { "timestamp": "2026-10-08T16:20:00-06:00", "actor": "Security/privacy authority Brett (via agent session, recorded by Cursor primary agent, run 10)", "event": "DEC-015 recorded (production auth: City SSO/Entra ID, server-side RBAC, future release) and DEC-016 recorded (NIST applicability: CSF 2.0 applicable-lightweight, SSDF 1.1 applicable, Privacy Framework 1.0 not applicable under DEC-012, SP 800-218A not applicable, SP 800-204D applicable-minimal). SPRINT-001 COMPLETE, all acceptance criteria met; FIND-001 carried to SPRINT-002. SPRINT-002 (adopt and harden prototype) PROPOSED; currentAuthorizedWork null pending its approval.", "basis": "Owner statement: 'accept both'" }
   ],
   "validation": {
     "validator": "python-jsonschema (Draft202012Validator), Python 3.14.0",

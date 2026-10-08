@@ -1,6 +1,6 @@
 # Sprint 001 — CJISTracker product definition and security baseline
 
-Status: ACTIVE
+Status: COMPLETE (2026-10-08)
 Owner: Jessica Solis (product owner); prepared by Cursor primary agent at project owner direction
 Version: 0.1.0
 Approval: Approved 2026-10-08 — relayed by project owner Brett on behalf of the joint governance authorities; ratification confirmed by the project owner 2026-10-08T16:06-06:00 ("go review and confirmed"). The relayed-approval limitation is closed.
@@ -85,6 +85,10 @@ Drafts presented in-session to the accountable owners; decisions recorded in `pr
 
 ## Readiness decision and evidence
 
-Readiness: READY — approved as relayed by the project owner (see Approval above).
+Readiness: READY — approved as relayed by the project owner; ratified 2026-10-08.
 Decided by: Jessica Solis + Annamarie Zambrano (joint governance), relayed by Brett, 2026-10-08
 Evidence: project.json history runs 7-8; currentAuthorizedWork = SPRINT-001.
+
+## Completion record
+
+Completed 2026-10-08. All acceptance criteria met: product-definition.md 0.1.0 APPROVED (G-SCOPE satisfied); decisions recorded — DEC-012 (no PII / no CJIS data; classification internal), DEC-013 (CJIS Security Policy not directly applicable), DEC-014 (PIA not required; revisit on scope change), DEC-015 (production auth: City SSO/Entra ID with server-side RBAC), DEC-016 (NIST applicability: CSF 2.0 applicable-lightweight, SSDF 1.1 applicable, Privacy Framework not applicable under DEC-012, SP 800-218A not applicable, SP 800-204D applicable-minimal); roadmap and PR template created; project.json schema-validated (python-jsonschema 4.26.0, pass). Finding carried forward: FIND-001 (prototype PII fields violate DEC-012) — assigned to SPRINT-002. Evidence: project.json history runs 8-10.
