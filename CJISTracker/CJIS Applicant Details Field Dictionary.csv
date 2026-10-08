@@ -1,0 +1,23 @@
+Field Name,Internal Field Name,Data Type,Input Type / Allowed Values
+Name,name,String,Text; Last First Middle Initial Suffix
+Vendor,vendor,String,Dropdown populated from entered vendor values
+Requestor,requestor,String,Text
+Date Information Provided,dateInformationProvided,Date,Date
+Date of III Completion,dateOfIiiCompletion,Date,Date
+III - Status,iiiStatus,Enum,Clear | Misd/Clear | Felony
+Clearance Type,clearanceType,Enum,Full Clearance | One Time Visit | No Access Given
+Access Type,accessType,"Array<String>",Checkbox group; VPN | Non VPN | Security Groups | Facility Access | Unescorted Access | Building Access | Escorted Access | System Access | System/Building
+CJIS Security and Awareness Role,cjisSecurityAwarenessRole,Enum,Basic | General | Privileged | Security
+Fingerprints Completed,fingerprintsNotifiedCompleted,Date,Date
+Fingerprint Outcome,outcome,Enum,Clear | Misd/Clear | Felony | Needs Follow Up
+Security and Awareness Expiration Annually,securityAwarenessExpiration,Date,Date
+Security Addendum,securityAddendum,Date,Date
+NCIC Date of Cert Expiration,ncicCertificationExpiration,Date,Date
+NCIC Certification,ncicCertification,Boolean / Enum,Yes | No
+Completed Full Process,completedFullProcess,Date,Date
+Date of Site Visit Only,dateOfSiteVisitOnly,Date,Date
+Query Date (Every 5 Years),queriedEveryFiveYears,Date,Date
+Applicant Email Address,emailAddress,String,Email
+Phone Number,phoneNumber,String,Telephone
+Last Changed By,lastChangedBy,String,System-maintained user name
+Notes,notes,String,Multiline text
