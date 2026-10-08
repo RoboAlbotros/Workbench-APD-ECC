@@ -1,0 +1,194 @@
+{
+  "$schema": ".governance/schemas/project.schema.json",
+  "schemaVersion": "3.0.0",
+  "sgkVersion": "project-authored-baseline-0.1.0 (no authoritative SGK distribution available; authored in-repo at owner direction 2026-10-08)",
+  "identity": {
+    "name": "Workbench APD ECC",
+    "shortId": "workbench-apd-ecc",
+    "businessPurpose": "TBD — owner decision required. Working assumption pending approval: in-house DTI tooling workbench; first capability is the CJIS Applicant Tracker.",
+    "intendedUsers": "TBD — owner decision required. Working assumption pending approval: APD/ECC staff managing CJIS applicant clearance tracking.",
+    "initialCapability": "CJIS Applicant Tracker (existing browser/local-storage prototype adopted into CJISTracker/)",
+    "deploymentTarget": null
+  },
+  "versioning": {
+    "scheme": "semver-2.0.0",
+    "developmentVersion": "0.1.0-dev.1",
+    "targetReleaseVersion": "0.1.0",
+    "tagConvention": "vMAJOR.MINOR.PATCH; prerelease stages -dev.N, -alpha.N, -beta.N, -rc.N; Conventional Commits 1.0.0 for retained integration commits",
+    "publicContract": "TBD — not yet defined. No public contract exists; the prototype's behavior is not a supported contract. 1.0.0 requires a documented stable public contract per Rule 60."
+  },
+  "state": {
+    "lifecycleStage": "initiation",
+    "frameworkPhase": "initialization",
+    "workStatus": "blocked",
+    "blockingState": "blocked",
+    "blockers": [
+      {
+        "id": "BLK-001",
+        "description": "Owner approval of the project-authored governance baseline (GOVERNANCE.md, .governance/rules, this file) is pending.",
+        "owner": "Project owner — TBD"
+      },
+      {
+        "id": "BLK-002",
+        "description": "Accountable owner/authority assignments are unfilled (all TBD).",
+        "owner": "Project owner — TBD"
+      },
+      {
+        "id": "BLK-003",
+        "description": "First sprint not prepared or approved; currentAuthorizedWork is null, so implementation is not authorized.",
+        "owner": "Project owner — TBD"
+      }
+    ],
+    "health": {
+      "status": "not-assessed",
+      "reason": "No accountable owner has assessed health.",
+      "assessor": null,
+      "assessedAt": null
+    },
+    "plan": {
+      "baseline": null,
+      "revision": null,
+      "forecast": null,
+      "actuals": null,
+      "comparison": "not-baselined",
+      "tolerance": null
+    },
+    "progress": {
+      "value": null,
+      "measurementBasis": null
+    },
+    "summary": {
+      "outcome": "TBD — owner decision required.",
+      "accountableOwner": null,
+      "nextMilestone": "Owner approval of governance baseline and authority assignments",
+      "nextRequiredDecision": "Approve or amend the project-authored governance baseline; assign accountable owners",
+      "decisionsRequired": [
+        "Approve governance baseline (GOVERNANCE.md, rules 00-70, this file, schema)",
+        "Assign all accountable authorities (product, business/outcome, technical, governance, QA, security/privacy, UX/accessibility, documentation, release, operations)",
+        "Confirm business purpose, intended users, and data classification",
+        "Confirm SGK applicability decision for CJISTracker work",
+        "Approve first sprint before implementation"
+      ],
+      "lastUpdated": "2026-10-08T14:55:00-06:00"
+    }
+  },
+  "release": {
+    "state": "not-released",
+    "releaseType": null,
+    "candidateIdentity": null,
+    "finalIdentity": null
+  },
+  "distributionBaseline": {
+    "version": null,
+    "location": null,
+    "owner": null,
+    "releaseRecord": null,
+    "publishedAt": null
+  },
+  "productionBaseline": {
+    "version": null,
+    "environment": null,
+    "owner": null,
+    "assessedAt": null
+  },
+  "repository": {
+    "url": "https://github.com/RoboAlbotros/Workbench-APD-ECC",
+    "defaultBranch": "main",
+    "primaryBranch": "main",
+    "integrationPath": "Pull request required for governance changes and C2-C4 work; C1 may use approved expedited path (Rule 00/30).",
+    "limitations": [
+      "GitHub branch protection not configured; recorded as mechanical limitation, not permission.",
+      "Commits before 2026-10-08 were integrated directly to main at owner direction prior to this baseline."
+    ]
+  },
+  "authorities": {
+    "productOwner": { "role": "Product owner", "name": null, "notes": "TBD-DEC-001" },
+    "businessOutcomeOwner": { "role": "Business/outcome owner and outcome-acceptance authority", "name": null, "notes": "TBD-DEC-002" },
+    "technicalOwner": { "role": "Technical owner", "name": null, "notes": "TBD-DEC-003" },
+    "governanceAuthority": { "role": "Governance and approval authority", "name": null, "notes": "TBD-DEC-004" },
+    "coordinationOwner": { "role": "Program/project coordination owner", "name": null, "notes": "TBD-DEC-005; applicability undecided" },
+    "qaAuthority": { "role": "QA authority", "name": null, "notes": "TBD-DEC-006" },
+    "securityPrivacyAuthority": { "role": "Security/privacy authority", "name": null, "notes": "TBD-DEC-007" },
+    "uxAccessibilityAuthority": { "role": "UX/accessibility authority", "name": null, "notes": "TBD-DEC-008" },
+    "documentationAuthority": { "role": "Documentation authority", "name": null, "notes": "TBD-DEC-009" },
+    "releaseAuthority": { "role": "Release authority (candidate acceptance and final release authorization are separately recorded decisions)", "name": null, "notes": "TBD-DEC-010" },
+    "operationsAuthority": { "role": "Operations authority", "name": null, "notes": "TBD-DEC-011" }
+  },
+  "gates": {
+    "G-SCOPE": { "state": "pending", "owner": "Product + business/outcome owners (TBD)", "decisionDate": null, "evidence": null, "scope": "project" },
+    "G-ARCH": { "state": "pending", "owner": "Technical owner (TBD)", "decisionDate": null, "evidence": null, "scope": "project" },
+    "G-SEC": { "state": "pending", "owner": "Security/privacy authority (TBD)", "decisionDate": null, "evidence": null, "scope": "project" },
+    "G-TEST": { "state": "pending", "owner": "QA authority (TBD)", "decisionDate": null, "evidence": null, "scope": "project" },
+    "G-CAND": { "state": "pending", "owner": "Release authority (TBD)", "decisionDate": null, "evidence": null, "scope": "release 0.1.0" },
+    "G-REL": { "state": "pending", "owner": "Release authority (TBD)", "decisionDate": null, "evidence": null, "scope": "release 0.1.0" }
+  },
+  "security": {
+    "classification": "TBD — owner decision required. The CJISTracker domain (CJIS applicant clearance tracking) suggests regulated sensitive data; classification must be decided by the security/privacy authority.",
+    "sensitiveData": "Prototype field dictionary defines PII fields (name, DOB, SSN, driver's license). No applicant records exist in the repository; test spreadsheets with sample PII exist outside the repository and MUST NOT be committed.",
+    "authentication": "TBD. Prototype uses local PIN gating, documented by its README as non-production. Production requires server-side authentication (undecided).",
+    "authorization": "TBD. Prototype has three local views (Limited, Records, Full Admin); production model undecided.",
+    "secretsManagement": "No credentials, tokens, personal information, or production secrets in repository files (Rule 50).",
+    "supplyChain": "No external dependencies currently. Additions require trusted-source decisions and recorded SP 800-204D practices.",
+    "loggingAudit": "TBD — required for production per prototype README; no decision recorded.",
+    "testingExpectations": "Rule 40 categories; required/not-required decisions pending security/privacy authority.",
+    "environmentSeparation": "TBD — no environments exist.",
+    "backupRecovery": "TBD.",
+    "vulnerabilityContact": "TBD — owner must designate intake path, severity method, response and disclosure expectations.",
+    "exceptions": [],
+    "nistBaseline": {
+      "appendixIntegrity": "SHA256SUMS generated 2026-10-08 from files downloaded directly from nvlpubs.nist.gov; verification procedure in docs/appendices/nist/README.md.",
+      "editions": "CSF 2.0; SP 800-218 (SSDF 1.1); Privacy Framework 1.0; SP 800-218A; SP 800-204D",
+      "csf-2.0": { "applicability": "not-assessed", "assessor": null, "notes": "Profile/crosswalk pending security/privacy authority." },
+      "ssdf-1.1": { "applicability": "not-assessed", "assessor": null, "notes": "Pending security/privacy authority." },
+      "privacy-framework-1.0": { "applicability": "not-assessed", "assessor": null, "notes": "Likely applicable given PII field dictionary; decision pending." },
+      "sp-800-218a": { "applicability": "not-assessed", "assessor": null, "notes": "No delivered AI system is planned; AI-assisted coding alone does not trigger the profile. Decision pending." },
+      "sp-800-204d": { "applicability": "not-assessed", "assessor": null, "notes": "No CI/CD or dependencies yet; decision pending." }
+    },
+    "threatModel": "Not started. Required before C4 or material C3 work (Rule 50).",
+    "privacyImpactAssessment": "Not started. Required before handling personal information; likely applicable given CJIS domain."
+  },
+  "compliance": {
+    "references": [
+      {
+        "name": "CJIS Security Policy",
+        "authority": "TBD — applicability and edition to be confirmed by security/privacy and governance authorities",
+        "classification": "external-policy-reference, not yet adopted as project obligation"
+      }
+    ],
+    "policyObligations": "TBD — applicable law, City of Albuquerque policy, records, accessibility, procurement, licensing, funding, data-governance, and continuity obligations not yet enumerated; owner to supply."
+  },
+  "documentation": {
+    "governance": "GOVERNANCE.md",
+    "rules": ".governance/rules/",
+    "contributing": "CONTRIBUTING.md",
+    "initializationStatus": "docs/reviews/initialization-status.md",
+    "futureConsiderations": "docs/planning/future-considerations.md",
+    "sprintTemplate": "docs/planning/sprints/sprint-template.md",
+    "nistAppendix": "docs/appendices/nist/README.md",
+    "prototype": "CJISTracker/README.md"
+  },
+  "currentAuthorizedWork": null,
+  "history": [
+    { "timestamp": "2026-10-05", "actor": "Codex primary agent (run 1)", "event": "Draft governing documents created in empty directory.", "basis": "User-pasted SGK initialization request" },
+    { "timestamp": "2026-10-07", "actor": "Cursor primary agent (run 2)", "event": "SGK location preflight; authoritative package not found; repo initialized and pushed to GitHub.", "basis": "User continuation request" },
+    { "timestamp": "2026-10-08T14:10:00-06:00", "actor": "Cursor primary agent", "event": "CJISTracker prototype copied into repository and pushed to main at owner direction.", "basis": "Direct user instruction" },
+    { "timestamp": "2026-10-08T14:12:00-06:00", "actor": "Cursor primary agent (run 3)", "event": "Initialization preflight re-run; 15 foundational files missing; blocked.", "basis": "User-pasted SGK initialization prompt" },
+    { "timestamp": "2026-10-08T14:55:00-06:00", "actor": "Cursor primary agent (run 4)", "event": "Project-authored governance baseline created at owner direction: schema, nine rules, project.json, NIST appendix (five official PDFs with SHA256SUMS), sprint template.", "basis": "Direct user instruction to create the foundational files" }
+  ],
+  "validation": {
+    "validator": "python-jsonschema (Draft202012Validator), Python 3.14.0",
+    "validatorVersion": "4.26.0",
+    "schemaVersion": "3.0.0",
+    "result": "pass",
+    "timestamp": "2026-10-08T14:58:00-06:00",
+    "limitations": "Structural conformance only; proves canonical values and shape, not factual accuracy, evidence sufficiency, approvals, gate satisfaction, or policy compliance. Schema is the project-authored profile, not an official SGK schema."
+  },
+  "extensions": {
+    "aiBoundaries": {
+      "approvedServices": "TBD — operator currently uses Cursor with Claude models; formal approval decision pending governance authority.",
+      "transmissionBoundaries": "TBD. No applicant records or production secrets may be transmitted to AI services.",
+      "prohibited": "Committing or transmitting real applicant PII; production credential handling by AI agents."
+    },
+    "projectStateOwner": "Cursor primary agent (reconciles project.json updates); accountable human owner TBD"
+  }
+}

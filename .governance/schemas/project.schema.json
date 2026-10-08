@@ -1,0 +1,275 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "project.schema.json",
+  "title": "Project state schema",
+  "description": "Machine-readable project state for the project-authored governance baseline (SemVer profile 3.0.0). Schema conformance proves structure and canonical values only.",
+  "type": "object",
+  "required": [
+    "$schema", "schemaVersion", "sgkVersion", "identity", "versioning", "state",
+    "release", "distributionBaseline", "productionBaseline", "repository",
+    "authorities", "gates", "security", "compliance", "documentation",
+    "currentAuthorizedWork", "history", "validation", "extensions"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-(?:dev|alpha|beta|rc)\\.(?:0|[1-9]\\d*))?$"
+    },
+    "nullableString": { "type": ["string", "null"] },
+    "owner": {
+      "type": "object",
+      "required": ["role", "name"],
+      "properties": {
+        "role": { "type": "string" },
+        "name": { "type": ["string", "null"], "description": "null or TBD-decision reference when unassigned" },
+        "notes": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "gateState": {
+      "type": "object",
+      "required": ["state", "owner"],
+      "properties": {
+        "state": { "enum": ["pending", "satisfied", "waived", "not-applicable"] },
+        "owner": { "type": "string" },
+        "decisionDate": { "type": ["string", "null"] },
+        "evidence": { "type": ["string", "null"] },
+        "scope": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    }
+  },
+  "properties": {
+    "$schema": { "const": ".governance/schemas/project.schema.json" },
+    "schemaVersion": { "const": "3.0.0" },
+    "sgkVersion": { "type": "string" },
+    "identity": {
+      "type": "object",
+      "required": ["name", "shortId", "businessPurpose", "intendedUsers", "initialCapability"],
+      "properties": {
+        "name": { "type": "string" },
+        "shortId": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "businessPurpose": { "type": "string" },
+        "intendedUsers": { "type": "string" },
+        "initialCapability": { "type": "string" },
+        "deploymentTarget": { "$ref": "#/$defs/nullableString" }
+      },
+      "additionalProperties": false
+    },
+    "versioning": {
+      "type": "object",
+      "required": ["scheme", "developmentVersion", "targetReleaseVersion", "tagConvention", "publicContract"],
+      "properties": {
+        "scheme": { "const": "semver-2.0.0" },
+        "developmentVersion": { "$ref": "#/$defs/semver" },
+        "targetReleaseVersion": { "$ref": "#/$defs/semver" },
+        "tagConvention": { "type": "string" },
+        "publicContract": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "state": {
+      "type": "object",
+      "required": ["lifecycleStage", "frameworkPhase", "workStatus", "blockingState", "blockers", "health", "plan", "progress", "summary"],
+      "properties": {
+        "lifecycleStage": { "enum": ["initiation", "discovery", "definition", "development", "stabilization", "released", "operations", "retired"] },
+        "frameworkPhase": { "type": "string" },
+        "workStatus": { "enum": ["not-started", "active", "paused", "blocked", "complete"] },
+        "blockingState": { "enum": ["clear", "blocked"] },
+        "blockers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "description", "owner"],
+            "properties": {
+              "id": { "type": "string" },
+              "description": { "type": "string" },
+              "owner": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        },
+        "health": {
+          "type": "object",
+          "required": ["status", "reason", "assessor", "assessedAt"],
+          "properties": {
+            "status": { "enum": ["healthy", "at-risk", "unhealthy", "not-assessed"] },
+            "reason": { "$ref": "#/$defs/nullableString" },
+            "assessor": { "$ref": "#/$defs/nullableString" },
+            "assessedAt": { "$ref": "#/$defs/nullableString" }
+          },
+          "additionalProperties": false
+        },
+        "plan": {
+          "type": "object",
+          "required": ["baseline", "revision", "forecast", "actuals", "comparison", "tolerance"],
+          "properties": {
+            "baseline": { "$ref": "#/$defs/nullableString" },
+            "revision": { "type": ["integer", "null"] },
+            "forecast": { "$ref": "#/$defs/nullableString" },
+            "actuals": { "$ref": "#/$defs/nullableString" },
+            "comparison": { "enum": ["on-plan", "ahead", "behind", "not-baselined"] },
+            "tolerance": { "$ref": "#/$defs/nullableString" }
+          },
+          "additionalProperties": false
+        },
+        "progress": {
+          "type": "object",
+          "required": ["value", "measurementBasis"],
+          "properties": {
+            "value": { "type": ["number", "null"] },
+            "measurementBasis": { "$ref": "#/$defs/nullableString" }
+          },
+          "additionalProperties": false
+        },
+        "summary": {
+          "type": "object",
+          "required": ["outcome", "accountableOwner", "nextMilestone", "nextRequiredDecision", "decisionsRequired", "lastUpdated"],
+          "properties": {
+            "outcome": { "type": "string" },
+            "accountableOwner": { "$ref": "#/$defs/nullableString" },
+            "nextMilestone": { "$ref": "#/$defs/nullableString" },
+            "nextRequiredDecision": { "$ref": "#/$defs/nullableString" },
+            "decisionsRequired": { "type": "array", "items": { "type": "string" } },
+            "lastUpdated": { "type": "string" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "release": {
+      "type": "object",
+      "required": ["state", "releaseType", "candidateIdentity", "finalIdentity"],
+      "properties": {
+        "state": { "enum": ["planned", "candidate", "released", "not-released"] },
+        "releaseType": { "enum": ["distribution", "runtime", "hybrid", null] },
+        "candidateIdentity": { "type": ["object", "null"] },
+        "finalIdentity": { "type": ["object", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "distributionBaseline": {
+      "type": "object",
+      "required": ["version", "location", "owner", "releaseRecord", "publishedAt"],
+      "properties": {
+        "version": { "$ref": "#/$defs/nullableString" },
+        "location": { "$ref": "#/$defs/nullableString" },
+        "owner": { "$ref": "#/$defs/nullableString" },
+        "releaseRecord": { "$ref": "#/$defs/nullableString" },
+        "publishedAt": { "$ref": "#/$defs/nullableString" }
+      },
+      "additionalProperties": false
+    },
+    "productionBaseline": {
+      "type": "object",
+      "required": ["version", "environment", "owner", "assessedAt"],
+      "properties": {
+        "version": { "$ref": "#/$defs/nullableString" },
+        "environment": { "$ref": "#/$defs/nullableString" },
+        "owner": { "$ref": "#/$defs/nullableString" },
+        "assessedAt": { "$ref": "#/$defs/nullableString" }
+      },
+      "additionalProperties": false
+    },
+    "repository": {
+      "type": "object",
+      "required": ["url", "defaultBranch", "primaryBranch", "integrationPath"],
+      "properties": {
+        "url": { "type": "string" },
+        "defaultBranch": { "type": "string" },
+        "primaryBranch": { "type": "string" },
+        "integrationPath": { "type": "string" },
+        "limitations": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+    "authorities": {
+      "type": "object",
+      "required": ["productOwner", "businessOutcomeOwner", "technicalOwner", "governanceAuthority", "qaAuthority", "securityPrivacyAuthority", "uxAccessibilityAuthority", "documentationAuthority", "releaseAuthority", "operationsAuthority"],
+      "properties": {
+        "productOwner": { "$ref": "#/$defs/owner" },
+        "businessOutcomeOwner": { "$ref": "#/$defs/owner" },
+        "technicalOwner": { "$ref": "#/$defs/owner" },
+        "governanceAuthority": { "$ref": "#/$defs/owner" },
+        "coordinationOwner": { "$ref": "#/$defs/owner" },
+        "qaAuthority": { "$ref": "#/$defs/owner" },
+        "securityPrivacyAuthority": { "$ref": "#/$defs/owner" },
+        "uxAccessibilityAuthority": { "$ref": "#/$defs/owner" },
+        "documentationAuthority": { "$ref": "#/$defs/owner" },
+        "releaseAuthority": { "$ref": "#/$defs/owner" },
+        "operationsAuthority": { "$ref": "#/$defs/owner" }
+      },
+      "additionalProperties": false
+    },
+    "gates": {
+      "type": "object",
+      "required": ["G-SCOPE", "G-ARCH", "G-SEC", "G-TEST", "G-CAND", "G-REL"],
+      "additionalProperties": { "$ref": "#/$defs/gateState" }
+    },
+    "security": {
+      "type": "object",
+      "required": ["classification", "sensitiveData", "authentication", "authorization", "secretsManagement", "supplyChain", "loggingAudit", "testingExpectations", "environmentSeparation", "backupRecovery", "vulnerabilityContact", "exceptions", "nistBaseline", "threatModel", "privacyImpactAssessment"],
+      "properties": {
+        "classification": { "$ref": "#/$defs/nullableString" },
+        "sensitiveData": { "$ref": "#/$defs/nullableString" },
+        "authentication": { "$ref": "#/$defs/nullableString" },
+        "authorization": { "$ref": "#/$defs/nullableString" },
+        "secretsManagement": { "$ref": "#/$defs/nullableString" },
+        "supplyChain": { "$ref": "#/$defs/nullableString" },
+        "loggingAudit": { "$ref": "#/$defs/nullableString" },
+        "testingExpectations": { "$ref": "#/$defs/nullableString" },
+        "environmentSeparation": { "$ref": "#/$defs/nullableString" },
+        "backupRecovery": { "$ref": "#/$defs/nullableString" },
+        "vulnerabilityContact": { "$ref": "#/$defs/nullableString" },
+        "exceptions": { "type": "array", "items": { "type": "object" } },
+        "nistBaseline": { "type": "object" },
+        "threatModel": { "$ref": "#/$defs/nullableString" },
+        "privacyImpactAssessment": { "$ref": "#/$defs/nullableString" }
+      },
+      "additionalProperties": false
+    },
+    "compliance": {
+      "type": "object",
+      "properties": {
+        "references": { "type": "array", "items": { "type": "object" } },
+        "policyObligations": { "$ref": "#/$defs/nullableString" }
+      },
+      "additionalProperties": false
+    },
+    "documentation": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "currentAuthorizedWork": { "type": ["string", "null"], "description": "Sprint or change-record ID; null means implementation is not authorized" },
+    "history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["timestamp", "actor", "event"],
+        "properties": {
+          "timestamp": { "type": "string" },
+          "actor": { "type": "string" },
+          "event": { "type": "string" },
+          "basis": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "validation": {
+      "type": "object",
+      "required": ["validator", "validatorVersion", "schemaVersion", "result", "timestamp", "limitations"],
+      "properties": {
+        "validator": { "$ref": "#/$defs/nullableString" },
+        "validatorVersion": { "$ref": "#/$defs/nullableString" },
+        "schemaVersion": { "$ref": "#/$defs/nullableString" },
+        "result": { "enum": ["pass", "fail", "not-run"] },
+        "timestamp": { "$ref": "#/$defs/nullableString" },
+        "limitations": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "extensions": { "type": "object" }
+  }
+}
