@@ -44,15 +44,13 @@
     "summary": {
       "outcome": "TBD — owner decision required.",
       "accountableOwner": "Jessica Solis (product owner)",
-      "nextMilestone": "SPRINT-001 completion: product-definition approval by Jessica Solis; authentication direction decision by Brett",
-      "nextRequiredDecision": "Jessica Solis approves docs/product/product-definition.md (G-SCOPE); Jessica and Annamarie may ratify the relayed sprint approval",
+      "nextMilestone": "Close SPRINT-001 (auth direction + NIST applicability decisions outstanding); then propose SPRINT-002",
+      "nextRequiredDecision": "Brett (security/privacy): production authentication direction and NIST CSF/SSDF/Privacy Framework applicability decisions",
       "decisionsRequired": [
-        "Product owner approval of product-definition.md (G-SCOPE)",
         "Authentication/authorization direction (deferred, owner Brett)",
-        "Ratification of relayed SPRINT-001 approval by Jessica Solis and Annamarie Zambrano",
-        "FIND-001 disposition confirmation (PII field removal in SPRINT-002)"
+        "NIST CSF 2.0 / SSDF 1.1 / Privacy Framework applicability decisions (owner Brett)"
       ],
-      "lastUpdated": "2026-10-08T15:55:00-06:00"
+      "lastUpdated": "2026-10-08T16:10:00-06:00"
     }
   },
   "release": {
@@ -98,7 +96,7 @@
     "operationsAuthority": { "role": "Operations authority", "name": "Brett (project owner)", "notes": "Assigned by project owner 2026-10-08 (DEC-011)" }
   },
   "gates": {
-    "G-SCOPE": { "state": "pending", "owner": "Product + business/outcome owners (TBD)", "decisionDate": null, "evidence": null, "scope": "project" },
+    "G-SCOPE": { "state": "satisfied", "owner": "Jessica Solis (product) + Jessica Solis/Annamarie Zambrano (outcome, joint)", "decisionDate": "2026-10-08", "evidence": "docs/product/product-definition.md 0.1.0 APPROVED; confirmation relayed by project owner in agent session (history run 9)", "scope": "project" },
     "G-ARCH": { "state": "pending", "owner": "Technical owner (TBD)", "decisionDate": null, "evidence": null, "scope": "project" },
     "G-SEC": { "state": "pending", "owner": "Security/privacy authority (TBD)", "decisionDate": null, "evidence": null, "scope": "project" },
     "G-TEST": { "state": "pending", "owner": "QA authority (TBD)", "decisionDate": null, "evidence": null, "scope": "project" },
@@ -169,7 +167,8 @@
     { "timestamp": "2026-10-08T15:00:00-06:00", "actor": "Project owner (via agent session, recorded by Cursor primary agent, run 5)", "event": "Governance baseline APPROVED: GOVERNANCE.md 0.2.0, rules 00-70, schema 3.0.0, project.json. BLK-001 cleared; owner assignments and first-sprint approval remain outstanding.", "basis": "Owner statement: 'I approve governance baseline'" },
     { "timestamp": "2026-10-08T15:30:00-06:00", "actor": "Project owner (via agent session, recorded by Cursor primary agent, run 6)", "event": "Authority assignments recorded (DEC-001..011): Jessica Solis — product owner; Jessica Solis + Annamarie Zambrano (joint) — business/outcome, governance, release; Annamarie Zambrano — QA; Brett — technical, coordination, security/privacy, UX/accessibility, documentation, operations. BLK-002 cleared.", "basis": "Owner selections in agent session question form" },
     { "timestamp": "2026-10-08T15:35:00-06:00", "actor": "Cursor primary agent (run 7)", "event": "SPRINT-001 (product definition and security baseline) prepared from template, status PROPOSED / NOT READY. Approval by Jessica Solis + Annamarie Zambrano required to clear BLK-003. currentAuthorizedWork remains null.", "basis": "Project owner instruction to proceed" },
-    { "timestamp": "2026-10-08T15:55:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 8)", "event": "SPRINT-001 approved as relayed by project owner on behalf of joint governance authorities Jessica Solis and Annamarie Zambrano (limitation: relayed, ratification open). BLK-003 cleared; currentAuthorizedWork = SPRINT-001; lifecycle definition/active. Security decisions recorded: DEC-012 no PII and no CJIS data stored (classification internal); DEC-013 CJIS Security Policy not directly applicable under that scope; DEC-014 PIA not required under that scope, revisit on scope change. FIND-001 opened: prototype PII fields conflict with DEC-012, assigned to SPRINT-002. Deliverables drafted: product-definition, product-concept, roadmap, PR template.", "basis": "Owner statements 'go' and 'B non PII and non CJIS data will be stored in the system'" }
+    { "timestamp": "2026-10-08T15:55:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 8)", "event": "SPRINT-001 approved as relayed by project owner on behalf of joint governance authorities Jessica Solis and Annamarie Zambrano (limitation: relayed, ratification open). BLK-003 cleared; currentAuthorizedWork = SPRINT-001; lifecycle definition/active. Security decisions recorded: DEC-012 no PII and no CJIS data stored (classification internal); DEC-013 CJIS Security Policy not directly applicable under that scope; DEC-014 PIA not required under that scope, revisit on scope change. FIND-001 opened: prototype PII fields conflict with DEC-012, assigned to SPRINT-002. Deliverables drafted: product-definition, product-concept, roadmap, PR template.", "basis": "Owner statements 'go' and 'B non PII and non CJIS data will be stored in the system'" },
+    { "timestamp": "2026-10-08T16:10:00-06:00", "actor": "Project owner (via agent session, recorded by Cursor primary agent, run 9)", "event": "SPRINT-001 relayed approval ratified; product-definition.md 0.1.0 and roadmap approved by Jessica Solis with joint outcome acceptance; G-SCOPE satisfied. Remaining in sprint: authentication direction and NIST applicability decisions (owner Brett).", "basis": "Owner statement: 'go review and confirmed'" }
   ],
   "validation": {
     "validator": "python-jsonschema (Draft202012Validator), Python 3.14.0",

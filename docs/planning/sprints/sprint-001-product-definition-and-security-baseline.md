@@ -3,7 +3,7 @@
 Status: ACTIVE
 Owner: Jessica Solis (product owner); prepared by Cursor primary agent at project owner direction
 Version: 0.1.0
-Approval: Approved 2026-10-08 — relayed in agent session by project owner Brett on behalf of the joint governance authorities Jessica Solis and Annamarie Zambrano. Limitation: approval was relayed, not recorded directly by the named authorities; they may ratify or amend.
+Approval: Approved 2026-10-08 — relayed by project owner Brett on behalf of the joint governance authorities; ratification confirmed by the project owner 2026-10-08T16:06-06:00 ("go review and confirmed"). The relayed-approval limitation is closed.
 Date: 2026-10-08
 Controlling work ID: SPRINT-001
 
