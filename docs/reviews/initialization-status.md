@@ -65,5 +65,18 @@ SGK search (negative):
 
 Result: the authoritative SGK package is unavailable in the workspace. Per the request, the project owner has been asked to supply its repository URL or local folder. No project.json, schema, sprint, NIST references, or rules were fabricated. FC-001 and FC-002 remain FUTURE.
 
+## Run 3 — 2026-10-08 — Initialization preflight re-run (Cursor primary agent)
+
+Acting function: Cursor primary agent, executing the user's re-pasted SGK initialization prompt. No subagents were delegated; no organizational authority is inferred from the request.
+
+Verified observations (2026-10-08T14:12-06:00):
+- Repository root: C:/Users/E41646/Documents/DTI - In House Tools/Development; branch main; remote origin https://github.com/RoboAlbotros/Workbench-APD-ECC.git; default branch main; working tree clean at commit 8d94060.
+- This is an existing project being adopted, not a fresh SGK template clone. No publication/ directory or .openai/hosting.json exists.
+- Since run 2, the CJISTracker prototype (7 files) was copied into CJISTracker/ and pushed to main as commit 8d94060 under the user's direct instruction. This was a user-directed repository action, not SGK-authorized implementation work; recorded here as a limitation because the direct-to-main integration preceded establishment of reviewed integration paths.
+- Preflight file check: PRESENT — README.md, GOVERNANCE.md (draft, unapproved), docs/planning/future-considerations.md. MISSING — project.json, .governance/schemas/project.schema.json, all nine .governance/rules/*.md, docs/appendices/nist/README.md, docs/appendices/nist/SHA256SUMS, the five NIST PDFs, docs/planning/sprints/sprint-template.md.
+- The operator's clipboard was read at the user's request; it contained the same initialization prompt text, not the SGK package or a build script.
+
+Result: Phases 2-10 remain blocked on the authoritative SGK package (schema, nine rules, NIST appendix with checksums and PDFs, sprint template, SGK version identification). Per the prompt — "Do not silently substitute a different governance model" — nothing was fabricated. Next owner decision: supply the SGK template repository URL or local folder, or direct an alternative governance basis as a recorded decision. FC-001 and FC-002 remain FUTURE.
+
 ## Completion limitation
 Only draft governing documents are prepared. Canonical state initialization, schema validation, NIST verification, bounded specialist reviews and first-sprint preparation remain outstanding. Initialization is not complete. Product implementation has not started in this run. Owner approval remains required before beginning the first sprint.
