@@ -34,6 +34,7 @@ const ACCESS_LABELS = {
 
 const fields = [
   "name",
+  "controlNumber",
   "vendor",
   "requestor",
   "dateInformationProvided",
@@ -53,6 +54,7 @@ const fields = [
   "queriedEveryFiveYears",
   "emailAddress",
   "phoneNumber",
+  "source",
   "lastChangedBy",
   "documents",
   "notes",
@@ -60,6 +62,7 @@ const fields = [
 
 const limitedFields = [
   "name",
+  "controlNumber",
   "vendor",
   "dateInformationProvided",
   "clearanceType",
@@ -77,6 +80,8 @@ const formFields = fields.filter((field) => field !== "documents");
 
 const labels = {
   name: "Name (Last, First, MI, Suffix)",
+  controlNumber: "Control ID",
+  source: "Source",
   vendor: "Vendor",
   requestor: "Requestor",
   dateInformationProvided: "Date Information Provided",
@@ -466,6 +471,8 @@ function normalizeRecords(recordSet) {
     const nextRecord = {
       ...record,
       name: normalizeApplicantName(record.name),
+      controlNumber: String(record.controlNumber || record.controlId || "").trim(),
+      source: String(record.source || "").trim(),
       requestor: record.requestor || "",
       outcome: normalizeOutcome(record.outcome),
       iiiStatus: normalizeIiiStatus(record.iiiStatus),
@@ -718,6 +725,18 @@ function saveApplicant(event) {
   nextRecord.outcome = normalizeOutcome(nextRecord.outcome);
   nextRecord.iiiStatus = normalizeIiiStatus(nextRecord.iiiStatus);
   nextRecord.ncicCertification = normalizeYesNo(nextRecord.ncicCertification);
+  nextRecord.controlNumber = String(nextRecord.controlNumber || "").trim();
+  if (nextRecord.controlNumber) {
+    const duplicate = records.some(
+      (record) =>
+        record.id !== id &&
+        String(record.controlNumber || "").trim().toLowerCase() === nextRecord.controlNumber.toLowerCase(),
+    );
+    if (duplicate) {
+      showMessage(formMessage, `Control ID "${nextRecord.controlNumber}" is already assigned to another applicant. Control IDs must be unique.`, true);
+      return;
+    }
+  }
   nextRecord.lastChangedBy = currentUser.name;
   nextRecord.documents = currentDocuments;
 
@@ -884,6 +903,7 @@ function getFilteredRecords() {
   return records.filter((record) => {
     const haystack = [
       record.name,
+      record.controlNumber,
       record.vendor,
       record.emailAddress,
     ]
@@ -1223,7 +1243,7 @@ function updateFormMode() {
     if (control.type === "checkbox" || control.tagName === "SELECT") {
       control.disabled = isReadOnly;
     } else {
-      control.readOnly = isReadOnly || control.id === "lastChangedBy";
+      control.readOnly = isReadOnly || control.id === "lastChangedBy" || control.id === "source";
     }
   });
   saveApplicantButton.classList.toggle("hidden", isReadOnly);

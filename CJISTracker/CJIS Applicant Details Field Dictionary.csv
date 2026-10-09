@@ -1,5 +1,7 @@
 Field Name,Internal Field Name,Data Type,Input Type / Allowed Values
 Name,name,String,Text; Last First Middle Initial Suffix
+Control ID,controlNumber,String,Text; manually entered unique external reference (secondary key; matches SQL ControlNumber)
+Source,source,String,Read-only text; populated at import or left blank
 Vendor,vendor,String,Dropdown populated from entered vendor values
 Requestor,requestor,String,Text
 Date Information Provided,dateInformationProvided,Date,Date

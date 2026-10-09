@@ -104,7 +104,7 @@
       <section class="toolbar" aria-label="Applicant filters">
         <label class="search-field">
           Search applicants
-          <input id="searchInput" type="search" placeholder="Name, vendor, or applicant email" />
+          <input id="searchInput" type="search" placeholder="Name, Control ID, vendor, or applicant email" />
         </label>
         <label>
           Clearance Type
@@ -137,6 +137,10 @@
           <label>
             Name (Last, First, MI, Suffix)
             <input id="name" type="text" autocomplete="name" placeholder="Last, First M., Suffix" required />
+          </label>
+          <label>
+            Control ID
+            <input id="controlNumber" type="text" placeholder="Unique external reference (e.g. CJIS-ECCID-001)" />
           </label>
           <label>
             Vendor
@@ -243,6 +247,10 @@
           <label>
             Query Date (every 5 years)
             <input id="queriedEveryFiveYears" type="date" />
+          </label>
+          <label>
+            Source
+            <input id="source" type="text" readonly />
           </label>
           <label>
             Last Changed By

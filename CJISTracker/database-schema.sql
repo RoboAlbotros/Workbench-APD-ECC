@@ -6,7 +6,9 @@
   - Date of Birth, Social Security Number, and Driver's License fields are intentionally excluded.
   - Access Type supports multiple selections through ApplicantAccessTypes.
   - Documents are modeled for future use even though the current UI hides the Applicant Documents field.
-  - ControlNumber is included as the shared external reference value used with Excel.
+  - ControlNumber is included as the shared external reference value used with Excel
+    (DEC-018: manually entered in the UI, unique secondary key).
+  - SourceName carries the "Source" value from imported spreadsheets (DEC-018: read-only in the UI).
 */
 
 IF DB_ID(N'CjisApplicantTracker') IS NULL
@@ -84,6 +86,7 @@ GO
 CREATE TABLE dbo.Applicants (
   ApplicantId UNIQUEIDENTIFIER NOT NULL CONSTRAINT PK_Applicants PRIMARY KEY DEFAULT (NEWID()),
   ControlNumber NVARCHAR(40) NULL CONSTRAINT UQ_Applicants_ControlNumber UNIQUE,
+  SourceName NVARCHAR(160) NULL,
   VendorId INT NOT NULL,
   ClearanceTypeId INT NULL,
   IiiStatusId INT NULL,
