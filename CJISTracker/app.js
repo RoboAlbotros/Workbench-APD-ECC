@@ -76,6 +76,9 @@ const limitedFields = [
 ];
 
 const adminFields = fields.filter((field) => !["notes", "documents"].includes(field));
+// Admin "All Applicant Records" table display: Control ID and Source are kept in the
+// data model, form, search, and CSV export but hidden from the table (owner direction 2026-10-09).
+const adminTableFields = adminFields.filter((field) => !["controlNumber", "source"].includes(field));
 const formFields = fields.filter((field) => field !== "documents");
 
 const labels = {
@@ -793,11 +796,11 @@ function renderAdminTable() {
     <thead>
       <tr>
         <th class="field-admin">Actions</th>
-        ${adminFields.map(renderHeaderCell).join("")}
+        ${adminTableFields.map(renderHeaderCell).join("")}
         <th class="field-updated">Updated</th>
       </tr>
     </thead>
-    <tbody>${renderGroupedRows(visibleRecords, renderAdminRow, adminFields.length + 2)}</tbody>
+    <tbody>${renderGroupedRows(visibleRecords, renderAdminRow, adminTableFields.length + 2)}</tbody>
   </table>`;
 
   adminTable.querySelectorAll("[data-edit]").forEach((button) => {
@@ -816,7 +819,7 @@ function renderAdminRow(record) {
         <button class="admin-action" type="button" data-edit="${record.id}">Edit</button>
       </div>
     </td>
-    ${adminFields
+    ${adminTableFields
       .map((field) => {
         return renderDataCell(field, record[field]);
       })
