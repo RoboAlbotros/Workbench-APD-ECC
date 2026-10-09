@@ -63,22 +63,23 @@ const fields = [
 const limitedFields = [
   "name",
   "controlNumber",
-  "vendor",
-  "dateInformationProvided",
   "clearanceType",
-  "outcome",
   "securityAwarenessExpiration",
-  "securityAddendum",
-  "completedFullProcess",
-  "dateOfSiteVisitOnly",
-  "emailAddress",
   "lastChangedBy",
 ];
 
 const adminFields = fields.filter((field) => !["notes", "documents"].includes(field));
-// Admin "All Applicant Records" table display: Control ID and Source are kept in the
-// data model, form, search, and CSV export but hidden from the table (owner direction 2026-10-09).
-const adminTableFields = adminFields.filter((field) => !["controlNumber", "source"].includes(field));
+// Admin table diet (DEC-019): Actions plus seven data columns. All other fields stay
+// in the data model, form, search, and CSV export.
+const adminTableFields = [
+  "clearanceType",
+  "accessType",
+  "name",
+  "requestor",
+  "iiiStatus",
+  "cjisSecurityAwarenessRole",
+  "ncicCertification",
+];
 const formFields = fields.filter((field) => field !== "documents");
 
 const labels = {
@@ -97,16 +98,22 @@ const labels = {
   ncicCertificationExpiration: "NCIC Date of Cert Expiration",
   fingerprintsNotifiedCompleted: "Fingerprints Completed",
   outcome: "Fingerprint Outcome",
-  securityAwarenessExpiration: "Security and Awareness Expiration Annually",
+  securityAwarenessExpiration: "Security and Awareness Cert",
   securityAddendum: "Security Addendum",
-  phoneNumber: "Phone Number",
+  phoneNumber: "Applicant Phone Number",
   emailAddress: "Applicant Email Address",
   documents: "Documents",
   completedFullProcess: "Completed Full Process",
   dateOfSiteVisitOnly: "Date of Site Visit Only",
-  queriedEveryFiveYears: "Query Date (every 5 years)",
+  queriedEveryFiveYears: "Next III Inquiry Due (5 yrs)",
   lastChangedBy: "Last Changed By",
   notes: "Notes",
+};
+
+const tableLabels = {
+  name: "Name",
+  cjisSecurityAwarenessRole: "CJIS Security Role",
+  securityAwarenessExpiration: "Security and Awareness Cert",
 };
 
 const ACCESS_TYPE_OPTIONS = [
@@ -121,12 +128,18 @@ const ACCESS_TYPE_OPTIONS = [
   "System/Building",
 ];
 
+let inquiryDueMigrationCount = 0;
 let records = loadRecords();
 let changeLog = loadChangeLog();
+if (inquiryDueMigrationCount) {
+  logInquiryDueMigration(inquiryDueMigrationCount);
+}
 let currentUser = null;
 let currentView = "limited";
 let currentDocuments = [];
 let currentFormMode = "edit";
+let drawerOpen = false;
+let drawerReturnFocus = null;
 
 const accessPanel = document.querySelector("#accessPanel");
 const accessForm = document.querySelector("#accessForm");
@@ -136,6 +149,12 @@ const managementAccessCode = document.querySelector("#managementAccessCode");
 const currentUserBadge = document.querySelector("#currentUserBadge");
 const signOutButton = document.querySelector("#signOutButton");
 const accessMessage = document.querySelector("#accessMessage");
+const headerMetrics = document.querySelector("#headerMetrics");
+const viewSwitch = document.querySelector("#viewSwitch");
+const sessionControls = document.querySelector("#sessionControls");
+const toolbar = document.querySelector("#toolbar");
+const drawerBackdrop = document.querySelector("#drawerBackdrop");
+const closeDrawer = document.querySelector("#closeDrawer");
 const limitedViewButton = document.querySelector("#limitedViewButton");
 const recordsViewButton = document.querySelector("#recordsViewButton");
 const adminViewButton = document.querySelector("#adminViewButton");
@@ -210,8 +229,13 @@ limitedViewButton.addEventListener("click", () => setView("limited"));
 recordsViewButton.addEventListener("click", () => setView("records"));
 adminViewButton.addEventListener("click", () => setView("admin"));
 applicantForm.addEventListener("submit", saveApplicant);
-resetForm.addEventListener("click", resetApplicantForm);
+resetForm.addEventListener("click", openNewApplicant);
+closeDrawer.addEventListener("click", closeApplicantDrawer);
+drawerBackdrop.addEventListener("click", closeApplicantDrawer);
 deleteRecord.addEventListener("click", deleteApplicant);
+document.querySelector("#dateOfIiiCompletion").addEventListener("input", syncInquiryDueField);
+document.querySelector("#dateOfIiiCompletion").addEventListener("change", syncInquiryDueField);
+document.addEventListener("keydown", handleDrawerKeydown);
 exportCsv.addEventListener("click", downloadCsv);
 documentUpload.addEventListener("change", handleDocumentUpload);
 [searchInput, clearanceFilter, outcomeFilter].forEach((control) => {
@@ -223,7 +247,13 @@ function loadRecords() {
   if (!raw) return [];
 
   try {
-    return normalizeRecords(JSON.parse(raw));
+    const parsed = JSON.parse(raw);
+    const previousDueDates = parsed.map((record) => record.queriedEveryFiveYears || "");
+    const normalized = normalizeRecords(parsed);
+    inquiryDueMigrationCount = normalized.filter((record, index) => {
+      return (record.queriedEveryFiveYears || "") !== previousDueDates[index];
+    }).length;
+    return normalized;
   } catch {
     return [];
   }
@@ -266,6 +296,7 @@ function normalizeRecords(recordSet) {
       clearanceType: normalizeClearanceType(record.clearanceType),
       securityAddendum: normalizeDateValue(record.securityAddendum),
       dateOfIiiCompletion: record.dateOfIiiCompletion || "",
+      queriedEveryFiveYears: computeInquiryDueDate(record.dateOfIiiCompletion),
       accessType: normalizeAccessType(record.accessType),
       cjisSecurityAwarenessRole: record.cjisSecurityAwarenessRole || "",
       ncicCertification: normalizeYesNo(record.ncicCertification),
@@ -383,8 +414,7 @@ function signInManagementUser(event) {
 function signOutManagementUser() {
   currentUser = null;
   currentFormMode = "edit";
-  applicantForm.reset();
-  document.querySelector("#recordId").value = "";
+  closeApplicantDrawer({ restoreFocus: false });
   showMessage(accessMessage, "Signed out.");
   updateAccessControls();
   setView("limited");
@@ -399,8 +429,13 @@ function canAccessView(view) {
 
 function updateAccessControls() {
   const signedIn = Boolean(currentUser);
-  currentUserBadge.classList.toggle("hidden", !signedIn);
-  signOutButton.classList.toggle("hidden", !signedIn);
+  document.body.classList.toggle("signed-in", signedIn);
+  document.body.classList.toggle("signed-out", !signedIn);
+  accessPanel.classList.toggle("hidden", signedIn);
+  headerMetrics.classList.toggle("hidden", !signedIn);
+  viewSwitch.classList.toggle("hidden", !signedIn);
+  sessionControls.classList.toggle("hidden", !signedIn);
+  toolbar.classList.toggle("hidden", !signedIn);
   currentUserBadge.textContent = signedIn ? `${currentUser.name} - ${ACCESS_LABELS[currentUser.role]}` : "";
 
   limitedViewButton.disabled = !canAccessView("limited");
@@ -439,7 +474,8 @@ function setView(view) {
   recordsViewButton.setAttribute("aria-selected", String(isRecords));
   adminViewButton.setAttribute("aria-selected", String(isAdmin));
   editorEyebrow.textContent = isAdmin ? "Full Record" : "Records";
-  resetForm.classList.toggle("hidden", isRecords);
+  resetForm.classList.toggle("hidden", !isAdmin);
+  if (!isAdmin && !isRecords) closeApplicantDrawer({ restoreFocus: false });
   updateFormMode();
   updateEditorVisibility();
   updateDeleteVisibility();
@@ -516,6 +552,7 @@ function saveApplicant(event) {
   }
   nextRecord.lastChangedBy = currentUser.name;
   nextRecord.documents = currentDocuments;
+  nextRecord.queriedEveryFiveYears = computeInquiryDueDate(nextRecord.dateOfIiiCompletion);
 
   const existingIndex = records.findIndex((record) => record.id === id);
   const previousRecord = existingIndex >= 0 ? records[existingIndex] : null;
@@ -535,16 +572,82 @@ function saveApplicant(event) {
 
 function resetApplicantForm() {
   currentFormMode = "edit";
+  drawerOpen = false;
   applicantForm.reset();
   currentDocuments = [];
   documentUpload.value = "";
   renderDocumentList();
   document.querySelector("#recordId").value = "";
+  syncInquiryDueField();
   updateFormMode();
   updateChangeLogVisibility();
   updateEditorVisibility();
   updateDeleteVisibility();
   showMessage(formMessage, "");
+}
+
+function openNewApplicant() {
+  if (!canAccessView("admin")) return;
+  setView("admin");
+  resetApplicantForm();
+  drawerOpen = true;
+  openApplicantDrawer(resetForm);
+  updateEditorVisibility();
+  updateFormMode();
+  showMessage(formMessage, "Enter a new applicant record.");
+  document.querySelector("#name").focus();
+}
+
+function closeApplicantDrawer(options = {}) {
+  const restoreFocus = options.restoreFocus !== false;
+  drawerOpen = false;
+  resetApplicantForm();
+  updateEditorVisibility();
+  if (restoreFocus && drawerReturnFocus && typeof drawerReturnFocus.focus === "function") {
+    drawerReturnFocus.focus();
+  }
+  drawerReturnFocus = null;
+}
+
+function openApplicantDrawer(invoker) {
+  drawerReturnFocus = invoker || document.activeElement;
+  drawerOpen = true;
+  editorPanel.classList.remove("hidden");
+  drawerBackdrop.classList.remove("hidden");
+  drawerBackdrop.hidden = false;
+  document.body.classList.add("drawer-open");
+}
+
+function getDrawerFocusable() {
+  return [...editorPanel.querySelectorAll("button, [href], input, select, textarea, [tabindex]:not([tabindex=\"-1\"])")]
+    .filter((element) => {
+      if (element.disabled || element.hidden || element.id === "recordId") return false;
+      const hiddenAncestor = element.closest(".hidden");
+      return !hiddenAncestor || hiddenAncestor === editorPanel;
+    });
+}
+
+function handleDrawerKeydown(event) {
+  if (editorPanel.classList.contains("hidden")) return;
+
+  if (event.key === "Escape") {
+    event.preventDefault();
+    closeApplicantDrawer();
+    return;
+  }
+
+  if (event.key !== "Tab") return;
+  const focusable = getDrawerFocusable();
+  if (!focusable.length) return;
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  }
 }
 
 function deleteApplicant() {
@@ -638,20 +741,25 @@ function loadApplicantForm(id, mode) {
   currentDocuments = Array.isArray(record.documents) ? [...record.documents] : [];
   documentUpload.value = "";
   renderDocumentList();
+  syncInquiryDueField();
+  drawerOpen = true;
   updateFormMode();
   updateChangeLogVisibility();
   updateEditorVisibility();
   updateDeleteVisibility();
   showMessage(formMessage, mode === "view" ? "Viewing applicant record in read-only mode." : "Editing applicant record.");
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  const firstField = document.querySelector("#name");
+  firstField?.focus();
 }
 
-function editApplicant(id) {
+function editApplicant(id, invoker) {
   loadApplicantForm(id, "edit");
+  openApplicantDrawer(invoker);
 }
 
-function viewApplicant(id) {
+function viewApplicant(id, invoker) {
   loadApplicantForm(id, "view");
+  openApplicantDrawer(invoker);
 }
 
 function renderAll() {
@@ -682,6 +790,7 @@ function getFilteredRecords() {
       record.name,
       record.controlNumber,
       record.vendor,
+      record.requestor,
       record.emailAddress,
     ]
       .join(" ")
@@ -751,18 +860,18 @@ function renderRecordsTable() {
   </table>`;
 
   recordsTable.querySelectorAll("[data-edit]").forEach((button) => {
-    button.addEventListener("click", () => editApplicant(button.dataset.edit));
+    button.addEventListener("click", () => editApplicant(button.dataset.edit, button));
   });
   recordsTable.querySelectorAll("[data-view]").forEach((button) => {
-    button.addEventListener("click", () => viewApplicant(button.dataset.view));
+    button.addEventListener("click", () => viewApplicant(button.dataset.view, button));
   });
 }
 
 function renderRecordsRow(record) {
-  return `<tr>
+  return `<tr${rowExpiredAttributes(record)}>
     ${limitedFields
       .map((field) => {
-        return renderDataCell(field, record[field]);
+        return renderDataCell(field, record[field], record);
       })
       .join("")}
     <td class="field-admin">
@@ -775,11 +884,11 @@ function renderRecordsRow(record) {
 }
 
 function renderLimitedRow(record) {
-  return `<tr>
+  return `<tr${rowExpiredAttributes(record)}>
     ${limitedFields
       .map((field) => {
         const value = record[field];
-        return renderDataCell(field, value);
+        return renderDataCell(field, value, record);
       })
       .join("")}
   </tr>`;
@@ -797,22 +906,21 @@ function renderAdminTable() {
       <tr>
         <th class="field-admin">Actions</th>
         ${adminTableFields.map(renderHeaderCell).join("")}
-        <th class="field-updated">Updated</th>
       </tr>
     </thead>
-    <tbody>${renderGroupedRows(visibleRecords, renderAdminRow, adminTableFields.length + 2)}</tbody>
+    <tbody>${renderGroupedRows(visibleRecords, renderAdminRow, adminTableFields.length + 1)}</tbody>
   </table>`;
 
   adminTable.querySelectorAll("[data-edit]").forEach((button) => {
-    button.addEventListener("click", () => editApplicant(button.dataset.edit));
+    button.addEventListener("click", () => editApplicant(button.dataset.edit, button));
   });
   adminTable.querySelectorAll("[data-view]").forEach((button) => {
-    button.addEventListener("click", () => viewApplicant(button.dataset.view));
+    button.addEventListener("click", () => viewApplicant(button.dataset.view, button));
   });
 }
 
 function renderAdminRow(record) {
-  return `<tr>
+  return `<tr${rowExpiredAttributes(record)}>
     <td class="field-admin">
       <div class="record-actions">
         <button class="admin-action" type="button" data-view="${record.id}">View</button>
@@ -821,10 +929,9 @@ function renderAdminRow(record) {
     </td>
     ${adminTableFields
       .map((field) => {
-        return renderDataCell(field, record[field]);
+        return renderDataCell(field, record[field], record);
       })
       .join("")}
-    <td class="field-updated">${formatDateTime(record.updatedAt)}</td>
   </tr>`;
 }
 
@@ -906,47 +1013,35 @@ function serializeFieldValue(value) {
 }
 
 function renderHeaderCell(field) {
-  return `<th class="field-${field}">${escapeHtml(labels[field])}</th>`;
+  return `<th class="field-${field}">${escapeHtml(tableLabels[field] || labels[field])}</th>`;
 }
 
 function renderGroupedRows(sortedRecords, rowRenderer, columnCount) {
-  let currentClearanceType = "";
+  let currentVendor = "";
   return sortedRecords
     .map((record) => {
-      const clearanceType = getClearanceGroupName(record);
-      const clearanceHeader =
-        clearanceType !== currentClearanceType
-          ? `<tr class="clearance-group-row"><th colspan="${columnCount}">Clearance Type: ${escapeHtml(clearanceType)}</th></tr>`
+      const vendor = getVendorGroupName(record);
+      const vendorHeader =
+        vendor !== currentVendor
+          ? `<tr class="vendor-group-row"><th colspan="${columnCount}">${escapeHtml(vendor)}</th></tr>`
           : "";
 
-      currentClearanceType = clearanceType;
-      return `${clearanceHeader}${rowRenderer(record)}`;
+      currentVendor = vendor;
+      return `${vendorHeader}${rowRenderer(record)}`;
     })
     .join("");
 }
 
 function getSortedRecords(recordSet) {
   return [...recordSet].sort((a, b) => {
-    const clearanceCompare = getGroupSortValue(getClearanceGroupName(a), CLEARANCE_GROUP_ORDER)
-      - getGroupSortValue(getClearanceGroupName(b), CLEARANCE_GROUP_ORDER);
-    if (clearanceCompare !== 0) return clearanceCompare;
-
-    const nameCompare = String(a.name || "").localeCompare(String(b.name || ""));
-    if (nameCompare !== 0) return nameCompare;
-
-    return getDateSortValue(a.dateInformationProvided) - getDateSortValue(b.dateInformationProvided);
+    const vendorCompare = getVendorGroupName(a).localeCompare(getVendorGroupName(b), undefined, { sensitivity: "base" });
+    if (vendorCompare !== 0) return vendorCompare;
+    return String(a.name || "").localeCompare(String(b.name || ""), undefined, { sensitivity: "base" });
   });
 }
 
-const CLEARANCE_GROUP_ORDER = ["Full Clearance", "One Time Visit", "No Access Given", "No Clearance Type"];
-
-function getGroupSortValue(value, order) {
-  const index = order.indexOf(value);
-  return index >= 0 ? index : order.length;
-}
-
-function getClearanceGroupName(record) {
-  return String(record.clearanceType || "").trim() || "No Clearance Type";
+function getVendorGroupName(record) {
+  return String(record.vendor || "").trim() || "Vendor Not Specified";
 }
 
 function getDateSortValue(value) {
@@ -955,7 +1050,7 @@ function getDateSortValue(value) {
   return Number.isNaN(timestamp) ? Number.MAX_SAFE_INTEGER : timestamp;
 }
 
-function renderDataCell(field, value) {
+function renderDataCell(field, value, record) {
   if (field === "documents") {
     return `<td class="field-documents">${renderDocumentSummary(value)}</td>`;
   }
@@ -963,7 +1058,26 @@ function renderDataCell(field, value) {
   const content = field === "accessType"
     ? renderBadgeList(value)
     : isBadgeField(field) ? renderBadge(value) : formatFieldValue(field, value);
-  return `<td class="field-${field}">${content}</td>`;
+  const expired = field === "securityAwarenessExpiration" && record && isSecurityCertExpired(record);
+  const extraClass = expired ? " security-cert-expired" : "";
+  const extraAttrs = expired
+    ? ` title="Out of compliance: Security and Awareness certification has expired" aria-label="${escapeHtml(`${String(value || "").trim() || "Security and Awareness Cert"}, expired and out of compliance`)}"`
+    : "";
+  return `<td class="field-${field}${extraClass}"${extraAttrs}>${content}</td>`;
+}
+
+function isSecurityCertExpired(record) {
+  if (!record.securityAwarenessExpiration) return false;
+  const expiration = new Date(`${record.securityAwarenessExpiration}T00:00:00`);
+  if (Number.isNaN(expiration.getTime())) return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return expiration < today;
+}
+
+function rowExpiredAttributes(record) {
+  if (!isSecurityCertExpired(record)) return "";
+  return ` class="compliance-expired-row" title="Out of compliance: Security and Awareness certification has expired"`;
 }
 
 function renderDocumentSummary(value) {
@@ -1008,15 +1122,25 @@ function updateDeleteVisibility() {
 
 function updateEditorVisibility() {
   const hasSelectedRecord = Boolean(document.querySelector("#recordId").value);
-  const showForAdmin = currentView === "admin" && canAccessView("admin");
+  const showForAdmin = currentView === "admin" && canAccessView("admin") && (hasSelectedRecord || drawerOpen);
   const showForRecords = currentView === "records" && hasSelectedRecord;
-  editorPanel.classList.toggle("hidden", !showForAdmin && !showForRecords);
+  const shouldShow = showForAdmin || showForRecords;
+  editorPanel.classList.toggle("hidden", !shouldShow);
+  drawerBackdrop.classList.toggle("hidden", !shouldShow);
+  drawerBackdrop.hidden = !shouldShow;
+  document.body.classList.toggle("drawer-open", shouldShow);
 }
 
 function updateFormMode() {
   const isReadOnly = currentFormMode === "view";
   applicantForm.querySelectorAll("input, select, textarea").forEach((control) => {
     if (control.id === "recordId") return;
+    if (control.id === "queriedEveryFiveYears") {
+      control.readOnly = true;
+      control.setAttribute("aria-readonly", "true");
+      control.classList.add("calculated-readonly-field");
+      return;
+    }
     if (control.type === "checkbox" || control.tagName === "SELECT") {
       control.disabled = isReadOnly;
     } else {
@@ -1039,11 +1163,58 @@ function formatFieldValue(field, value) {
 }
 
 function isQueryDue(record) {
-  if (!record.queriedEveryFiveYears) return true;
-  const queried = new Date(`${record.queriedEveryFiveYears}T00:00:00`);
-  const due = new Date(queried);
-  due.setFullYear(due.getFullYear() + 5);
-  return due <= new Date();
+  if (!record.queriedEveryFiveYears) return false;
+  const due = new Date(`${record.queriedEveryFiveYears}T00:00:00`);
+  if (Number.isNaN(due.getTime())) return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return due <= today;
+}
+
+function parseIiiCompletionDate(value) {
+  const text = String(value || "").trim();
+  if (!text) return null;
+  const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text);
+  if (iso) return { year: Number(iso[1]), month: Number(iso[2]), day: Number(iso[3]) };
+  const ddmm = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(text);
+  if (ddmm) return { year: Number(ddmm[3]), month: Number(ddmm[2]), day: Number(ddmm[1]) };
+  return null;
+}
+
+function addYearsToDateParts(parts, years) {
+  const targetYear = parts.year + years;
+  const lastDay = new Date(targetYear, parts.month, 0).getDate();
+  return { year: targetYear, month: parts.month, day: Math.min(parts.day, lastDay) };
+}
+
+function computeInquiryDueDate(iiiCompletion) {
+  const parts = parseIiiCompletionDate(iiiCompletion);
+  if (!parts) return "";
+  return toIsoDate(addYearsToDateParts(parts, 5));
+}
+
+function syncInquiryDueField() {
+  const dueField = document.querySelector("#queriedEveryFiveYears");
+  const iiiField = document.querySelector("#dateOfIiiCompletion");
+  if (!dueField || !iiiField) return;
+  dueField.value = computeInquiryDueDate(iiiField.value);
+}
+
+function logInquiryDueMigration(changedCount) {
+  changeLog.unshift({
+    id: crypto.randomUUID(),
+    recordId: "inquiry-due-migration",
+    applicantName: `${changedCount} stored record(s)`,
+    vendor: "",
+    action: "Migrated",
+    changes: [`Recomputed Next III Inquiry Due (5 yrs) for ${changedCount} stored record(s) from Date of III Completion + 5 years.`],
+    changedBy: "System",
+    role: "admin",
+    roleLabel: "System",
+    changedAt: new Date().toISOString(),
+  });
+  changeLog = changeLog.slice(0, 500);
+  saveChangeLog();
 }
 
 // --- CSV import (SPRINT-004) -------------------------------------------------

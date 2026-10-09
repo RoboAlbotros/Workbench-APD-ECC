@@ -31,7 +31,13 @@ one-time pre-go-live function); re-enable it by uncommenting that section.
 The application ships with no built-in records; data arrives via manual entry or CSV
 import only.
 Notes remain editable on applicant records but are hidden from list tables.
-Applicant list tables are grouped by Clearance Type.
+Applicant list tables are grouped by Vendor (default grouping).
+The Full Admin table shows Actions plus Clearance Type, Access Type, Name,
+Requestor, III - Status, CJIS Security Role, and NCIC Certification. Remaining
+fields are edited in the slide-in record drawer.
+Next III Inquiry Due (5 yrs) is a calculated, read-only date equal to Date of
+III Completion plus 5 years. The Query Due metric counts records whose due date
+is on or before today.
 
 These access codes are local prototype controls. For production use, replace them with server-side authentication, authorization, and audit logging (recorded direction: City SSO / Entra ID with server-side role-based access, decision DEC-015).
 
@@ -52,14 +58,14 @@ Access Type supports multiple selections.
 - CJIS Security and Awareness Role
 - Fingerprints Completed
 - Fingerprint Outcome
-- Security and Awareness Expiration Annually
+- Security and Awareness Cert
 - Security Addendum
 - NCIC Date of Cert Expiration
 - NCIC Certification
-- Phone Number
+- Applicant Phone Number
 - Completed Full Process
 - Date of Site Visit Only
-- Query Date (every 5 years)
+- Next III Inquiry Due (5 yrs) (calculated from Date of III Completion + 5 years)
 - Last Changed By
 - Applicant Email Address
 - Documents

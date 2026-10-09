@@ -6,14 +6,29 @@
     <title>CJIS Applicant Tracker</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
-  <body>
-    <main class="shell">
-      <section class="topbar" aria-label="Application controls">
-        <div>
-          <p class="eyebrow">Criminal Justice Information Services</p>
-          <h1>CJIS Applicant Tracker</h1>
+  <body class="signed-out">
+    <header class="app-header" aria-label="Application header">
+      <h1>CJIS Applicant Tracker</h1>
+      <div id="headerMetrics" class="header-metrics hidden" aria-label="Applicant summary">
+        <div class="metric">
+          <span id="totalCount">0</span>
+          <p>Total</p>
         </div>
-        <div class="view-switch" role="tablist" aria-label="View mode">
+        <div class="metric">
+          <span id="fullClearanceCount">0</span>
+          <p>Full Clearance</p>
+        </div>
+        <div class="metric">
+          <span id="siteVisitCount">0</span>
+          <p>One Time Visit</p>
+        </div>
+        <div class="metric">
+          <span id="queryDueCount">0</span>
+          <p>Query Due</p>
+        </div>
+      </div>
+      <div class="header-controls">
+        <div id="viewSwitch" class="view-switch hidden" role="tablist" aria-label="View mode">
           <button id="limitedViewButton" class="active" type="button" role="tab" aria-selected="true">
             Limited View
           </button>
@@ -24,15 +39,20 @@
             Full Admin
           </button>
         </div>
-      </section>
+        <div id="sessionControls" class="session-controls hidden">
+          <span id="currentUserBadge" class="status-pill"></span>
+          <button id="signOutButton" class="secondary-action" type="button">Sign Out</button>
+        </div>
+      </div>
+    </header>
 
+    <main class="shell">
       <section id="accessPanel" class="panel access-panel" aria-labelledby="accessHeading">
         <div class="panel-heading">
           <div>
             <p class="eyebrow">Management Access</p>
             <h2 id="accessHeading">Sign In</h2>
           </div>
-          <span id="currentUserBadge" class="status-pill hidden"></span>
         </div>
         <form id="accessForm" class="record-form compact-form">
           <label>
@@ -54,7 +74,6 @@
           </label>
           <div class="form-actions">
             <button class="primary-action" type="submit">Sign In</button>
-            <button id="signOutButton" class="secondary-action hidden" type="button">Sign Out</button>
           </div>
           <p id="accessMessage" class="form-message" role="status"></p>
         </form>
@@ -82,29 +101,10 @@
         </form>
       </section>
 
-      <section class="summary-grid" aria-label="Applicant summary">
-        <div class="metric">
-          <span id="totalCount">0</span>
-          <p>Total Applicants</p>
-        </div>
-        <div class="metric">
-          <span id="fullClearanceCount">0</span>
-          <p>Full Clearance</p>
-        </div>
-        <div class="metric">
-          <span id="siteVisitCount">0</span>
-          <p>One Time Visit</p>
-        </div>
-        <div class="metric">
-          <span id="queryDueCount">0</span>
-          <p>Query Due</p>
-        </div>
-      </section>
-
-      <section class="toolbar" aria-label="Applicant filters">
+      <section id="toolbar" class="toolbar hidden" aria-label="Applicant filters">
         <label class="search-field">
           Search applicants
-          <input id="searchInput" type="search" placeholder="Name, Control ID, vendor, or applicant email" />
+          <input id="searchInput" type="search" placeholder="Name, Control ID, vendor, requestor, or applicant email" />
         </label>
         <label>
           Clearance Type
@@ -121,166 +121,10 @@
             <option value="all">All fingerprint outcomes</option>
           </select>
         </label>
+        <button id="resetForm" class="primary-action hidden" type="button">New Applicant</button>
       </section>
 
-      <section id="editorPanel" class="panel editor-panel hidden" aria-labelledby="formHeading">
-        <div class="panel-heading">
-          <div>
-            <p id="editorEyebrow" class="eyebrow">Records</p>
-            <h2 id="formHeading">Applicant Details</h2>
-          </div>
-          <button id="resetForm" class="secondary-action" type="button">New Applicant</button>
-        </div>
-
-        <form id="applicantForm" class="record-form">
-          <input id="recordId" type="hidden" />
-          <label>
-            Name (Last, First, MI, Suffix)
-            <input id="name" type="text" autocomplete="name" placeholder="Last, First M., Suffix" required />
-          </label>
-          <label>
-            Control ID
-            <input id="controlNumber" type="text" placeholder="Unique external reference (e.g. CJIS-ECCID-001)" />
-          </label>
-          <label>
-            Vendor
-            <input id="vendor" type="text" list="vendorOptions" required />
-          </label>
-          <label>
-            Requestor
-            <input id="requestor" type="text" />
-          </label>
-          <label>
-            Date Information Provided
-            <input id="dateInformationProvided" type="date" />
-          </label>
-          <label>
-            Date of III Completion
-            <input id="dateOfIiiCompletion" type="text" inputmode="numeric" placeholder="DD/MM/YYYY" pattern="\d{2}/\d{2}/\d{4}" />
-          </label>
-          <label>
-            III - Status
-            <select id="iiiStatus">
-              <option value="">Select status</option>
-              <option>Clear</option>
-              <option>Misd/Clear</option>
-              <option>Felony</option>
-            </select>
-          </label>
-          <label>
-            Clearance Type
-            <select id="clearanceType" required>
-              <option value="">Select type</option>
-              <option>Full Clearance</option>
-              <option>One Time Visit</option>
-              <option>No Access Given</option>
-            </select>
-          </label>
-          <fieldset id="accessType" class="checkbox-group">
-            <legend>Access Type</legend>
-            <label><input type="checkbox" name="accessTypeValues" value="VPN" /> VPN</label>
-            <label><input type="checkbox" name="accessTypeValues" value="Non VPN" /> Non VPN</label>
-            <label><input type="checkbox" name="accessTypeValues" value="Security Groups" /> Security Groups</label>
-            <label><input type="checkbox" name="accessTypeValues" value="Facility Access" /> Facility Access</label>
-            <label><input type="checkbox" name="accessTypeValues" value="Unescorted Access" /> Unescorted Access</label>
-            <label><input type="checkbox" name="accessTypeValues" value="Building Access" /> Building Access</label>
-            <label><input type="checkbox" name="accessTypeValues" value="Escorted Access" /> Escorted Access</label>
-            <label><input type="checkbox" name="accessTypeValues" value="System Access" /> System Access</label>
-            <label><input type="checkbox" name="accessTypeValues" value="System/Building" /> System/Building</label>
-          </fieldset>
-          <label>
-            CJIS Security and Awareness Role
-            <select id="cjisSecurityAwarenessRole">
-              <option value="">Select role</option>
-              <option>Basic</option>
-              <option>General</option>
-              <option>Privileged</option>
-              <option>Security</option>
-            </select>
-          </label>
-          <label>
-            Fingerprints Completed
-            <input id="fingerprintsNotifiedCompleted" type="date" />
-          </label>
-          <label>
-            Fingerprint Outcome
-            <select id="outcome">
-              <option value="">Select outcome</option>
-              <option>Clear</option>
-              <option>Misd/Clear</option>
-              <option>Felony</option>
-              <option>Needs Follow Up</option>
-            </select>
-          </label>
-          <label>
-            Security and Awareness Expiration Annually
-            <input id="securityAwarenessExpiration" type="date" />
-          </label>
-          <label>
-            Security Addendum
-            <input id="securityAddendum" type="date" />
-          </label>
-          <label>
-            NCIC Date of Cert Expiration
-            <input id="ncicCertificationExpiration" type="date" />
-          </label>
-          <label>
-            NCIC Certification
-            <select id="ncicCertification">
-              <option value="">Select Y/N</option>
-              <option>Y</option>
-              <option>N</option>
-            </select>
-          </label>
-          <label>
-            Phone Number
-            <input id="phoneNumber" type="tel" autocomplete="tel" />
-          </label>
-          <label>
-            Completed Full Process
-            <input id="completedFullProcess" type="date" />
-          </label>
-          <label>
-            Date of Site Visit Only
-            <input id="dateOfSiteVisitOnly" type="date" />
-          </label>
-          <label>
-            Query Date (every 5 years)
-            <input id="queriedEveryFiveYears" type="date" />
-          </label>
-          <label>
-            Source
-            <input id="source" type="text" readonly />
-          </label>
-          <label>
-            Last Changed By
-            <input id="lastChangedBy" type="text" readonly />
-          </label>
-          <label>
-            Applicant Email Address
-            <input id="emailAddress" type="email" autocomplete="email" />
-          </label>
-          <label class="field-documents hidden">
-            Applicant Documents
-            <input id="documentUpload" type="file" multiple />
-          </label>
-          <div class="document-list-wrap hidden">
-            <p class="field-caption">Uploaded Documents</p>
-            <div id="documentList" class="document-list"></div>
-          </div>
-          <label class="field-notes">
-            Notes
-            <textarea id="notes" rows="3"></textarea>
-          </label>
-          <div class="form-actions">
-            <button id="saveApplicantButton" class="primary-action" type="submit">Save Applicant</button>
-            <button id="deleteRecord" class="secondary-action danger hidden" type="button">Delete</button>
-          </div>
-          <p id="formMessage" class="form-message" role="status"></p>
-        </form>
-      </section>
-
-      <section id="limitedView" class="workspace">
+      <section id="limitedView" class="workspace hidden">
         <section class="panel" aria-labelledby="limitedHeading">
           <div class="panel-heading">
             <div>
@@ -347,21 +191,198 @@
             </div>
             <div id="adminTable" class="table-wrap" aria-live="polite"></div>
           </section>
-          <section id="changeLogPanel" class="panel hidden" aria-labelledby="changeLogHeading">
-            <div class="panel-heading">
-              <div>
-                <p class="eyebrow">Audit Trail</p>
-                <h2 id="changeLogHeading">Change Log</h2>
-              </div>
-            </div>
-            <div id="changeLogTable" class="table-wrap change-log-wrap" aria-live="polite"></div>
-          </section>
         </section>
       </section>
       <datalist id="vendorOptions"></datalist>
     </main>
 
+    <div id="drawerBackdrop" class="drawer-backdrop hidden" hidden></div>
+    <aside id="editorPanel" class="record-drawer hidden" role="dialog" aria-modal="true" aria-labelledby="formHeading">
+      <div class="drawer-header">
+        <div>
+          <p id="editorEyebrow" class="eyebrow">Records</p>
+          <h2 id="formHeading">Applicant Details</h2>
+        </div>
+        <button id="closeDrawer" class="secondary-action" type="button" aria-label="Close applicant form">Close</button>
+      </div>
+
+      <form id="applicantForm" class="record-form drawer-form">
+        <input id="recordId" type="hidden" />
+
+        <fieldset class="form-section">
+          <legend>Identity</legend>
+          <label>
+            Name (Last, First, MI, Suffix)
+            <input id="name" type="text" autocomplete="name" placeholder="Last, First M., Suffix" required />
+          </label>
+          <label>
+            Control ID
+            <input id="controlNumber" type="text" placeholder="Unique external reference (e.g. CJIS-ECCID-001)" />
+          </label>
+          <label>
+            Vendor
+            <input id="vendor" type="text" list="vendorOptions" required />
+          </label>
+          <label>
+            Requestor
+            <input id="requestor" type="text" />
+          </label>
+          <label>
+            Source
+            <input id="source" type="text" readonly />
+          </label>
+          <label>
+            Last Changed By
+            <input id="lastChangedBy" type="text" readonly />
+          </label>
+        </fieldset>
+
+        <fieldset class="form-section">
+          <legend>Clearance &amp; Access</legend>
+          <label>
+            Clearance Type
+            <select id="clearanceType" required>
+              <option value="">Select type</option>
+              <option>Full Clearance</option>
+              <option>One Time Visit</option>
+              <option>No Access Given</option>
+            </select>
+          </label>
+          <fieldset id="accessType" class="checkbox-group">
+            <legend>Access Type</legend>
+            <label><input type="checkbox" name="accessTypeValues" value="VPN" /> VPN</label>
+            <label><input type="checkbox" name="accessTypeValues" value="Non VPN" /> Non VPN</label>
+            <label><input type="checkbox" name="accessTypeValues" value="Security Groups" /> Security Groups</label>
+            <label><input type="checkbox" name="accessTypeValues" value="Facility Access" /> Facility Access</label>
+            <label><input type="checkbox" name="accessTypeValues" value="Unescorted Access" /> Unescorted Access</label>
+            <label><input type="checkbox" name="accessTypeValues" value="Building Access" /> Building Access</label>
+            <label><input type="checkbox" name="accessTypeValues" value="Escorted Access" /> Escorted Access</label>
+            <label><input type="checkbox" name="accessTypeValues" value="System Access" /> System Access</label>
+            <label><input type="checkbox" name="accessTypeValues" value="System/Building" /> System/Building</label>
+          </fieldset>
+          <label>
+            III - Status
+            <select id="iiiStatus">
+              <option value="">Select status</option>
+              <option>Clear</option>
+              <option>Misd/Clear</option>
+              <option>Felony</option>
+            </select>
+          </label>
+          <label>
+            CJIS Security and Awareness Role
+            <select id="cjisSecurityAwarenessRole">
+              <option value="">Select role</option>
+              <option>Basic</option>
+              <option>General</option>
+              <option>Privileged</option>
+              <option>Security</option>
+            </select>
+          </label>
+        </fieldset>
+
+        <fieldset class="form-section">
+          <legend>Certifications &amp; Dates</legend>
+          <label>
+            Date Information Provided
+            <input id="dateInformationProvided" type="date" />
+          </label>
+          <label>
+            Date of III Completion
+            <input id="dateOfIiiCompletion" type="text" inputmode="numeric" placeholder="DD/MM/YYYY" pattern="\d{2}/\d{2}/\d{4}" />
+          </label>
+          <label>
+            Next III Inquiry Due (5 yrs)
+            <input id="queriedEveryFiveYears" type="date" readonly aria-readonly="true" class="calculated-readonly-field" />
+          </label>
+          <p class="field-caption">Next III Inquiry Due is calculated as Date of III Completion plus 5 years.</p>
+          <label>
+            Fingerprints Completed
+            <input id="fingerprintsNotifiedCompleted" type="date" />
+          </label>
+          <label>
+            Fingerprint Outcome
+            <select id="outcome">
+              <option value="">Select outcome</option>
+              <option>Clear</option>
+              <option>Misd/Clear</option>
+              <option>Felony</option>
+              <option>Needs Follow Up</option>
+            </select>
+          </label>
+          <label>
+            Security and Awareness Cert
+            <input id="securityAwarenessExpiration" type="date" />
+          </label>
+          <label>
+            Security Addendum
+            <input id="securityAddendum" type="date" />
+          </label>
+          <label>
+            NCIC Date of Cert Expiration
+            <input id="ncicCertificationExpiration" type="date" />
+          </label>
+          <label>
+            NCIC Certification
+            <select id="ncicCertification">
+              <option value="">Select Y/N</option>
+              <option>Y</option>
+              <option>N</option>
+            </select>
+          </label>
+          <label>
+            Completed Full Process
+            <input id="completedFullProcess" type="date" />
+          </label>
+          <label>
+            Date of Site Visit Only
+            <input id="dateOfSiteVisitOnly" type="date" />
+          </label>
+        </fieldset>
+
+        <fieldset class="form-section">
+          <legend>Contact &amp; Notes</legend>
+          <label>
+            Applicant Phone Number
+            <input id="phoneNumber" type="tel" autocomplete="tel" />
+          </label>
+          <label>
+            Applicant Email Address
+            <input id="emailAddress" type="email" autocomplete="email" />
+          </label>
+          <label class="field-documents hidden">
+            Applicant Documents
+            <input id="documentUpload" type="file" multiple />
+          </label>
+          <div class="document-list-wrap hidden">
+            <p class="field-caption">Uploaded Documents</p>
+            <div id="documentList" class="document-list"></div>
+          </div>
+          <label class="field-notes">
+            Notes
+            <textarea id="notes" rows="3"></textarea>
+          </label>
+        </fieldset>
+
+        <div class="form-actions">
+          <button id="saveApplicantButton" class="primary-action" type="submit">Save Applicant</button>
+          <button id="deleteRecord" class="secondary-action danger hidden" type="button">Delete</button>
+        </div>
+        <p id="formMessage" class="form-message" role="status"></p>
+      </form>
+
+      <section id="changeLogPanel" class="panel hidden" aria-labelledby="changeLogHeading">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Audit Trail</p>
+            <h2 id="changeLogHeading">Change Log</h2>
+          </div>
+        </div>
+        <div id="changeLogTable" class="table-wrap change-log-wrap" aria-live="polite"></div>
+      </section>
+    </aside>
+
     <script src="app.js"></script>
-  <script src="tracker-list-overrides.js"></script>
-</body>
+    <!-- tracker-list-overrides.js retired in SPRINT-005; behaviors folded into app.js and styles.css. -->
+  </body>
 </html>

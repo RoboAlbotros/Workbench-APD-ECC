@@ -1,14 +1,12 @@
 # Sprint 005 — UI/UX redesign: Tabbed Workspace with Form Drawer (Option B)
 
-Status: PROPOSED (awaiting owner go)
+Status: IN PROGRESS
 Owner: Brett (technical and UX/accessibility owner); product impact approval Jessica Solis
 Version: 0.1.0
-Approval: Direction selected 2026-10-09 by project owner Brett (DEC-019, verbatim
-statements below). Sprint designation recorded earlier the same session ("I agree we
-will redesign in sprint SPRINT-005." — project.json history run 20 context).
-Implementation NOT yet authorized; owner go and governance approval (Jessica Solis +
-Annamarie Zambrano, relay permitted per prior sprints with ratification open) required
-before any code change.
+Approval: Direction selected 2026-10-09 by project owner Brett (DEC-019). Owner go
+recorded 2026-10-09T10:27:00-06:00 ("go") — project.json history run 24. Sprint
+approval relayed by the project owner on behalf of joint governance authorities
+Jessica Solis and Annamarie Zambrano, consistent with prior sprints; ratification open.
 Date: 2026-10-09
 Controlling work ID: SPRINT-005
 
@@ -92,8 +90,8 @@ localStorage persistence are unchanged.
    sections (Identity, Clearance & Access, Certifications & Dates, Contact & Notes),
    keyboard- and focus-trap-accessible (Escape closes, focus returns to the invoking
    control), eliminating the current jump-to-top behavior.
-6. **Overlay retirement** — delete `tracker-list-overrides.js` and its `index.html`
-   script tag after folding ALL of its behaviors into `app.js`/`styles.css`:
+6. **Overlay retirement** — stop loading `tracker-list-overrides.js` from `index.html`
+   after folding ALL of its behaviors into `app.js`/`styles.css` (file retained unused):
    - Label renames: "Query Date (every 5 years)" → "Next III Inquiry Due (5 yrs)";
      "Security and Awareness Expiration Annually" → "Security and Awareness Cert";
      "Phone Number" → "Applicant Phone Number".
@@ -179,7 +177,8 @@ localStorage persistence are unchanged.
 - **Export CSV button removal:** the overlay currently removes any "Export CSV"
   button from the UI. Carrying this forward natively conflicts in spirit with the
   acceptance criterion that CSV export be unaffected (export code remains, but the
-  control is inaccessible). Owner to confirm: keep the Export CSV button removed in
-  the redesigned UI, or restore it?
+  control is inaccessible). Implementation keeps the Export CSV button visible in
+  the admin table heading pending owner confirmation. Owner to confirm: keep the
+  Export CSV button removed in the redesigned UI, or restore it?
 - None on column mapping: "Requestor" maps to the existing `requestor` field key
   (resolved — see mapping table).

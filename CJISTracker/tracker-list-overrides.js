@@ -1,3 +1,8 @@
+/*
+  Retired in SPRINT-005. This file is no longer loaded by index.html.
+  Vendor grouping, Inquiry Due calculation, expired-cert highlighting,
+  label renames, and compact density now live in app.js and styles.css.
+*/
 (function () {
   "use strict";
 

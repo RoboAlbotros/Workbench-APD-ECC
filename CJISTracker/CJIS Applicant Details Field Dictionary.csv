@@ -12,14 +12,14 @@ Access Type,accessType,"Array<String>",Checkbox group; VPN | Non VPN | Security 
 CJIS Security and Awareness Role,cjisSecurityAwarenessRole,Enum,Basic | General | Privileged | Security
 Fingerprints Completed,fingerprintsNotifiedCompleted,Date,Date
 Fingerprint Outcome,outcome,Enum,Clear | Misd/Clear | Felony | Needs Follow Up
-Security and Awareness Expiration Annually,securityAwarenessExpiration,Date,Date
+Security and Awareness Cert,securityAwarenessExpiration,Date,Date
 Security Addendum,securityAddendum,Date,Date
 NCIC Date of Cert Expiration,ncicCertificationExpiration,Date,Date
 NCIC Certification,ncicCertification,Boolean / Enum,Yes | No
 Completed Full Process,completedFullProcess,Date,Date
 Date of Site Visit Only,dateOfSiteVisitOnly,Date,Date
-Query Date (Every 5 Years),queriedEveryFiveYears,Date,Date
+Next III Inquiry Due (5 yrs),queriedEveryFiveYears,Date,Calculated read-only; Date of III Completion + 5 years
 Applicant Email Address,emailAddress,String,Email
-Phone Number,phoneNumber,String,Telephone
+Applicant Phone Number,phoneNumber,String,Telephone
 Last Changed By,lastChangedBy,String,System-maintained user name
 Notes,notes,String,Multiline text

@@ -19,8 +19,8 @@
   },
   "state": {
     "lifecycleStage": "development",
-    "frameworkPhase": "post-SPRINT-004",
-    "workStatus": "paused",
+    "frameworkPhase": "SPRINT-005",
+    "workStatus": "active",
     "blockingState": "clear",
     "blockers": [],
     "health": {
@@ -44,13 +44,12 @@
     "summary": {
       "outcome": "TBD — owner decision required.",
       "accountableOwner": "Jessica Solis (product owner)",
-      "nextMilestone": "SPRINT-005 (UI/UX redesign, Option B) proposal drafted and awaiting owner go/governance approval; then release preparation toward 0.1.0",
-      "nextRequiredDecision": "Owner go and governance approval of the PROPOSED SPRINT-005 sprint (docs/planning/sprints/sprint-005-ui-redesign.md); owner answer on the Export CSV button open question",
+      "nextMilestone": "SPRINT-005 (UI/UX redesign, Option B) implementation in progress; then G-TEST and sprint close",
+      "nextRequiredDecision": "Export CSV button in redesigned UI: keep removed (overlay behavior) or restore — currently kept visible pending owner answer; G-TEST when implementation complete",
       "decisionsRequired": [
-        "Approve SPRINT-005 proposal (owner go; governance authorities)",
         "Export CSV button in redesigned UI: keep removed (current overlay behavior) or restore"
       ],
-      "lastUpdated": "2026-10-09T10:23:00-06:00"
+      "lastUpdated": "2026-10-09T10:27:00-06:00"
     }
   },
   "release": {
@@ -149,7 +148,7 @@
     "nistAppendix": "docs/appendices/nist/README.md",
     "prototype": "CJISTracker/README.md"
   },
-  "currentAuthorizedWork": null,
+  "currentAuthorizedWork": "SPRINT-005",
   "history": [
     { "timestamp": "2026-10-05", "actor": "Codex primary agent (run 1)", "event": "Draft governing documents created in empty directory.", "basis": "User-pasted SGK initialization request" },
     { "timestamp": "2026-10-07", "actor": "Cursor primary agent (run 2)", "event": "SGK location preflight; authoritative package not found; repo initialized and pushed to GitHub.", "basis": "User continuation request" },
@@ -174,14 +173,15 @@
     { "timestamp": "2026-10-09T08:43:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 20)", "event": "SPRINT-004 COMPLETE. Sprint approval ratified and G-TEST accepted as relayed by project owner on behalf of Jessica Solis and Annamarie Zambrano (evidence: docs/reviews/sprint-004-test-evidence.md). All acceptance criteria met: sample data removed, governed CSV import delivered with PII-column exclusion, owner live import verified. currentAuthorizedWork = null. Next: SPRINT-005 (UI/UX redesign) designated by owner agreement earlier this session; proposal pending direction selection.", "basis": "Owner statement: 'I have approval for sprint 004.'" },
     { "timestamp": "2026-10-09T09:15:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 21)", "event": "C1 UI label change, no data-model impact: three field labels renamed at owner direction. (1) 'Security and Awareness Cert:' -> 'Security and Awareness Cert' (trailing colon removed; tracker-list-overrides.js). (2) 'Date of III Completion (DD/MM/YYYY)' -> 'Date of III Completion' (index.html form label, app.js label map, README.md). (3) 'Query Every Five Years' -> 'Next III Inquery Due (5 yrs)' (tracker-list-overrides.js replacement label and dependent calculated-column header matcher; owner's spelling 'Inquery' preserved verbatim). Field keys, storage keys, date input formats/placeholders, and IMPORT_HEADER_MAP unchanged.", "basis": "Owner statement: 'relable the following fields:  Security and Awareness Cert: change to Security and Awareness Cert, Date of III Completion (DD/MM/YYYY) to Date of III Completion, change field label Query Every Five Years to Next III Inquery Due (5 yrs)'" },
     { "timestamp": "2026-10-09T09:17:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 22)", "event": "Label spelling corrected at owner direction: 'Next III Inquery Due (5 yrs)' -> 'Next III Inquiry Due (5 yrs)' (tracker-list-overrides.js label and calculated-column matcher).", "basis": "Owner statement: 'use standard spelling for Inquiry'" },
-    { "timestamp": "2026-10-09T10:23:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 23)", "event": "DEC-019 recorded: SPRINT-005 redesign direction selected — Option B 'Tabbed Workspace with Form Drawer' — with three owner answers: (1) admin table shows Actions plus seven data columns (Clearance Type, Access Type, Name, Requestor, III - Status, CJIS Security Role, NCIC Certification), all verified to map to existing field keys (Requestor = existing 'requestor' field; no new fields); (2) default grouping = the grouping users currently see, i.e. vendor grouping (today applied by tracker-list-overrides.js), carried into the base app as the default; (3) queriedEveryFiveYears becomes a calculated read-only due date = Date of III Completion + 5 years, displayed as 'Next III Inquiry Due (5 yrs)', with a one-time migration of stored records on load and the Query Due metric updated to compare that due date against today (resolving the app.js/overlay inconsistency). SPRINT-005 proposal drafted at docs/planning/sprints/sprint-005-ui-redesign.md, status PROPOSED, awaiting owner go to begin implementation; currentAuthorizedWork remains null and no implementation performed. Open question for owner: keep or restore the Export CSV button currently removed by the overlay.", "basis": "Owner statement (2026-10-09 10:23 AM -06:00): 'Yes to Option B, \n\n1. the 8 coluns that stay visable are Actions, Clearance Type, Access Type, Name, Requestor,III - Status, CJIS Security Role, NCIC Certification\n2. Default grouping - keep current grouping\n3. This field should be a calculated value of field Date of III Completion + 5 years = Next III Inquiry Due (5 yrs) date.'" }
+    { "timestamp": "2026-10-09T10:23:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 23)", "event": "DEC-019 recorded: SPRINT-005 redesign direction selected — Option B 'Tabbed Workspace with Form Drawer' — with three owner answers: (1) admin table shows Actions plus seven data columns (Clearance Type, Access Type, Name, Requestor, III - Status, CJIS Security Role, NCIC Certification), all verified to map to existing field keys (Requestor = existing 'requestor' field; no new fields); (2) default grouping = the grouping users currently see, i.e. vendor grouping (today applied by tracker-list-overrides.js), carried into the base app as the default; (3) queriedEveryFiveYears becomes a calculated read-only due date = Date of III Completion + 5 years, displayed as 'Next III Inquiry Due (5 yrs)', with a one-time migration of stored records on load and the Query Due metric updated to compare that due date against today (resolving the app.js/overlay inconsistency). SPRINT-005 proposal drafted at docs/planning/sprints/sprint-005-ui-redesign.md, status PROPOSED, awaiting owner go to begin implementation; currentAuthorizedWork remains null and no implementation performed. Open question for owner: keep or restore the Export CSV button currently removed by the overlay.", "basis": "Owner statement (2026-10-09 10:23 AM -06:00): 'Yes to Option B, \n\n1. the 8 coluns that stay visable are Actions, Clearance Type, Access Type, Name, Requestor,III - Status, CJIS Security Role, NCIC Certification\n2. Default grouping - keep current grouping\n3. This field should be a calculated value of field Date of III Completion + 5 years = Next III Inquiry Due (5 yrs) date.'" },
+    { "timestamp": "2026-10-09T10:27:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 24)", "event": "SPRINT-005 authorized and implementation started. Owner go recorded for Option B (Tabbed Workspace with Form Drawer) under DEC-019. currentAuthorizedWork = SPRINT-005; workStatus active. Sprint document status set to IN PROGRESS. Implementation folds tracker-list-overrides.js behaviors into the base app (vendor grouping, Inquiry Due calculation, expired-cert highlighting, label renames, compact density), slim sticky header, sign-in collapse, form drawer, and admin column diet.", "basis": "Owner statement: 'go' (2026-10-09T10:27:00-06:00)" }
   ],
   "validation": {
     "validator": "python-jsonschema (Draft202012Validator), Python 3.14.0",
     "validatorVersion": "4.26.0",
     "schemaVersion": "3.0.0",
     "result": "pass",
-    "timestamp": "2026-10-09T10:23:00-06:00",
+    "timestamp": "2026-10-09T10:40:00-06:00",
     "limitations": "Structural conformance only; proves canonical values and shape, not factual accuracy, evidence sufficiency, approvals, gate satisfaction, or policy compliance. Schema is the project-authored profile, not an official SGK schema."
   },
   "extensions": {
