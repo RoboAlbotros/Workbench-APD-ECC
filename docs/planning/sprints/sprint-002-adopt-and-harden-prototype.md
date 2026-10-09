@@ -1,6 +1,6 @@
 # Sprint 002 — Adopt and harden the CJISTracker prototype
 
-Status: ACTIVE
+Status: COMPLETE (2026-10-09)
 Owner: Brett (technical owner); product impact approvals Jessica Solis
 Version: 0.1.0
 Approval: Approved 2026-10-08 — relayed in agent session by project owner Brett on behalf of the joint governance authorities Jessica Solis and Annamarie Zambrano (consistent with their ratified handling of SPRINT-001); ratification may be recorded when they review.
@@ -110,9 +110,15 @@ Evidence: project.json history run 11; currentAuthorizedWork = SPRINT-002.
   contact data needed for clearance tracking. Basis: owner statement "Keep as is all
   fields" (project.json history run 13).
 
-### Remaining to close the sprint
+## Completion record (2026-10-09)
 
-1. **G-TEST acceptance (Annamarie Zambrano, QA):** accept or supplement the recorded
-   test evidence.
-2. **Ratification** of the relayed sprint approval by Jessica Solis and Annamarie
-   Zambrano (open limitation from approval).
+- **Sprint approval ratified and G-TEST accepted** — relayed in agent session by project
+  owner Brett on behalf of Jessica Solis and Annamarie Zambrano (owner statement:
+  "Sprint-002 is approved"; project.json history run 14). G-TEST evidence:
+  `docs/reviews/sprint-002-test-evidence.md`.
+- **All acceptance criteria met:** no PII fields anywhere (FIND-001 closed under
+  DEC-017); default PINs removed and operator-configured setup documented; all three
+  views function with fictitious sample data; test evidence recorded with no unresolved
+  defects; project.json updated and schema-validated.
+- **Definition of done satisfied.** currentAuthorizedWork returned to null; next work
+  (SPRINT-003, release preparation toward 0.1.0) requires its own proposal and approval.
