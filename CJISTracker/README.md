@@ -45,7 +45,7 @@ Access Type supports multiple selections.
 - Vendor
 - Requestor
 - Date Information Provided
-- Date of III Completion (DD/MM/YYYY)
+- Date of III Completion
 - III - Status
 - Clearance Type
 - Access Type

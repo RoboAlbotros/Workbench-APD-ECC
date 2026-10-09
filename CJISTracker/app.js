@@ -89,7 +89,7 @@ const labels = {
   requestor: "Requestor",
   dateInformationProvided: "Date Information Provided",
   iiiStatus: "III - Status",
-  dateOfIiiCompletion: "Date of III Completion (DD/MM/YYYY)",
+  dateOfIiiCompletion: "Date of III Completion",
   clearanceType: "Clearance Type",
   accessType: "Access Type",
   cjisSecurityAwarenessRole: "CJIS Security and Awareness Role",

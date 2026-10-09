@@ -94,9 +94,9 @@
       if (label === "phone number") {
         replaceLabelText(element, "Applicant Phone Number");
       } else if (label === "query date (every 5 years)" || label === "queried (every 5 years)" || label === "query date") {
-        replaceLabelText(element, "Query Every Five Years");
+        replaceLabelText(element, "Next III Inquery Due (5 yrs)");
       } else if (label === "security and awareness expiration annually" || label === "security and awareness expiration") {
-        replaceLabelText(element, "Security and Awareness Cert:");
+        replaceLabelText(element, "Security and Awareness Cert");
       }
     });
 
@@ -177,7 +177,7 @@
 
     const headers = Array.from(headerRow.cells, (cell) => normalize(cell.textContent));
     const iiiIndex = headers.findIndex((label) => label.includes("date of iii completion"));
-    const queryIndex = headers.findIndex((label) => label.includes("query every five years"));
+    const queryIndex = headers.findIndex((label) => label.includes("next iii inquery due (5 yrs)"));
     if (iiiIndex < 0 || queryIndex < 0) return;
 
     Array.from(body.rows).forEach((row) => {
