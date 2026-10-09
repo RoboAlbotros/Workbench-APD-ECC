@@ -78,3 +78,12 @@ behavior; no trust-boundary change (import is gated behind existing Full Admin a
 - At owner direction post-import, the import panel was commented out of the UI
   (one-time pre-go-live function; code retained; re-enable by uncommenting in
   `index.html`).
+
+## Follow-up (2026-10-09)
+
+- Export CSV is hidden from the UI (`class="hidden"` on `#exportCsv`); `downloadCsv`
+  and export logic remain in `app.js` for later use (owner 2026-10-09).
+- The four fictitious test applicants from the sanitized MasterSheet CSV
+  (`CJIS_MasterSheet_import.csv`, outside the repository) are the empty-storage seed
+  (`CJISTracker/test-applicants.js`). Values are unchanged; existing stored records
+  are not replaced.

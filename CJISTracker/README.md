@@ -6,7 +6,7 @@ Open `index.html` in a browser to use the CJIS Applicant Tracker.
 
 - Limited View is read-only and hides sensitive personal fields.
 - Records View uses the Limited View table style and allows applicant view/edit actions without delete access.
-- Full Admin View requires the admin access code and can create, view, edit, delete, filter, and export applicant records.
+- Full Admin View requires the admin access code and can create, view, edit, delete, and filter applicant records. The Export CSV control is hidden in the UI (owner 2026-10-09); `downloadCsv` and export logic remain in `app.js` for later use.
 
 The Full Admin access code is operator-set to `12345` (local prototype only; not a
 production control). On load the app writes that admin code into this browser's
@@ -34,8 +34,11 @@ and never stored (DEC-012), and every import is recorded in the change log.
 The import panel is currently commented out in `index.html` at owner direction (it is a
 one-time pre-go-live function); re-enable it by uncommenting that section.
 
-The application ships with no built-in records; data arrives via manual entry or CSV
-import only.
+When the browser has no stored records, the app seeds four fictitious test applicants
+copied from the sanitized MasterSheet CSV (`CJIS_MasterSheet_import.csv`, kept outside
+the repository). Source, Control ID, names, vendors, and other cell values are
+unchanged. Existing localStorage records are not replaced; clearing storage and
+reloading restores the seed.
 Notes remain editable on applicant records but are hidden from list tables.
 Applicant list tables are grouped by Vendor (default grouping).
 The Full Admin table shows Actions plus Clearance Type, Access Type, Name,

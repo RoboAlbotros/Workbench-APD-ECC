@@ -268,7 +268,7 @@ deleteRecord.addEventListener("click", deleteApplicant);
 document.querySelector("#dateOfIiiCompletion").addEventListener("input", syncInquiryDueField);
 document.querySelector("#dateOfIiiCompletion").addEventListener("change", syncInquiryDueField);
 document.addEventListener("keydown", handleDrawerKeydown);
-exportCsv.addEventListener("click", downloadCsv);
+if (exportCsv) exportCsv.addEventListener("click", downloadCsv);
 documentUpload.addEventListener("change", handleDocumentUpload);
 [searchInput, clearanceFilter, outcomeFilter].forEach((control) => {
   control.addEventListener("input", renderAll);
@@ -277,6 +277,10 @@ documentUpload.addEventListener("change", handleDocumentUpload);
 function loadRecords() {
   const raw = localStorage.getItem(STORAGE_KEYS.records);
   if (!raw) {
+    const seed = typeof getTestApplicantSeed === "function" ? getTestApplicantSeed() : [];
+    if (seed.length) {
+      return normalizeRecords(seed);
+    }
     markIiiCompletionMigrated();
     return [];
   }

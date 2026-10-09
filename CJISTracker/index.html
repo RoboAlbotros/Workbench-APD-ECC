@@ -186,7 +186,8 @@
                 <p class="eyebrow">Full Admin</p>
                 <h2 id="adminTableHeading">All Applicant Records</h2>
               </div>
-              <button id="exportCsv" class="secondary-action" type="button">Export CSV</button>
+              <!-- Export CSV control retained for later use (owner 2026-10-09). Hidden from the UI. -->
+              <button id="exportCsv" class="secondary-action hidden" type="button">Export CSV</button>
             </div>
             <div id="adminTable" class="table-wrap" aria-live="polite"></div>
           </section>
@@ -381,6 +382,7 @@
       </section>
     </aside>
 
+    <script src="test-applicants.js"></script>
     <script src="app.js"></script>
     <!-- tracker-list-overrides.js retired in SPRINT-005; behaviors folded into app.js and styles.css. -->
   </body>
