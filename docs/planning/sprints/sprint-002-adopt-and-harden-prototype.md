@@ -103,12 +103,16 @@ Evidence: project.json history run 11; currentAuthorizedWork = SPRINT-002.
   rejection of former default code, sign-in with configured code, persistence across
   reload. Evidence: `docs/reviews/sprint-002-test-evidence.md` §2.
 
+- **FIND-001 CLOSED (2026-10-09, DEC-017):** security/privacy authority Brett decided
+  all remaining identity/contact fields (applicant name, phone, email, notes, document
+  upload) are kept as-is and accepted as in-scope. DEC-012 is interpreted as excluding
+  sensitive PII (DOB/SSN/driver's license) and CJI while permitting basic identity and
+  contact data needed for clearance tracking. Basis: owner statement "Keep as is all
+  fields" (project.json history run 13).
+
 ### Remaining to close the sprint
 
-1. **FIND-001 closure decision (Brett, security/privacy):** confirm closure of the
-   DOB/SSN/DL portion and record the disposition of the remaining identity/contact
-   fields (name, phone, email, notes, document upload) under DEC-012.
-2. **G-TEST acceptance (Annamarie Zambrano, QA):** accept or supplement the recorded
+1. **G-TEST acceptance (Annamarie Zambrano, QA):** accept or supplement the recorded
    test evidence.
-3. **Ratification** of the relayed sprint approval by Jessica Solis and Annamarie
+2. **Ratification** of the relayed sprint approval by Jessica Solis and Annamarie
    Zambrano (open limitation from approval).

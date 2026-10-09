@@ -44,14 +44,13 @@
     "summary": {
       "outcome": "TBD — owner decision required.",
       "accountableOwner": "Jessica Solis (product owner)",
-      "nextMilestone": "SPRINT-002 close: FIND-001 closure decision, G-TEST acceptance, approval ratification (implementation and test evidence complete)",
-      "nextRequiredDecision": "Brett (security/privacy): FIND-001 closure and disposition of remaining identity/contact fields (name, phone, email, notes, documents) under DEC-012",
+      "nextMilestone": "SPRINT-002 close: G-TEST acceptance and approval ratification (implementation, test evidence, and FIND-001 closure complete)",
+      "nextRequiredDecision": "Annamarie Zambrano (QA): G-TEST acceptance of docs/reviews/sprint-002-test-evidence.md",
       "decisionsRequired": [
-        "FIND-001 closure and disposition of remaining identity/contact fields (name, phone, email, notes, document upload) under DEC-012 (Brett)",
         "G-TEST acceptance of docs/reviews/sprint-002-test-evidence.md (Annamarie Zambrano)",
         "Ratification of relayed SPRINT-002 approval (Jessica Solis + Annamarie Zambrano)"
       ],
-      "lastUpdated": "2026-10-08T17:10:00-06:00"
+      "lastUpdated": "2026-10-09T01:36:00-06:00"
     }
   },
   "release": {
@@ -105,8 +104,8 @@
     "G-REL": { "state": "pending", "owner": "Release authority (TBD)", "decisionDate": null, "evidence": null, "scope": "release 0.1.0" }
   },
   "security": {
-    "classification": "Internal use only — DEC-012 (security/privacy authority Brett, 2026-10-08): no PII and no CJI/CJIS data will be stored in the system. See openFindings FIND-001 for the field-dictionary conflict this creates.",
-    "sensitiveData": "None permitted — DEC-012. SPRINT-002 verification (2026-10-08): the committed prototype contains no DOB/SSN/driver's-license fields anywhere; app.js strips them from legacy records and database-schema.sql documents their intentional exclusion. Remaining identity/contact fields (name, phone, email, notes, document upload) await disposition under DEC-012 (FIND-001). No applicant records exist in the repository.",
+    "classification": "Internal use only — DEC-012 (security/privacy authority Brett, 2026-10-08): no PII and no CJI/CJIS data will be stored in the system, interpreted per DEC-017 (2026-10-09) as excluding sensitive PII (DOB, SSN, driver's license) and CJI while accepting basic identity/contact fields needed for clearance tracking.",
+    "sensitiveData": "No sensitive PII or CJI — DEC-012 as interpreted by DEC-017. SPRINT-002 verification (2026-10-08): the committed prototype contains no DOB/SSN/driver's-license fields anywhere; app.js strips them from legacy records and database-schema.sql documents their intentional exclusion. DEC-017 (security/privacy authority Brett, 2026-10-09): applicant name, phone, email, notes, and document-upload fields are kept as-is and accepted as in-scope. FIND-001 CLOSED. No applicant records exist in the repository.",
     "authentication": "DEC-015 (security/privacy authority Brett, 2026-10-08): production direction is City SSO (Entra ID) with server-side role-based access mirroring the three view levels (Limited/Records/Admin), targeted at a future release. Prototype local PINs are never production controls.",
     "authorization": "TBD. Prototype has three local views (Limited, Records, Full Admin); production model undecided.",
     "secretsManagement": "No credentials, tokens, personal information, or production secrets in repository files (Rule 50).",
@@ -128,15 +127,7 @@
     },
     "threatModel": "Not started. Required before C4 or material C3 work (Rule 50).",
     "privacyImpactAssessment": "Not required under DEC-012 (no PII stored) — accountable decision by security/privacy authority Brett, 2026-10-08. MUST be revisited if data scope ever changes (DEC-014).",
-    "openFindings": [
-      {
-        "id": "FIND-001",
-        "severity": "blocking-for-real-use",
-        "description": "DEC-012 (no PII / no CJIS data) vs. prototype data model. SPRINT-002 verification (2026-10-08) found the committed prototype already excludes DOB, SSN, and driver's-license fields entirely (data model, forms, exports, field dictionary, SQL schema; app.js strips them from legacy records). Remaining open scope: disposition of applicant name, phone, email, notes, and document-upload fields under DEC-012. Evidence: docs/reviews/sprint-002-test-evidence.md §1.",
-        "owner": "Brett (technical owner); product impact approval Jessica Solis",
-        "disposition": "Verification complete in SPRINT-002; awaiting security/privacy authority closure decision and disposition of remaining identity/contact fields"
-      }
-    ]
+    "openFindings": []
   },
   "compliance": {
     "references": [
@@ -172,7 +163,8 @@
     { "timestamp": "2026-10-08T16:10:00-06:00", "actor": "Project owner (via agent session, recorded by Cursor primary agent, run 9)", "event": "SPRINT-001 relayed approval ratified; product-definition.md 0.1.0 and roadmap approved by Jessica Solis with joint outcome acceptance; G-SCOPE satisfied. Remaining in sprint: authentication direction and NIST applicability decisions (owner Brett).", "basis": "Owner statement: 'go review and confirmed'" },
     { "timestamp": "2026-10-08T16:20:00-06:00", "actor": "Security/privacy authority Brett (via agent session, recorded by Cursor primary agent, run 10)", "event": "DEC-015 recorded (production auth: City SSO/Entra ID, server-side RBAC, future release) and DEC-016 recorded (NIST applicability: CSF 2.0 applicable-lightweight, SSDF 1.1 applicable, Privacy Framework 1.0 not applicable under DEC-012, SP 800-218A not applicable, SP 800-204D applicable-minimal). SPRINT-001 COMPLETE, all acceptance criteria met; FIND-001 carried to SPRINT-002. SPRINT-002 (adopt and harden prototype) PROPOSED; currentAuthorizedWork null pending its approval.", "basis": "Owner statement: 'accept both'" },
     { "timestamp": "2026-10-08T16:25:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 11)", "event": "SPRINT-002 approved as relayed by project owner on behalf of joint governance authorities (ratification open). currentAuthorizedWork = SPRINT-002; lifecycle development/active. Implementation begins: FIND-001 PII-field removal, PIN hardening, field dictionary alignment, test data and evidence.", "basis": "Owner statement: 'go'" },
-    { "timestamp": "2026-10-08T17:10:00-06:00", "actor": "Cursor primary agent (run 12)", "event": "SPRINT-002 implementation complete. FIND-001 verification: committed prototype already excludes DOB/SSN/driver's-license everywhere; no field removal needed; remaining identity/contact fields await DEC-012 disposition. PIN hardening implemented: hardcoded defaults (1111/2222/2468) removed; operator-configured first-run setup added (min 4 chars, distinct, trivial/former-default codes rejected); README updated. Browser acceptance tests passed (setup, old-default rejection, new-code sign-in, reload persistence); evidence in docs/reviews/sprint-002-test-evidence.md. Open to close sprint: FIND-001 closure decision (Brett), G-TEST (Annamarie Zambrano), approval ratification.", "basis": "SPRINT-002 authorized scope (history run 11)" }
+    { "timestamp": "2026-10-08T17:10:00-06:00", "actor": "Cursor primary agent (run 12)", "event": "SPRINT-002 implementation complete. FIND-001 verification: committed prototype already excludes DOB/SSN/driver's-license everywhere; no field removal needed; remaining identity/contact fields await DEC-012 disposition. PIN hardening implemented: hardcoded defaults (1111/2222/2468) removed; operator-configured first-run setup added (min 4 chars, distinct, trivial/former-default codes rejected); README updated. Browser acceptance tests passed (setup, old-default rejection, new-code sign-in, reload persistence); evidence in docs/reviews/sprint-002-test-evidence.md. Open to close sprint: FIND-001 closure decision (Brett), G-TEST (Annamarie Zambrano), approval ratification.", "basis": "SPRINT-002 authorized scope (history run 11)" },
+    { "timestamp": "2026-10-09T01:36:00-06:00", "actor": "Security/privacy authority Brett (via agent session, recorded by Cursor primary agent, run 13)", "event": "DEC-017 recorded: applicant name, phone, email, notes, and document-upload fields are kept as-is and accepted as in-scope; DEC-012 is interpreted as excluding sensitive PII (DOB/SSN/driver's license) and CJI while permitting basic identity/contact data needed for clearance tracking. FIND-001 CLOSED (verification evidence: docs/reviews/sprint-002-test-evidence.md §1). Remaining to close SPRINT-002: G-TEST acceptance (Annamarie Zambrano) and ratification of the relayed sprint approval.", "basis": "Owner statement: 'Keep as is all fields'" }
   ],
   "validation": {
     "validator": "python-jsonschema (Draft202012Validator), Python 3.14.0",
