@@ -73,13 +73,13 @@ const adminFields = fields.filter((field) => !["notes", "documents"].includes(fi
 // Admin table diet (DEC-019): Actions plus seven data columns. All other fields stay
 // in the data model, form, search, and CSV export.
 const adminTableFields = [
+  "name",
   "clearanceType",
   "accessType",
-  "name",
-  "requestor",
   "iiiStatus",
   "cjisSecurityAwarenessRole",
   "ncicCertification",
+  "requestor",
 ];
 const formFields = fields.filter((field) => field !== "documents");
 
@@ -887,8 +887,8 @@ function renderRecordsTable() {
   });
 }
 
-function renderRecordsRow(record) {
-  return `<tr${rowExpiredAttributes(record)}>
+function renderRecordsRow(record, groupTone) {
+  return `<tr${rowClassAttributes(record, groupTone)}>
     ${limitedFields
       .map((field) => {
         return renderDataCell(field, record[field], record);
@@ -903,8 +903,8 @@ function renderRecordsRow(record) {
   </tr>`;
 }
 
-function renderLimitedRow(record) {
-  return `<tr${rowExpiredAttributes(record)}>
+function renderLimitedRow(record, groupTone) {
+  return `<tr${rowClassAttributes(record, groupTone)}>
     ${limitedFields
       .map((field) => {
         const value = record[field];
@@ -939,8 +939,8 @@ function renderAdminTable() {
   });
 }
 
-function renderAdminRow(record) {
-  return `<tr${rowExpiredAttributes(record)}>
+function renderAdminRow(record, groupTone) {
+  return `<tr${rowClassAttributes(record, groupTone)}>
     <td class="field-admin">
       <div class="record-actions">
         <button class="admin-action" type="button" data-view="${record.id}">View</button>
@@ -1038,16 +1038,21 @@ function renderHeaderCell(field) {
 
 function renderGroupedRows(sortedRecords, rowRenderer, columnCount) {
   let currentVendor = "";
+  let groupIndex = -1;
   return sortedRecords
     .map((record) => {
       const vendor = getVendorGroupName(record);
-      const vendorHeader =
-        vendor !== currentVendor
-          ? `<tr class="vendor-group-row"><th colspan="${columnCount}">${escapeHtml(vendor)}</th></tr>`
-          : "";
+      const isNewGroup = vendor !== currentVendor;
+      if (isNewGroup) {
+        groupIndex += 1;
+        currentVendor = vendor;
+      }
+      const groupTone = groupIndex % 2;
+      const vendorHeader = isNewGroup
+        ? `<tr class="vendor-group-row vendor-group-${groupTone}"><th colspan="${columnCount}">${escapeHtml(vendor)}</th></tr>`
+        : "";
 
-      currentVendor = vendor;
-      return `${vendorHeader}${rowRenderer(record)}`;
+      return `${vendorHeader}${rowRenderer(record, groupTone)}`;
     })
     .join("");
 }
@@ -1095,9 +1100,14 @@ function isSecurityCertExpired(record) {
   return expiration < today;
 }
 
-function rowExpiredAttributes(record) {
-  if (!isSecurityCertExpired(record)) return "";
-  return ` class="compliance-expired-row" title="Out of compliance: Security and Awareness certification has expired"`;
+function rowClassAttributes(record, groupTone) {
+  const classes = [`vendor-group-${groupTone}`];
+  const expired = isSecurityCertExpired(record);
+  if (expired) classes.push("compliance-expired-row");
+  const title = expired
+    ? ` title="Out of compliance: Security and Awareness certification has expired"`
+    : "";
+  return ` class="${classes.join(" ")}"${title}`;
 }
 
 function renderDocumentSummary(value) {

@@ -4,6 +4,10 @@
   --surface: #ffffff;
   --surface-strong: #e9f1ef;
   --group-blue: #d9eefb;
+  --vendor-group-0: #e8f4fb;
+  --vendor-group-0-header: #d0e8f6;
+  --vendor-group-1: #eef6ee;
+  --vendor-group-1-header: #d8edda;
   --text: #18211f;
   --muted: #66736f;
   --line: #d9e0dc;
@@ -449,7 +453,7 @@ textarea {
   max-height: calc(100vh - 180px);
   overflow-x: auto;
   overflow-y: auto;
-  padding: 8px 10px 12px;
+  padding: 8px 4px 12px;
 }
 
 table {
@@ -479,7 +483,7 @@ table {
 
 th,
 td {
-  padding: 0.48rem 0.56rem;
+  padding: 0.42rem 0.22rem;
   border-bottom: 1px solid var(--line);
   text-align: left;
   vertical-align: middle;
@@ -507,11 +511,10 @@ td {
 .vendor-group-row th,
 .vendor-group-row td {
   position: static;
-  padding: 0.52rem 0.65rem;
+  padding: 0.42rem 0.28rem;
   border-top: 2px solid #87c4e6;
   border-bottom: 1px solid #b9ddef;
   text-align: left;
-  background: #eaf5fb;
   color: #173b56;
   font-size: 13px;
   font-weight: 700;
@@ -519,11 +522,37 @@ td {
   text-transform: none;
 }
 
-.compliance-expired-row > td {
+.admin-records-table tbody tr.vendor-group-0 > td,
+.limited-records-table tbody tr.vendor-group-0 > td {
+  background: var(--vendor-group-0);
+}
+
+.admin-records-table tbody tr.vendor-group-1 > td,
+.limited-records-table tbody tr.vendor-group-1 > td {
+  background: var(--vendor-group-1);
+}
+
+.vendor-group-row.vendor-group-0 th,
+.vendor-group-row.vendor-group-0 td {
+  background: var(--vendor-group-0-header);
+  border-top-color: #7eb8d8;
+  border-bottom-color: #b4d6ea;
+}
+
+.vendor-group-row.vendor-group-1 th,
+.vendor-group-row.vendor-group-1 td {
+  background: var(--vendor-group-1-header);
+  border-top-color: #8ec198;
+  border-bottom-color: #b7d8bb;
+}
+
+.admin-records-table tbody tr.compliance-expired-row > td,
+.limited-records-table tbody tr.compliance-expired-row > td {
   background: #fff2f2;
 }
 
-.compliance-expired-row > td.security-cert-expired {
+.admin-records-table tbody tr.compliance-expired-row > td.security-cert-expired,
+.limited-records-table tbody tr.compliance-expired-row > td.security-cert-expired {
   background: #ffdada;
   box-shadow: inset 4px 0 #bd2c2c;
   color: #8d1717;
@@ -565,6 +594,9 @@ td {
 .admin-records-table .field-admin,
 .limited-records-table .field-admin {
   width: 136px;
+  padding-left: 0.32rem;
+  padding-right: 0.32rem;
+  white-space: nowrap;
 }
 
 .admin-records-table .field-clearanceType,

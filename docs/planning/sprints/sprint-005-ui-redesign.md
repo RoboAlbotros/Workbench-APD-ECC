@@ -190,3 +190,11 @@ localStorage persistence are unchanged.
   Export CSV button removed in the redesigned UI, or restore it?
 - None on column mapping: "Requestor" maps to the existing `requestor` field key
   (resolved — see mapping table).
+
+## Follow-up (C1, 2026-10-09T11:14:00-06:00)
+
+Owner direction: tighten column whitespace; bold vendor group headers and color
+rows by vendor group (same color within a group, alternating colors between
+groups); admin column order is now Actions, Name, Clearance Type, Access Type,
+III - Status, CJIS Security Role, NCIC Certification, Requestor. Limited view
+already had Name before Clearance Type. Field keys and data model unchanged.
