@@ -5,17 +5,20 @@ const STORAGE_KEYS = {
   iiiCompletionIsoMigrated: "cjisApplicantTracker.iiiCompletionIsoMigrated",
 };
 
-// Access codes are operator-configured on first run (SPRINT-002).
-// No default codes ship with the application.
+// Access codes are local prototype controls. Full Admin is operator-set to 12345
+// (owner-directed, SPRINT-004). Former defaults 1111/2222/2468 stay forbidden.
 const FORBIDDEN_CODES = new Set(["1111", "2222", "2468", "0000", "1234"]);
-let accessCodes = loadAccessCodes();
+const OWNER_ADMIN_CODE = "12345";
+const PROTOTYPE_LIMITED_CODE = "lim-7431";
+const PROTOTYPE_RECORDS_CODE = "rec-8562";
+let accessCodes = null;
 
 function loadAccessCodes() {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.accessCodes);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
-    if (parsed && parsed.limited && parsed.records && parsed.admin) return parsed;
+    if (parsed && typeof parsed === "object") return parsed;
     return null;
   } catch {
     return null;
@@ -26,6 +29,29 @@ function saveAccessCodes(codes) {
   localStorage.setItem(STORAGE_KEYS.accessCodes, JSON.stringify(codes));
   accessCodes = codes;
 }
+
+function isUsableRoleCode(code, reserved) {
+  return Boolean(code) && !FORBIDDEN_CODES.has(code) && !reserved.has(code);
+}
+
+function ensureOwnerAccessCodes() {
+  const existing = loadAccessCodes() || {};
+  const reserved = new Set([OWNER_ADMIN_CODE]);
+  const limited = isUsableRoleCode(existing.limited, reserved)
+    ? existing.limited
+    : PROTOTYPE_LIMITED_CODE;
+  reserved.add(limited);
+  const records = isUsableRoleCode(existing.records, reserved)
+    ? existing.records
+    : PROTOTYPE_RECORDS_CODE;
+  saveAccessCodes({
+    limited,
+    records,
+    admin: OWNER_ADMIN_CODE,
+  });
+}
+
+ensureOwnerAccessCodes();
 
 const ACCESS_LABELS = {
   limited: "Limited View",
@@ -401,14 +427,19 @@ function normalizeYesNo(value) {
 
 function signInManagementUser(event) {
   event.preventDefault();
+  const name = managementUserName.value.trim();
+  const role = managementAccessLevel.value;
+  const code = managementAccessCode.value;
+
+  if (role === "admin" && code === OWNER_ADMIN_CODE) {
+    ensureOwnerAccessCodes();
+    updateSetupVisibility();
+  }
+
   if (!accessCodes) {
     showMessage(accessMessage, "Access codes are not configured. Complete initial setup first.", true);
     return;
   }
-
-  const name = managementUserName.value.trim();
-  const role = managementAccessLevel.value;
-  const code = managementAccessCode.value;
 
   if (!name || !role || accessCodes[role] !== code) {
     showMessage(accessMessage, "Invalid management access.", true);

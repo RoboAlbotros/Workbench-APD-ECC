@@ -6,13 +6,19 @@ Open `index.html` in a browser to use the CJIS Applicant Tracker.
 
 - Limited View is read-only and hides sensitive personal fields.
 - Records View uses the Limited View table style and allows applicant view/edit actions without delete access.
-- Full Admin View requires the admin PIN and can create, view, edit, delete, filter, and export applicant records.
+- Full Admin View requires the admin access code and can create, view, edit, delete, filter, and export applicant records.
 
-No default access codes ship with the application. On first run, the app shows a
-one-time setup form where the operator creates the Limited, Records, and Full Admin
-codes (minimum 4 characters, all different; former defaults and trivial sequences are
-rejected). Codes are stored only in the browser's local storage. To reset them, clear
-the browser's local storage for this page (this also clears applicant records).
+The Full Admin access code is operator-set to `12345` (local prototype only; not a
+production control). On load the app writes that admin code into this browser's
+local storage, overwriting any leftover admin value so a known Full Admin sign-in
+always works. Former defaults (`1111`, `2222`, `2468`) and trivial sequences
+(`0000`, `1234`) remain rejected and are not restored.
+
+If Limited or Records codes are missing, the app stores the documented prototype
+values `lim-7431` (Limited) and `rec-8562` (Records) so those roles are never empty
+strings. Existing distinct Limited/Records codes are kept. Codes live only in this
+browser's local storage. Clearing local storage for this page resets codes and
+applicant records; Full Admin will again be `12345` on the next load.
 
 Full Admin includes a change log for created, updated, and deleted applicant records.
 
