@@ -64,9 +64,11 @@ outcomes) that the tracker normalizes on save/load.
 3. **Normalization is lossy.** Unrecognized clearance types become blank and
    unrecognized outcomes become "Needs Follow Up". A pre-import validation pass over
    the source vocabulary is required.
-4. **Sample records re-merge on load.** The tracker's 12 fictitious sample records are
-   re-added whenever missing. Sample-data seeding must be removed before importing real
-   records, or samples will mix with production data.
+4. **Sample records re-merge on load.** ~~The tracker's 12 fictitious sample records are
+   re-added whenever missing.~~ **Resolved in SPRINT-004 (2026-10-09):** sample-data
+   seeding removed entirely; the app ships with no built-in records. Quirks 1–3 are
+   handled inside the SPRINT-004 CSV importer (III date conversion, derived query date
+   noted as informational, header/vocabulary normalization with per-row error reporting).
 
 ## Security constraints (binding)
 

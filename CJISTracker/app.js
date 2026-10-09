@@ -118,225 +118,6 @@ const ACCESS_TYPE_OPTIONS = [
   "System/Building",
 ];
 
-const sampleRecords = [
-  {
-    id: "sample-1",
-    name: "Lee, Jordan",
-    vendor: "Northstar Systems",
-    dateInformationProvided: "2026-06-01",
-    iiiStatus: "Clear",
-    clearanceType: "Full Clearance",
-    fingerprintsNotifiedCompleted: "2026-06-03",
-    outcome: "Clear",
-    securityAwarenessExpiration: "2027-06-01",
-    securityAddendum: "2026-06-01",
-    phoneNumber: "303-555-0174",
-    emailAddress: "jordan.lee@example.com",
-    completedFullProcess: "2026-06-08",
-    dateOfSiteVisitOnly: "",
-    queriedEveryFiveYears: "2026-06-08",
-    updatedAt: "2026-06-08T15:30:00.000Z",
-  },
-  {
-    id: "sample-2",
-    name: "Morgan, Casey",
-    vendor: "Civic Access Group",
-    dateInformationProvided: "2026-05-20",
-    iiiStatus: "Misd/Clear",
-    clearanceType: "One Time Visit",
-    fingerprintsNotifiedCompleted: "",
-    outcome: "Needs Follow Up",
-    securityAwarenessExpiration: "",
-    securityAddendum: "",
-    phoneNumber: "720-555-0118",
-    emailAddress: "casey.morgan@example.com",
-    completedFullProcess: "",
-    dateOfSiteVisitOnly: "2026-06-25",
-    queriedEveryFiveYears: "",
-    updatedAt: "2026-05-20T18:10:00.000Z",
-  },
-  {
-    id: "sample-3",
-    name: "Brooks, Taylor",
-    vendor: "Summit Records Group",
-    dateInformationProvided: "2026-04-15",
-    iiiStatus: "Misd/Clear",
-    clearanceType: "Full Clearance",
-    fingerprintsNotifiedCompleted: "2026-04-18",
-    outcome: "Needs Follow Up",
-    securityAwarenessExpiration: "2027-04-15",
-    securityAddendum: "2026-04-15",
-    phoneNumber: "303-555-0193",
-    emailAddress: "taylor.brooks@example.com",
-    completedFullProcess: "",
-    dateOfSiteVisitOnly: "",
-    queriedEveryFiveYears: "2021-04-14",
-    updatedAt: "2026-04-18T16:45:00.000Z",
-  },
-  {
-    id: "sample-4",
-    name: "Patel, Avery",
-    vendor: "ClearPath Consulting",
-    dateInformationProvided: "2026-03-28",
-    iiiStatus: "Clear",
-    clearanceType: "Full Clearance",
-    fingerprintsNotifiedCompleted: "2026-03-30",
-    outcome: "Clear",
-    securityAwarenessExpiration: "2027-03-28",
-    securityAddendum: "2026-03-28",
-    phoneNumber: "385-555-0144",
-    emailAddress: "avery.patel@example.com",
-    completedFullProcess: "2026-04-04",
-    dateOfSiteVisitOnly: "",
-    queriedEveryFiveYears: "2026-04-04",
-    updatedAt: "2026-04-04T19:20:00.000Z",
-  },
-  {
-    id: "sample-5",
-    name: "Rivera, Morgan",
-    vendor: "Front Range Data",
-    dateInformationProvided: "2026-02-11",
-    iiiStatus: "Felony",
-    clearanceType: "One Time Visit",
-    fingerprintsNotifiedCompleted: "",
-    outcome: "Needs Follow Up",
-    securityAwarenessExpiration: "",
-    securityAddendum: "",
-    phoneNumber: "720-555-0135",
-    emailAddress: "morgan.rivera@example.com",
-    completedFullProcess: "",
-    dateOfSiteVisitOnly: "2026-02-19",
-    queriedEveryFiveYears: "",
-    updatedAt: "2026-02-12T14:05:00.000Z",
-  },
-  {
-    id: "sample-6",
-    name: "Chen, Riley",
-    vendor: "Justice Systems Lab",
-    dateInformationProvided: "2026-01-07",
-    iiiStatus: "Clear",
-    clearanceType: "Full Clearance",
-    fingerprintsNotifiedCompleted: "2026-01-10",
-    outcome: "Clear",
-    securityAwarenessExpiration: "2027-01-07",
-    securityAddendum: "2026-01-07",
-    phoneNumber: "505-555-0166",
-    emailAddress: "riley.chen@example.com",
-    completedFullProcess: "2026-01-16",
-    dateOfSiteVisitOnly: "",
-    queriedEveryFiveYears: "2020-12-30",
-    updatedAt: "2026-01-16T21:40:00.000Z",
-  },
-  {
-    id: "sample-7",
-    name: "Thompson, Jamie",
-    vendor: "Prairie SecureTech",
-    dateInformationProvided: "2025-12-02",
-    iiiStatus: "Felony",
-    clearanceType: "One Time Visit",
-    fingerprintsNotifiedCompleted: "2025-12-05",
-    outcome: "Felony",
-    securityAwarenessExpiration: "",
-    securityAddendum: "",
-    phoneNumber: "785-555-0127",
-    emailAddress: "jamie.thompson@example.com",
-    completedFullProcess: "",
-    dateOfSiteVisitOnly: "2025-12-10",
-    queriedEveryFiveYears: "2025-12-10",
-    updatedAt: "2025-12-10T17:25:00.000Z",
-  },
-  {
-    id: "sample-8",
-    name: "Adams, Skyler",
-    vendor: "Urban Shield Services",
-    dateInformationProvided: "2025-11-18",
-    iiiStatus: "Misd/Clear",
-    clearanceType: "Full Clearance",
-    fingerprintsNotifiedCompleted: "2025-11-21",
-    outcome: "Needs Follow Up",
-    securityAwarenessExpiration: "2026-11-18",
-    securityAddendum: "",
-    phoneNumber: "602-555-0188",
-    emailAddress: "skyler.adams@example.com",
-    completedFullProcess: "",
-    dateOfSiteVisitOnly: "",
-    queriedEveryFiveYears: "",
-    updatedAt: "2025-11-21T15:55:00.000Z",
-  },
-  {
-    id: "sample-9",
-    name: "Foster, Quinn",
-    vendor: "Bridgewater Analytics",
-    dateInformationProvided: "2025-10-09",
-    iiiStatus: "Clear",
-    clearanceType: "Full Clearance",
-    fingerprintsNotifiedCompleted: "2025-10-11",
-    outcome: "Clear",
-    securityAwarenessExpiration: "2026-10-09",
-    securityAddendum: "2025-10-09",
-    phoneNumber: "970-555-0109",
-    emailAddress: "quinn.foster@example.com",
-    completedFullProcess: "2025-10-17",
-    dateOfSiteVisitOnly: "",
-    queriedEveryFiveYears: "2025-10-17",
-    updatedAt: "2025-10-17T18:35:00.000Z",
-  },
-  {
-    id: "sample-10",
-    name: "Simmons, Drew",
-    vendor: "Canyon Compliance",
-    dateInformationProvided: "2025-09-22",
-    iiiStatus: "Misd/Clear",
-    clearanceType: "One Time Visit",
-    fingerprintsNotifiedCompleted: "",
-    outcome: "Needs Follow Up",
-    securityAwarenessExpiration: "",
-    securityAddendum: "",
-    phoneNumber: "307-555-0110",
-    emailAddress: "drew.simmons@example.com",
-    completedFullProcess: "",
-    dateOfSiteVisitOnly: "2025-10-01",
-    queriedEveryFiveYears: "",
-    updatedAt: "2025-09-23T13:15:00.000Z",
-  },
-  {
-    id: "sample-11",
-    name: "Nelson, Harper",
-    vendor: "Pioneer Access",
-    dateInformationProvided: "2025-08-14",
-    iiiStatus: "Clear",
-    clearanceType: "Full Clearance",
-    fingerprintsNotifiedCompleted: "2025-08-16",
-    outcome: "Clear",
-    securityAwarenessExpiration: "2026-08-14",
-    securityAddendum: "2025-08-14",
-    phoneNumber: "402-555-0111",
-    emailAddress: "harper.nelson@example.com",
-    completedFullProcess: "2025-08-22",
-    dateOfSiteVisitOnly: "",
-    queriedEveryFiveYears: "2025-08-22",
-    updatedAt: "2025-08-22T20:10:00.000Z",
-  },
-  {
-    id: "sample-12",
-    name: "Walker, Reese",
-    vendor: "Mesa Field Support",
-    dateInformationProvided: "2025-07-03",
-    iiiStatus: "Misd/Clear",
-    clearanceType: "One Time Visit",
-    fingerprintsNotifiedCompleted: "",
-    outcome: "Needs Follow Up",
-    securityAwarenessExpiration: "",
-    securityAddendum: "",
-    phoneNumber: "719-555-0112",
-    emailAddress: "reese.walker@example.com",
-    completedFullProcess: "",
-    dateOfSiteVisitOnly: "2025-07-15",
-    queriedEveryFiveYears: "",
-    updatedAt: "2025-07-04T12:50:00.000Z",
-  },
-];
-
 let records = loadRecords();
 let changeLog = loadChangeLog();
 let currentUser = null;
@@ -382,9 +163,14 @@ const documentList = document.querySelector("#documentList");
 
 const accessSetupForm = document.querySelector("#accessSetupForm");
 const setupMessage = document.querySelector("#setupMessage");
+const importForm = document.querySelector("#importForm");
+const importCsvFile = document.querySelector("#importCsvFile");
+const importReplace = document.querySelector("#importReplace");
+const importMessage = document.querySelector("#importMessage");
 
 accessForm.addEventListener("submit", signInManagementUser);
 accessSetupForm.addEventListener("submit", completeAccessSetup);
+importForm.addEventListener("submit", handleCsvImport);
 
 function updateSetupVisibility() {
   const needsSetup = !accessCodes;
@@ -431,12 +217,10 @@ documentUpload.addEventListener("change", handleDocumentUpload);
 
 function loadRecords() {
   const raw = localStorage.getItem(STORAGE_KEYS.records);
-  if (!raw) {
-    return normalizeRecords(sampleRecords);
-  }
+  if (!raw) return [];
 
   try {
-    return mergeMissingSampleRecords(normalizeRecords(JSON.parse(raw)));
+    return normalizeRecords(JSON.parse(raw));
   } catch {
     return [];
   }
@@ -568,16 +352,6 @@ function normalizeYesNo(value) {
   if (normalized === "yes" || normalized === "y") return "Y";
   if (normalized === "no" || normalized === "n") return "N";
   return "";
-}
-
-function mergeMissingSampleRecords(existingRecords) {
-  const existingIds = new Set(existingRecords.map((record) => record.id));
-  const missingSamples = sampleRecords.filter((record) => !existingIds.has(record.id));
-  if (!missingSamples.length) return existingRecords;
-
-  const mergedRecords = [...missingSamples, ...existingRecords];
-  saveRecordSet(mergedRecords);
-  return mergedRecords;
 }
 
 function signInManagementUser(event) {
@@ -1267,6 +1041,216 @@ function isQueryDue(record) {
   const due = new Date(queried);
   due.setFullYear(due.getFullYear() + 5);
   return due <= new Date();
+}
+
+// --- CSV import (SPRINT-004) -------------------------------------------------
+// Maps spreadsheet columns to tracker fields per docs/planning/import-crosswalk-mastersheet.md.
+// Sensitive PII columns (DOB, SSN, driver's license) are excluded unconditionally (DEC-012).
+
+const IMPORT_BLOCKED_HEADER_PATTERNS = [/birth/i, /social\s*security/i, /\bssn\b/i, /licen[cs]e/i];
+
+const IMPORT_HEADER_MAP = [
+  { match: /^source$/i, field: "source" },
+  { match: /^control[\s_-]*id$/i, field: "controlNumber" },
+  { match: /^name/i, field: "name" },
+  { match: /^vendor$/i, field: "vendor" },
+  { match: /^requestor$/i, field: "requestor" },
+  { match: /^date information provided$/i, field: "dateInformationProvided", type: "isoDate" },
+  { match: /iii\s*completion/i, field: "dateOfIiiCompletion", type: "ddmmDate" },
+  { match: /^iii\s*-?\s*status$/i, field: "iiiStatus" },
+  { match: /clearance/i, field: "clearanceType" },
+  { match: /^access type$/i, field: "accessType" },
+  { match: /security and awareness role/i, field: "cjisSecurityAwarenessRole" },
+  { match: /^fingerprints?\s/i, field: "fingerprintsNotifiedCompleted", type: "isoDate" },
+  { match: /outcome/i, field: "outcome" },
+  { match: /security and awareness (expiration|cert)/i, field: "securityAwarenessExpiration", type: "isoDate" },
+  { match: /^security addendum$/i, field: "securityAddendum", type: "isoDate" },
+  { match: /ncic.*(expiration|cert of)/i, field: "ncicCertificationExpiration", type: "isoDate" },
+  { match: /^ncic certification$/i, field: "ncicCertification" },
+  { match: /phone/i, field: "phoneNumber" },
+  { match: /^completed full process$/i, field: "completedFullProcess", type: "isoDate" },
+  { match: /site visit/i, field: "dateOfSiteVisitOnly", type: "isoDate" },
+  { match: /quer/i, field: "queriedEveryFiveYears", type: "isoDate" },
+  { match: /e-?mail/i, field: "emailAddress" },
+  { match: /^notes$/i, field: "notes" },
+];
+
+function parseCsv(text) {
+  const rows = [];
+  let row = [];
+  let value = "";
+  let inQuotes = false;
+  const source = String(text || "").replace(/^\uFEFF/, "");
+
+  for (let i = 0; i < source.length; i++) {
+    const char = source[i];
+    if (inQuotes) {
+      if (char === '"') {
+        if (source[i + 1] === '"') {
+          value += '"';
+          i++;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        value += char;
+      }
+    } else if (char === '"') {
+      inQuotes = true;
+    } else if (char === ",") {
+      row.push(value);
+      value = "";
+    } else if (char === "\n" || char === "\r") {
+      if (char === "\r" && source[i + 1] === "\n") i++;
+      row.push(value);
+      value = "";
+      if (row.some((cell) => cell.trim() !== "")) rows.push(row);
+      row = [];
+    } else {
+      value += char;
+    }
+  }
+  row.push(value);
+  if (row.some((cell) => cell.trim() !== "")) rows.push(row);
+  return rows;
+}
+
+function parseUsOrIsoDate(value) {
+  const text = String(value || "").trim();
+  if (!text) return null;
+  const iso = /^(\d{4})-(\d{2})-(\d{2})/.exec(text);
+  if (iso) return { year: Number(iso[1]), month: Number(iso[2]), day: Number(iso[3]) };
+  const us = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(text);
+  if (us) return { year: Number(us[3]), month: Number(us[1]), day: Number(us[2]) };
+  return null;
+}
+
+function toIsoDate(parts) {
+  if (!parts) return "";
+  return `${parts.year}-${String(parts.month).padStart(2, "0")}-${String(parts.day).padStart(2, "0")}`;
+}
+
+function toDdMmYyyy(parts) {
+  if (!parts) return "";
+  return `${String(parts.day).padStart(2, "0")}/${String(parts.month).padStart(2, "0")}/${parts.year}`;
+}
+
+function importCsvText(csvText, replaceAll) {
+  if (!currentUser || currentUser.role !== "admin") {
+    return { ok: false, message: "Full Admin access is required to import records." };
+  }
+
+  const rows = parseCsv(csvText);
+  if (rows.length < 2) {
+    return { ok: false, message: "CSV must contain a header row and at least one record." };
+  }
+
+  const headers = rows[0].map((header) => header.trim());
+  const columnMap = headers.map((header) => {
+    if (!header) return null;
+    if (IMPORT_BLOCKED_HEADER_PATTERNS.some((pattern) => pattern.test(header))) {
+      return { blocked: true, header };
+    }
+    const mapped = IMPORT_HEADER_MAP.find((entry) => entry.match.test(header));
+    return mapped ? { field: mapped.field, type: mapped.type || "text", header } : null;
+  });
+
+  const blockedHeaders = columnMap.filter((column) => column?.blocked).map((column) => column.header);
+  const mappedCount = columnMap.filter((column) => column && !column.blocked).length;
+  if (!mappedCount) {
+    return { ok: false, message: "No recognizable columns found. Check the header row against the import crosswalk." };
+  }
+
+  const imported = [];
+  const errors = [];
+  const seenControlIds = new Map();
+
+  rows.slice(1).forEach((cells, rowIndex) => {
+    const record = { id: crypto.randomUUID(), updatedAt: new Date().toISOString() };
+    columnMap.forEach((column, columnIndex) => {
+      if (!column || column.blocked) return;
+      const raw = String(cells[columnIndex] ?? "").trim();
+      if (column.type === "isoDate") {
+        record[column.field] = toIsoDate(parseUsOrIsoDate(raw));
+      } else if (column.type === "ddmmDate") {
+        record[column.field] = toDdMmYyyy(parseUsOrIsoDate(raw));
+      } else {
+        record[column.field] = raw;
+      }
+    });
+    record.lastChangedBy = currentUser.name;
+
+    if (!String(record.name || "").trim()) {
+      errors.push(`Row ${rowIndex + 2}: missing applicant name; row skipped.`);
+      return;
+    }
+
+    const controlId = String(record.controlNumber || "").trim().toLowerCase();
+    if (controlId) {
+      if (seenControlIds.has(controlId)) {
+        errors.push(`Row ${rowIndex + 2}: duplicate Control ID "${record.controlNumber}" within the file; row skipped.`);
+        return;
+      }
+      seenControlIds.set(controlId, true);
+    }
+    imported.push(record);
+  });
+
+  if (!imported.length) {
+    return { ok: false, message: `No records imported. ${errors.join(" ")}` };
+  }
+
+  let nextRecords;
+  if (replaceAll) {
+    nextRecords = imported;
+  } else {
+    const existingControlIds = new Set(
+      records.map((record) => String(record.controlNumber || "").trim().toLowerCase()).filter(Boolean),
+    );
+    const additions = imported.filter((record) => {
+      const controlId = String(record.controlNumber || "").trim().toLowerCase();
+      if (controlId && existingControlIds.has(controlId)) {
+        errors.push(`Control ID "${record.controlNumber}" already exists; row skipped.`);
+        return false;
+      }
+      return true;
+    });
+    nextRecords = [...additions, ...records];
+  }
+
+  records = normalizeRecords(nextRecords);
+  saveRecords();
+  logRecordChange(
+    replaceAll ? "Imported (replaced all)" : "Imported (added)",
+    { id: "import", name: `${imported.length} records from CSV` },
+    [`${imported.length} records imported`, ...(blockedHeaders.length ? [`Excluded PII columns: ${blockedHeaders.join(", ")}`] : [])],
+  );
+  resetApplicantForm();
+  renderAll();
+
+  const summary = `Imported ${imported.length} record${imported.length === 1 ? "" : "s"}${replaceAll ? " (existing records replaced)" : ""}.`;
+  const exclusions = blockedHeaders.length ? ` Excluded PII columns: ${blockedHeaders.join(", ")}.` : "";
+  const problems = errors.length ? ` ${errors.join(" ")}` : "";
+  return { ok: true, message: `${summary}${exclusions}${problems}` };
+}
+
+function handleCsvImport(event) {
+  event.preventDefault();
+  const file = importCsvFile.files?.[0];
+  if (!file) {
+    showMessage(importMessage, "Choose a CSV file to import.", true);
+    return;
+  }
+  const reader = new FileReader();
+  reader.addEventListener("load", () => {
+    const result = importCsvText(String(reader.result || ""), importReplace.checked);
+    showMessage(importMessage, result.message, !result.ok);
+    if (result.ok) importForm.reset();
+  });
+  reader.addEventListener("error", () => {
+    showMessage(importMessage, "Unable to read the selected file.", true);
+  });
+  reader.readAsText(file);
 }
 
 function downloadCsv() {

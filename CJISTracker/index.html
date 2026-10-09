@@ -308,6 +308,33 @@
 
       <section id="adminView" class="workspace hidden" aria-labelledby="adminHeading">
         <section id="adminTools" class="admin-tools">
+          <section class="panel" aria-labelledby="importHeading">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Data Import</p>
+                <h2 id="importHeading">Import Applicants from CSV</h2>
+              </div>
+            </div>
+            <form id="importForm" class="record-form compact-form">
+              <label>
+                CSV File
+                <input id="importCsvFile" type="file" accept=".csv,text/csv" required />
+              </label>
+              <label class="checkbox-inline">
+                <input id="importReplace" type="checkbox" checked />
+                Replace all existing records (unchecked: add to existing)
+              </label>
+              <div class="form-actions">
+                <button id="importCsvButton" class="primary-action" type="submit">Import</button>
+              </div>
+              <p id="importMessage" class="form-message" role="status"></p>
+              <p class="field-caption">
+                Columns are mapped by header name per the import crosswalk. Date of Birth,
+                Social Security Number, and Driver's License columns are always excluded
+                and never stored (DEC-012).
+              </p>
+            </form>
+          </section>
           <section class="panel" aria-labelledby="adminTableHeading">
             <div class="panel-heading">
               <div>

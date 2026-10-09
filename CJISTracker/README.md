@@ -15,6 +15,18 @@ rejected). Codes are stored only in the browser's local storage. To reset them, 
 the browser's local storage for this page (this also clears applicant records).
 
 Full Admin includes a change log for created, updated, and deleted applicant records.
+
+## Importing records from CSV
+
+Full Admin includes an "Import Applicants from CSV" panel. Columns are mapped by header
+name per `docs/planning/import-crosswalk-mastersheet.md`. US-format dates (M/D/YYYY) are
+converted automatically. "Replace all existing records" (default) clears current records
+first; unchecked, rows are added and rows whose Control ID already exists are skipped.
+Date of Birth, Social Security Number, and Driver's License columns are always excluded
+and never stored (DEC-012), and every import is recorded in the change log.
+
+The application ships with no built-in records; data arrives via manual entry or CSV
+import only.
 Notes remain editable on applicant records but are hidden from list tables.
 Applicant list tables are grouped by Clearance Type.
 
