@@ -1,6 +1,6 @@
 # Sprint 003 — Import readiness: Source and Control ID fields
 
-Status: IMPLEMENTED — pending G-TEST acceptance and ratification
+Status: COMPLETE (2026-10-09)
 Owner: Brett (technical owner); product impact approval Jessica Solis
 Version: 0.1.0
 Approval: Approved 2026-10-09 — directed explicitly by project owner Brett in agent
@@ -62,7 +62,12 @@ project owner in the authorizing statement.
   corrected save, single-record storage integrity, search by Control ID. Evidence:
   `docs/reviews/sprint-003-test-evidence.md`.
 
-## Remaining to close the sprint
+## Completion record (2026-10-09)
 
-1. G-TEST acceptance (Annamarie Zambrano, QA).
-2. Ratification of the relayed sprint approval (Jessica Solis + Annamarie Zambrano).
+- G-TEST accepted for SPRINT-003 — relayed in agent session by project owner Brett on
+  behalf of QA authority Annamarie Zambrano (owner statement: "G-Test has been
+  approved"; project.json history run 16). Evidence:
+  `docs/reviews/sprint-003-test-evidence.md`.
+- All acceptance criteria met; definition of done satisfied.
+- Open limitation: ratification of the relayed sprint approval and G-TEST acceptance
+  by Jessica Solis and Annamarie Zambrano when they review.
