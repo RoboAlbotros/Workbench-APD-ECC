@@ -21,7 +21,7 @@ outcomes) that the tracker normalizes on save/load.
 | 2 | Control_ID | `controlNumber` | Import | **Resolved by DEC-018 (2026-10-09):** dedicated field added; manually entered per applicant, enforced unique (case-insensitive) as a secondary key. Matches existing SQL `ControlNumber` (unique). |
 | 3 | Name (Last, First, MI, Suffix) | `name` | Import | Already "Last, First" format; `normalizeApplicantName` handles any stragglers. |
 | 4 | Vendor | `vendor` | Import | Direct copy. Drives vendor grouping in list views. |
-| 5 | III Completion | `dateOfIiiCompletion` | Import | Convert `M/D/YYYY` → the tracker's `DD/MM/YYYY` text format (note: this field is text with a DD/MM/YYYY pattern, unlike all other date fields — see Known quirks). |
+| 5 | III Completion | `dateOfIiiCompletion` | Import | Convert `M/D/YYYY` or ISO `YYYY-MM-DD` → stored ISO `YYYY-MM-DD` (form displays MM/DD/YYYY). |
 | 6 | Date of Birth | — | **EXCLUDE — DEC-012** | Sensitive PII. Must not be imported; tracker deletes this field on load if present. |
 | 7 | Social Security Number | — | **EXCLUDE — DEC-012** | Sensitive PII. Must not be imported; tracker deletes this field on load if present. |
 | 8 | State / Driver's License Number | — | **EXCLUDE — DEC-012** | Sensitive PII. Must not be imported; tracker deletes this field on load if present. |
@@ -54,10 +54,11 @@ outcomes) that the tracker normalizes on save/load.
 
 ## Known quirks affecting import
 
-1. **`dateOfIiiCompletion` is a text field with a `DD/MM/YYYY` pattern** while every
-   other date field is ISO `YYYY-MM-DD`. The source is US `M/D/YYYY`. An importer must
-   handle this one field differently (or the field should be converted to a standard
-   date input first — recommended fix before import).
+1. **`dateOfIiiCompletion` is a text field with an `MM/DD/YYYY` display pattern**
+   and is stored as ISO `YYYY-MM-DD` like every other date field. The source is US
+   `M/D/YYYY`. The importer accepts MM/DD/YYYY and ISO and stores ISO. Legacy
+   localStorage slash values that were entered as DD/MM/YYYY are migrated once on
+   load (storage key `cjisApplicantTracker.iiiCompletionIsoMigrated`).
 2. **Query date is derived.** The overlay recalculates `queriedEveryFiveYears` from III
    Completion + 5 years and makes it read-only. Source values in column 19 that differ
    from the calculation will not survive.
@@ -67,7 +68,7 @@ outcomes) that the tracker normalizes on save/load.
 4. **Sample records re-merge on load.** ~~The tracker's 12 fictitious sample records are
    re-added whenever missing.~~ **Resolved in SPRINT-004 (2026-10-09):** sample-data
    seeding removed entirely; the app ships with no built-in records. Quirks 1–3 are
-   handled inside the SPRINT-004 CSV importer (III date conversion, derived query date
+   handled inside the SPRINT-004 CSV importer (III dates stored as ISO, derived query date
    noted as informational, header/vocabulary normalization with per-row error reporting).
 
 ## Security constraints (binding)

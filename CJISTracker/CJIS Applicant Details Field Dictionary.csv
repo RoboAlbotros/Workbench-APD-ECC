@@ -5,7 +5,7 @@ Source,source,String,Read-only text; populated at import or left blank
 Vendor,vendor,String,Dropdown populated from entered vendor values
 Requestor,requestor,String,Text
 Date Information Provided,dateInformationProvided,Date,Date
-Date of III Completion,dateOfIiiCompletion,Date,Date
+Date of III Completion,dateOfIiiCompletion,Date,Date; display MM/DD/YYYY; stored ISO YYYY-MM-DD
 III - Status,iiiStatus,Enum,Clear | Misd/Clear | Felony
 Clearance Type,clearanceType,Enum,Full Clearance | One Time Visit | No Access Given
 Access Type,accessType,"Array<String>",Checkbox group; VPN | Non VPN | Security Groups | Facility Access | Unescorted Access | Building Access | Escorted Access | System Access | System/Building

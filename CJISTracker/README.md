@@ -19,8 +19,8 @@ Full Admin includes a change log for created, updated, and deleted applicant rec
 ## Importing records from CSV
 
 Full Admin includes an "Import Applicants from CSV" panel. Columns are mapped by header
-name per `docs/planning/import-crosswalk-mastersheet.md`. US-format dates (M/D/YYYY) are
-converted automatically. "Replace all existing records" (default) clears current records
+name per `docs/planning/import-crosswalk-mastersheet.md`. US-format dates (MM/DD/YYYY) and ISO dates (YYYY-MM-DD) are
+accepted; Date of III Completion is stored as ISO like other date fields. "Replace all existing records" (default) clears current records
 first; unchecked, rows are added and rows whose Control ID already exists are skipped.
 Date of Birth, Social Security Number, and Driver's License columns are always excluded
 and never stored (DEC-012), and every import is recorded in the change log.
@@ -51,7 +51,7 @@ Access Type supports multiple selections.
 - Vendor
 - Requestor
 - Date Information Provided
-- Date of III Completion
+- Date of III Completion (entered as MM/DD/YYYY; stored as ISO YYYY-MM-DD)
 - III - Status
 - Clearance Type
 - Access Type

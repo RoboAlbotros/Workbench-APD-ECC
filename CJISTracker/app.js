@@ -2,6 +2,7 @@ const STORAGE_KEYS = {
   records: "cjisApplicantTracker.records",
   changeLog: "cjisApplicantTracker.changeLog",
   accessCodes: "cjisApplicantTracker.accessCodes",
+  iiiCompletionIsoMigrated: "cjisApplicantTracker.iiiCompletionIsoMigrated",
 };
 
 // Access codes are operator-configured on first run (SPRINT-002).
@@ -129,10 +130,15 @@ const ACCESS_TYPE_OPTIONS = [
 ];
 
 let inquiryDueMigrationCount = 0;
+let iiiCompletionMigrationCount = 0;
+let iiiCompletionIsoMigrated = localStorage.getItem(STORAGE_KEYS.iiiCompletionIsoMigrated) === "1";
 let records = loadRecords();
 let changeLog = loadChangeLog();
 if (inquiryDueMigrationCount) {
   logInquiryDueMigration(inquiryDueMigrationCount);
+}
+if (iiiCompletionMigrationCount) {
+  logIiiCompletionIsoMigration(iiiCompletionMigrationCount);
 }
 let currentUser = null;
 let currentView = "limited";
@@ -244,7 +250,10 @@ documentUpload.addEventListener("change", handleDocumentUpload);
 
 function loadRecords() {
   const raw = localStorage.getItem(STORAGE_KEYS.records);
-  if (!raw) return [];
+  if (!raw) {
+    markIiiCompletionMigrated();
+    return [];
+  }
 
   try {
     const parsed = JSON.parse(raw);
@@ -285,6 +294,7 @@ function saveChangeLog() {
 function normalizeRecords(recordSet) {
   const normalized = recordSet.map((record) => {
     const legacyDate = record.completedProcessOrSiteVisit || "";
+    const storedIiiCompletion = toStoredIiiCompletionDate(record.dateOfIiiCompletion);
     const nextRecord = {
       ...record,
       name: normalizeApplicantName(record.name),
@@ -295,8 +305,8 @@ function normalizeRecords(recordSet) {
       iiiStatus: normalizeIiiStatus(record.iiiStatus),
       clearanceType: normalizeClearanceType(record.clearanceType),
       securityAddendum: normalizeDateValue(record.securityAddendum),
-      dateOfIiiCompletion: record.dateOfIiiCompletion || "",
-      queriedEveryFiveYears: computeInquiryDueDate(record.dateOfIiiCompletion),
+      dateOfIiiCompletion: storedIiiCompletion,
+      queriedEveryFiveYears: computeInquiryDueDate(storedIiiCompletion),
       accessType: normalizeAccessType(record.accessType),
       cjisSecurityAwarenessRole: record.cjisSecurityAwarenessRole || "",
       ncicCertification: normalizeYesNo(record.ncicCertification),
@@ -324,6 +334,7 @@ function normalizeRecords(recordSet) {
     return nextRecord;
   });
 
+  markIiiCompletionMigrated();
   saveRecordSet(normalized);
   return normalized;
 }
@@ -490,7 +501,11 @@ function getFormFieldValue(field) {
       .join(", ");
   }
 
-  return document.querySelector(`#${field}`).value.trim();
+  const raw = document.querySelector(`#${field}`).value.trim();
+  if (field === "dateOfIiiCompletion") {
+    return toIsoDate(parseIiiCompletionDate(raw));
+  }
+  return raw;
 }
 
 function setFormFieldValue(field, value) {
@@ -501,6 +516,11 @@ function setFormFieldValue(field, value) {
     document.querySelectorAll('input[name="accessTypeValues"]').forEach((input) => {
       input.checked = selectedValues.includes(input.value);
     });
+    return;
+  }
+
+  if (field === "dateOfIiiCompletion") {
+    document.querySelector(`#${field}`).value = toMmDdYyyy(parseIiiCompletionDate(value));
     return;
   }
 
@@ -1171,14 +1191,50 @@ function isQueryDue(record) {
   return due <= today;
 }
 
+// Date of III Completion: display MM/DD/YYYY, store ISO YYYY-MM-DD.
+// Legacy localStorage slash dates were DD/MM/YYYY; a one-time flag
+// (STORAGE_KEYS.iiiCompletionIsoMigrated) interprets those as DD/MM once, then
+// rewrites them to ISO so 10/02/2026 (10 Feb) becomes 2026-02-10, not 2 Oct.
+function parseIsoDateParts(value) {
+  const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value || "").trim());
+  if (!iso) return null;
+  return { year: Number(iso[1]), month: Number(iso[2]), day: Number(iso[3]) };
+}
+
+function parseSlashDateParts(value, order) {
+  const slash = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(String(value || "").trim());
+  if (!slash) return null;
+  if (order === "ddmm") {
+    return { year: Number(slash[3]), month: Number(slash[2]), day: Number(slash[1]) };
+  }
+  return { year: Number(slash[3]), month: Number(slash[1]), day: Number(slash[2]) };
+}
+
 function parseIiiCompletionDate(value) {
   const text = String(value || "").trim();
   if (!text) return null;
-  const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text);
-  if (iso) return { year: Number(iso[1]), month: Number(iso[2]), day: Number(iso[3]) };
-  const ddmm = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(text);
-  if (ddmm) return { year: Number(ddmm[3]), month: Number(ddmm[2]), day: Number(ddmm[1]) };
-  return null;
+  return parseIsoDateParts(text) || parseSlashDateParts(text, "mmdd");
+}
+
+function markIiiCompletionMigrated() {
+  if (iiiCompletionIsoMigrated) return;
+  iiiCompletionIsoMigrated = true;
+  localStorage.setItem(STORAGE_KEYS.iiiCompletionIsoMigrated, "1");
+}
+
+function toStoredIiiCompletionDate(value) {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  const iso = parseIsoDateParts(text);
+  if (iso) return toIsoDate(iso);
+  if (!iiiCompletionIsoMigrated) {
+    const legacy = parseSlashDateParts(text, "ddmm");
+    if (legacy) {
+      iiiCompletionMigrationCount += 1;
+      return toIsoDate(legacy);
+    }
+  }
+  return toIsoDate(parseIiiCompletionDate(text));
 }
 
 function addYearsToDateParts(parts, years) {
@@ -1198,6 +1254,23 @@ function syncInquiryDueField() {
   const iiiField = document.querySelector("#dateOfIiiCompletion");
   if (!dueField || !iiiField) return;
   dueField.value = computeInquiryDueDate(iiiField.value);
+}
+
+function logIiiCompletionIsoMigration(changedCount) {
+  changeLog.unshift({
+    id: crypto.randomUUID(),
+    recordId: "iii-completion-iso-migration",
+    applicantName: `${changedCount} stored record(s)`,
+    vendor: "",
+    action: "Migrated",
+    changes: [`Converted Date of III Completion from legacy DD/MM/YYYY display strings to stored ISO YYYY-MM-DD for ${changedCount} stored record(s), preserving the same calendar day.`],
+    changedBy: "System",
+    role: "admin",
+    roleLabel: "System",
+    changedAt: new Date().toISOString(),
+  });
+  changeLog = changeLog.slice(0, 500);
+  saveChangeLog();
 }
 
 function logInquiryDueMigration(changedCount) {
@@ -1230,7 +1303,7 @@ const IMPORT_HEADER_MAP = [
   { match: /^vendor$/i, field: "vendor" },
   { match: /^requestor$/i, field: "requestor" },
   { match: /^date information provided$/i, field: "dateInformationProvided", type: "isoDate" },
-  { match: /iii\s*completion/i, field: "dateOfIiiCompletion", type: "ddmmDate" },
+  { match: /iii\s*completion/i, field: "dateOfIiiCompletion", type: "isoDate" },
   { match: /^iii\s*-?\s*status$/i, field: "iiiStatus" },
   { match: /clearance/i, field: "clearanceType" },
   { match: /^access type$/i, field: "accessType" },
@@ -1304,9 +1377,9 @@ function toIsoDate(parts) {
   return `${parts.year}-${String(parts.month).padStart(2, "0")}-${String(parts.day).padStart(2, "0")}`;
 }
 
-function toDdMmYyyy(parts) {
+function toMmDdYyyy(parts) {
   if (!parts) return "";
-  return `${String(parts.day).padStart(2, "0")}/${String(parts.month).padStart(2, "0")}/${parts.year}`;
+  return `${String(parts.month).padStart(2, "0")}/${String(parts.day).padStart(2, "0")}/${parts.year}`;
 }
 
 function importCsvText(csvText, replaceAll) {
@@ -1346,8 +1419,6 @@ function importCsvText(csvText, replaceAll) {
       const raw = String(cells[columnIndex] ?? "").trim();
       if (column.type === "isoDate") {
         record[column.field] = toIsoDate(parseUsOrIsoDate(raw));
-      } else if (column.type === "ddmmDate") {
-        record[column.field] = toDdMmYyyy(parseUsOrIsoDate(raw));
       } else {
         record[column.field] = raw;
       }
@@ -1429,7 +1500,7 @@ function handleCsvImport(event) {
 
 function downloadCsv() {
   const header = adminFields.map((field) => labels[field]);
-  const rows = records.map((record) => adminFields.map((field) => record[field] || ""));
+  const rows = records.map((record) => adminFields.map((field) => exportFieldValue(field, record[field])));
   const csv = [header, ...rows]
     .map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(","))
     .join("\n");
@@ -1442,9 +1513,17 @@ function downloadCsv() {
   URL.revokeObjectURL(url);
 }
 
+function exportFieldValue(field, value) {
+  if (field === "dateOfIiiCompletion") {
+    return toMmDdYyyy(parseIiiCompletionDate(value));
+  }
+  return value || "";
+}
+
 function isDateField(field) {
   return [
     "dateInformationProvided",
+    "dateOfIiiCompletion",
     "fingerprintsNotifiedCompleted",
     "securityAwarenessExpiration",
     "securityAddendum",

@@ -48,6 +48,14 @@ Recorded interpretations of the owner answers:
    "Next III Inquiry Due (5 yrs)", with a one-time migration of stored records on
    load and the "Query Due" metric updated to compare that due date against today.
 
+Date display format (C1, owner 2026-10-09): all date UX uses MM/DD/YYYY, not
+DD/MM/YYYY. Date of III Completion stays a text input with MM/DD/YYYY
+placeholder/pattern; the stored value is ISO YYYY-MM-DD. Existing slash dates
+are migrated once on load by interpreting them as legacy DD/MM/YYYY and rewriting
+to ISO so the calendar day is preserved (example: `10/02/2026` meaning 10 Feb
+becomes `2026-02-10`). Native `type=date` fields keep ISO storage and browser-locale
+display.
+
 ## Column-to-field mapping (admin "All Applicant Records" table)
 
 All owner-named columns map to existing field keys in `app.js`; no field invention
