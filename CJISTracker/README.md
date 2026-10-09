@@ -25,6 +25,9 @@ first; unchecked, rows are added and rows whose Control ID already exists are sk
 Date of Birth, Social Security Number, and Driver's License columns are always excluded
 and never stored (DEC-012), and every import is recorded in the change log.
 
+The import panel is currently commented out in `index.html` at owner direction (it is a
+one-time pre-go-live function); re-enable it by uncommenting that section.
+
 The application ships with no built-in records; data arrives via manual entry or CSV
 import only.
 Notes remain editable on applicant records but are hidden from list tables.

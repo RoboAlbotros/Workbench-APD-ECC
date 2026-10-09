@@ -173,7 +173,7 @@ const importMessage = document.querySelector("#importMessage");
 
 accessForm.addEventListener("submit", signInManagementUser);
 accessSetupForm.addEventListener("submit", completeAccessSetup);
-importForm.addEventListener("submit", handleCsvImport);
+if (importForm) importForm.addEventListener("submit", handleCsvImport);
 
 function updateSetupVisibility() {
   const needsSetup = !accessCodes;

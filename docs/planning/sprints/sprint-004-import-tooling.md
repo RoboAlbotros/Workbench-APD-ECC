@@ -75,3 +75,6 @@ behavior; no trust-boundary change (import is gated behind existing Full Admin a
   for sprint 004."; project.json history run 20).
 - G-TEST evidence: `docs/reviews/sprint-004-test-evidence.md`.
 - All acceptance criteria met and definition of done satisfied.
+- At owner direction post-import, the import panel was commented out of the UI
+  (one-time pre-go-live function; code retained; re-enable by uncommenting in
+  `index.html`).
