@@ -61,8 +61,14 @@ behavior; no trust-boundary change (import is gated behind existing Full Admin a
 - Scripted browser acceptance tests PASSED; evidence:
   `docs/reviews/sprint-004-test-evidence.md`.
 
+- **Live import confirmed by the project owner, 2026-10-09** ("import looks good" —
+  project.json history run 18): sample records replaced with the four MasterSheet
+  records in the owner's working environment, exercising the file-picker path noted as
+  untested in the scripted evidence.
+- Post-implementation UI adjustment at owner direction: Control ID and Source columns
+  hidden from the Full Admin records table (fields retained in form, search, export).
+
 ## Remaining to close the sprint
 
-1. Owner performs the live import in his working browser (feature + CSV delivered).
-2. G-TEST acceptance (Annamarie Zambrano, QA).
-3. Ratification of the relayed sprint approval (Jessica Solis + Annamarie Zambrano).
+1. G-TEST acceptance (Annamarie Zambrano, QA).
+2. Ratification of the relayed sprint approval (Jessica Solis + Annamarie Zambrano).
