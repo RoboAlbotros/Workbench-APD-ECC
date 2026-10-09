@@ -1,6 +1,6 @@
 # Sprint 004 — Import tooling and sample-data removal
 
-Status: IMPLEMENTED — pending G-TEST acceptance and ratification
+Status: COMPLETE (2026-10-09)
 Owner: Brett (technical owner); product impact approval Jessica Solis
 Version: 0.1.0
 Approval: Approved 2026-10-09 — directed explicitly by project owner Brett in agent
@@ -68,7 +68,10 @@ behavior; no trust-boundary change (import is gated behind existing Full Admin a
 - Post-implementation UI adjustment at owner direction: Control ID and Source columns
   hidden from the Full Admin records table (fields retained in form, search, export).
 
-## Remaining to close the sprint
+## Completion record (2026-10-09)
 
-1. G-TEST acceptance (Annamarie Zambrano, QA).
-2. Ratification of the relayed sprint approval (Jessica Solis + Annamarie Zambrano).
+- Sprint approval ratified and G-TEST accepted as relayed by project owner Brett on
+  behalf of Jessica Solis and Annamarie Zambrano (owner statement: "I have approval
+  for sprint 004."; project.json history run 20).
+- G-TEST evidence: `docs/reviews/sprint-004-test-evidence.md`.
+- All acceptance criteria met and definition of done satisfied.

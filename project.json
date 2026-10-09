@@ -19,8 +19,8 @@
   },
   "state": {
     "lifecycleStage": "development",
-    "frameworkPhase": "SPRINT-004",
-    "workStatus": "active",
+    "frameworkPhase": "post-SPRINT-004",
+    "workStatus": "paused",
     "blockingState": "clear",
     "blockers": [],
     "health": {
@@ -44,13 +44,12 @@
     "summary": {
       "outcome": "TBD — owner decision required.",
       "accountableOwner": "Jessica Solis (product owner)",
-      "nextMilestone": "SPRINT-004 close: G-TEST acceptance and ratification (implementation, test evidence, and owner live import complete)",
-      "nextRequiredDecision": "Annamarie Zambrano (QA): G-TEST acceptance of docs/reviews/sprint-004-test-evidence.md",
+      "nextMilestone": "SPRINT-005 (UI/UX redesign) proposal and approval; then release preparation toward 0.1.0",
+      "nextRequiredDecision": "Owner: select redesign direction for SPRINT-005 from the options review; governance authorities approve the sprint once proposed",
       "decisionsRequired": [
-        "G-TEST acceptance of docs/reviews/sprint-004-test-evidence.md (Annamarie Zambrano)",
-        "Ratification of relayed SPRINT-003/004 approvals (Jessica Solis + Annamarie Zambrano)"
+        "Select SPRINT-005 redesign direction and approve the sprint proposal"
       ],
-      "lastUpdated": "2026-10-09T03:17:00-06:00"
+      "lastUpdated": "2026-10-09T08:43:00-06:00"
     }
   },
   "release": {
@@ -99,7 +98,7 @@
     "G-SCOPE": { "state": "satisfied", "owner": "Jessica Solis (product) + Jessica Solis/Annamarie Zambrano (outcome, joint)", "decisionDate": "2026-10-08", "evidence": "docs/product/product-definition.md 0.1.0 APPROVED; confirmation relayed by project owner in agent session (history run 9)", "scope": "project" },
     "G-ARCH": { "state": "pending", "owner": "Technical owner (TBD)", "decisionDate": null, "evidence": null, "scope": "project" },
     "G-SEC": { "state": "pending", "owner": "Security/privacy authority (TBD)", "decisionDate": null, "evidence": null, "scope": "project" },
-    "G-TEST": { "state": "satisfied", "owner": "Annamarie Zambrano (QA)", "decisionDate": "2026-10-09", "evidence": "SPRINT-002: docs/reviews/sprint-002-test-evidence.md (relayed, history run 14). SPRINT-003: docs/reviews/sprint-003-test-evidence.md (relayed, history run 16).", "scope": "per-sprint; latest SPRINT-003" },
+    "G-TEST": { "state": "satisfied", "owner": "Annamarie Zambrano (QA)", "decisionDate": "2026-10-09", "evidence": "SPRINT-002: docs/reviews/sprint-002-test-evidence.md (relayed, history run 14). SPRINT-003: docs/reviews/sprint-003-test-evidence.md (relayed, history run 16). SPRINT-004: docs/reviews/sprint-004-test-evidence.md (relayed, history run 20).", "scope": "per-sprint; latest SPRINT-004" },
     "G-CAND": { "state": "pending", "owner": "Release authority (TBD)", "decisionDate": null, "evidence": null, "scope": "release 0.1.0" },
     "G-REL": { "state": "pending", "owner": "Release authority (TBD)", "decisionDate": null, "evidence": null, "scope": "release 0.1.0" }
   },
@@ -149,7 +148,7 @@
     "nistAppendix": "docs/appendices/nist/README.md",
     "prototype": "CJISTracker/README.md"
   },
-  "currentAuthorizedWork": "SPRINT-004",
+  "currentAuthorizedWork": null,
   "history": [
     { "timestamp": "2026-10-05", "actor": "Codex primary agent (run 1)", "event": "Draft governing documents created in empty directory.", "basis": "User-pasted SGK initialization request" },
     { "timestamp": "2026-10-07", "actor": "Cursor primary agent (run 2)", "event": "SGK location preflight; authoritative package not found; repo initialized and pushed to GitHub.", "basis": "User continuation request" },
@@ -169,14 +168,15 @@
     { "timestamp": "2026-10-09T02:55:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 15)", "event": "DEC-018 recorded and SPRINT-003 (import readiness: Source and Control ID fields) authorized as a C3 data-model change, directed explicitly by the project owner and relayed on behalf of joint governance authorities (ratification open). Implemented same session: read-only 'source' field; 'controlNumber' (Control ID) manual unique secondary key with case-insensitive duplicate rejection, table display, and search; field dictionary, SQL schema (SourceName column), and import crosswalk aligned. Scripted browser acceptance tests passed; evidence in docs/reviews/sprint-003-test-evidence.md. Open: G-TEST (Annamarie Zambrano), ratification. Background: import crosswalk for CJIS MasterSheet authored (docs/planning/import-crosswalk-mastersheet.md); DOB/SSN/DL columns excluded from any import per DEC-012/DEC-017.", "basis": "Owner statement: 'Yes Source create field called Source as read only  Yes create a Control_ID field which will be manually input for each applicant tracked treat as secondary key the is unique, which would be a C3 data-model change'" },
     { "timestamp": "2026-10-09T02:45:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 16)", "event": "SPRINT-003 COMPLETE. G-TEST accepted for SPRINT-003 as relayed by project owner on behalf of QA authority Annamarie Zambrano (evidence: docs/reviews/sprint-003-test-evidence.md). All acceptance criteria met. Open limitation: ratification of the relayed sprint approval and G-TEST acceptance by Jessica Solis and Annamarie Zambrano. currentAuthorizedWork = null; next sprint candidates: release preparation toward 0.1.0, import tooling.", "basis": "Owner statement: 'G-Test has been approved'" },
     { "timestamp": "2026-10-09T03:15:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 17)", "event": "SPRINT-004 (import tooling and sample-data removal) authorized as C3, directed explicitly by the project owner and relayed on behalf of joint governance authorities (ratification open). Implemented same session: sample-data seeding removed (app ships with zero records); admin-only CSV import with crosswalk header mapping, US-date conversion, replace/additive modes, per-row errors, change-log audit, and unconditional DOB/SSN/DL column exclusion (DEC-012); sanitized CSV generated from the MasterSheet via Excel COM with PII columns dropped at extraction, stored outside the repository. Scripted browser acceptance tests passed (4 records imported, mapping/normalization verified, PII exclusion verified); evidence in docs/reviews/sprint-004-test-evidence.md. Open: owner live import, G-TEST, ratification.", "basis": "Owner statement: 'next is Import tooling and I want to remove all exsisting records from tracker and import records in MasterSheet located \"C:\\\\Users\\\\E41646\\\\Documents\\\\ECC\\\\Worksheet Consolodation\\\\CJIS_MasterSheet_wPII-Test.xlsx\"'" },
-    { "timestamp": "2026-10-09T03:17:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 18)", "event": "Owner live import confirmed successful in his working environment, exercising the file-picker path untested in the scripted run. Also at owner direction: Control ID and Source columns hidden from the Full Admin records table display (fields retained in form, search, export). SPRINT-004 implementation fully verified; open: G-TEST (Annamarie Zambrano), ratification.", "basis": "Owner statements: 'import looks good' and 'From the full admin view All Applicant Records section remove column ControlID and Source from displayed list'" }
+    { "timestamp": "2026-10-09T03:17:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 18)", "event": "Owner live import confirmed successful in his working environment, exercising the file-picker path untested in the scripted run. Also at owner direction: Control ID and Source columns hidden from the Full Admin records table display (fields retained in form, search, export). SPRINT-004 implementation fully verified; open: G-TEST (Annamarie Zambrano), ratification.", "basis": "Owner statements: 'import looks good' and 'From the full admin view All Applicant Records section remove column ControlID and Source from displayed list'" },
+    { "timestamp": "2026-10-09T08:43:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 20)", "event": "SPRINT-004 COMPLETE. Sprint approval ratified and G-TEST accepted as relayed by project owner on behalf of Jessica Solis and Annamarie Zambrano (evidence: docs/reviews/sprint-004-test-evidence.md). All acceptance criteria met: sample data removed, governed CSV import delivered with PII-column exclusion, owner live import verified. currentAuthorizedWork = null. Next: SPRINT-005 (UI/UX redesign) designated by owner agreement earlier this session; proposal pending direction selection.", "basis": "Owner statement: 'I have approval for sprint 004.'" }
   ],
   "validation": {
     "validator": "python-jsonschema (Draft202012Validator), Python 3.14.0",
     "validatorVersion": "4.26.0",
     "schemaVersion": "3.0.0",
     "result": "pass",
-    "timestamp": "2026-10-09T03:17:00-06:00",
+    "timestamp": "2026-10-09T08:43:00-06:00",
     "limitations": "Structural conformance only; proves canonical values and shape, not factual accuracy, evidence sufficiency, approvals, gate satisfaction, or policy compliance. Schema is the project-authored profile, not an official SGK schema."
   },
   "extensions": {
