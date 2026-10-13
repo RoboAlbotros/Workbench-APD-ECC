@@ -4,80 +4,57 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>CJIS Applicant Tracker</title>
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=sprint-005-center" />
   </head>
   <body class="signed-out">
     <header class="app-header" aria-label="Application header">
       <h1>CJIS Applicant Tracker</h1>
-      <div id="headerMetrics" class="header-metrics hidden" aria-label="Applicant summary">
-        <div class="metric">
-          <span id="totalCount">0</span>
-          <p>Total</p>
-        </div>
-        <div class="metric">
-          <span id="fullClearanceCount">0</span>
-          <p>Full Clearance</p>
-        </div>
-        <div class="metric">
-          <span id="siteVisitCount">0</span>
-          <p>One Time Visit</p>
-        </div>
-        <div class="metric">
-          <span id="queryDueCount">0</span>
-          <p>Query Due</p>
-        </div>
-      </div>
-      <div class="header-controls">
-        <div id="viewSwitch" class="view-switch hidden" role="tablist" aria-label="View mode">
-          <button id="limitedViewButton" class="active" type="button" role="tab" aria-selected="true">
-            Limited View
-          </button>
-          <button id="recordsViewButton" type="button" role="tab" aria-selected="false">
-            Records View
-          </button>
-          <button id="adminViewButton" type="button" role="tab" aria-selected="false">
-            Full Admin
-          </button>
-        </div>
-        <div id="sessionControls" class="session-controls hidden">
-          <span id="currentUserBadge" class="status-pill"></span>
-          <button id="signOutButton" class="secondary-action" type="button">Sign Out</button>
-        </div>
+      <div id="viewSwitch" class="view-switch hidden" role="tablist" aria-label="View mode">
+        <button id="limitedViewButton" class="active" type="button" role="tab" aria-selected="true">
+          Limited View
+        </button>
+        <button id="recordsViewButton" type="button" role="tab" aria-selected="false">
+          Records View
+        </button>
+        <button id="adminViewButton" type="button" role="tab" aria-selected="false">
+          Full Admin
+        </button>
       </div>
     </header>
 
     <main class="shell">
       <section id="accessPanel" class="panel access-panel" aria-labelledby="accessHeading">
-        <div class="panel-heading">
-          <div>
-            <p class="eyebrow">Management Access</p>
-            <h2 id="accessHeading">Sign In</h2>
+        <div class="access-bar">
+          <p id="accessHeading" class="eyebrow">Management Access</p>
+          <form id="accessForm" class="signin-inline">
+            <label>
+              User Name
+              <input id="managementUserName" type="text" autocomplete="name" required />
+            </label>
+            <label>
+              Access Level
+              <select id="managementAccessLevel" required>
+                <option value="">Select access level</option>
+                <option value="limited">Limited View</option>
+                <option value="records">Records View</option>
+                <option value="admin">Full Admin</option>
+              </select>
+            </label>
+            <label>
+              Access Code
+              <input id="managementAccessCode" type="password" inputmode="numeric" autocomplete="current-password" required />
+            </label>
+            <div class="form-actions">
+              <button class="primary-action" type="submit">Sign In</button>
+            </div>
+          </form>
+          <div id="sessionControls" class="session-controls hidden">
+            <span id="currentUserBadge" class="status-pill"></span>
+            <button id="signOutButton" class="secondary-action" type="button">Sign Out</button>
           </div>
         </div>
-        <form id="accessForm" class="record-form compact-form">
-          <label>
-            User Name
-            <input id="managementUserName" type="text" autocomplete="name" required />
-          </label>
-          <label>
-            Access Level
-            <select id="managementAccessLevel" required>
-              <option value="">Select access level</option>
-              <option value="limited">Limited View</option>
-              <option value="records">Records View</option>
-              <option value="admin">Full Admin</option>
-            </select>
-          </label>
-          <label>
-            Access Code
-            <input id="managementAccessCode" type="password" inputmode="numeric" autocomplete="current-password" required />
-          </label>
-          <div class="form-actions">
-            <button class="primary-action" type="submit">Sign In</button>
-          </div>
-          <p id="accessMessage" class="form-message" role="status"></p>
-        </form>
-        <form id="accessSetupForm" class="record-form compact-form hidden" aria-label="Initial access code setup">
+        <p id="accessMessage" class="form-message" role="status"></p>
+        <form id="accessSetupForm" class="signin-inline setup-inline hidden" aria-label="Initial access code setup">
           <p class="field-caption">
             First-run setup: create the access codes for each view level. Codes must be at least 4 characters,
             all different, and are stored only in this browser.
@@ -102,6 +79,24 @@
       </section>
 
       <section id="toolbar" class="toolbar hidden" aria-label="Applicant filters">
+        <div id="headerMetrics" class="header-metrics hidden" aria-label="Applicant summary">
+          <div class="metric">
+            <span id="totalCount">0</span>
+            <p>Total</p>
+          </div>
+          <div class="metric">
+            <span id="fullClearanceCount">0</span>
+            <p>Full Clearance</p>
+          </div>
+          <div class="metric">
+            <span id="siteVisitCount">0</span>
+            <p>One Time Visit</p>
+          </div>
+          <div class="metric">
+            <span id="queryDueCount">0</span>
+            <p>Query Due</p>
+          </div>
+        </div>
         <label class="search-field">
           Search applicants
           <input id="searchInput" type="search" placeholder="Name, Control ID, vendor, requestor, or applicant email" />
@@ -121,7 +116,6 @@
             <option value="all">All fingerprint outcomes</option>
           </select>
         </label>
-        <button id="resetForm" class="primary-action hidden" type="button">New Applicant</button>
       </section>
 
       <section id="limitedView" class="workspace hidden">
@@ -186,8 +180,11 @@
                 <p class="eyebrow">Full Admin</p>
                 <h2 id="adminTableHeading">All Applicant Records</h2>
               </div>
-              <!-- Export CSV control retained for later use (owner 2026-10-09). Hidden from the UI. -->
-              <button id="exportCsv" class="secondary-action hidden" type="button">Export CSV</button>
+              <div class="panel-heading-actions">
+                <button id="resetForm" class="primary-action" type="button">New Applicant</button>
+                <!-- Export CSV control retained for later use (owner 2026-10-09). Hidden from the UI. -->
+                <button id="exportCsv" class="secondary-action hidden" type="button">Export CSV</button>
+              </div>
             </div>
             <div id="adminTable" class="table-wrap" aria-live="polite"></div>
           </section>
@@ -200,7 +197,7 @@
     </main>
 
     <div id="drawerBackdrop" class="drawer-backdrop hidden" hidden></div>
-    <aside id="editorPanel" class="record-drawer hidden" role="dialog" aria-modal="true" aria-labelledby="formHeading">
+    <aside id="editorPanel" class="editor-panel record-drawer hidden" role="dialog" aria-modal="true" aria-labelledby="formHeading">
       <div class="drawer-header">
         <div>
           <p id="editorEyebrow" class="eyebrow">Records</p>
@@ -385,8 +382,8 @@
       </section>
     </aside>
 
-    <script src="test-applicants.js"></script>
-    <script src="app.js"></script>
+    <script src="test-applicants.js?v=sprint-005"></script>
+    <script src="app.js?v=sprint-005"></script>
     <!-- tracker-list-overrides.js retired in SPRINT-005; behaviors folded into app.js and styles.css. -->
   </body>
 </html>
