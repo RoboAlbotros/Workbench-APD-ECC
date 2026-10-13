@@ -1,0 +1,23 @@
+{
+  "provider": "entra-id",
+  "decision": "DEC-015",
+  "status": "scaffolding-only",
+  "notes": [
+    "City SSO / Entra ID is the recorded production authentication direction.",
+    "Server-side RBAC must enforce Limited / Records / Admin. Browser PINs never apply in production.",
+    "All identifiers below are unassigned. Do not invent tenant IDs, client secrets, or City policy.",
+    "Do not implement a live login against Entra in this sprint."
+  ],
+  "tenantId": "TBD",
+  "clientId": "TBD",
+  "clientSecret": "TBD",
+  "redirectUri": "TBD",
+  "authorizeUrl": "https://login.microsoftonline.com/TBD/oauth2/v2.0/authorize",
+  "tokenUrl": "https://login.microsoftonline.com/TBD/oauth2/v2.0/token",
+  "roleClaim": "TBD",
+  "roleMap": {
+    "TBD-limited-claim": "limited",
+    "TBD-records-claim": "records",
+    "TBD-admin-claim": "admin"
+  }
+}

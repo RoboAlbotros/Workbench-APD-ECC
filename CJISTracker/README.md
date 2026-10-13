@@ -57,6 +57,8 @@ Access Type supports multiple selections.
 ## Tracked fields
 
 - Name (Last, First, MI, Suffix)
+- Control ID (unique secondary key)
+- Source (read-only in the UI)
 - Vendor
 - Requestor
 - Date Information Provided
@@ -81,3 +83,16 @@ Access Type supports multiple selections.
 - Notes
 
 Data is stored in the browser's local storage. For production CJIS workflows, connect this interface to server-side authentication, authorization, encryption, auditing, and a managed database.
+
+## SQL schema and future backend (SPRINT-006)
+
+The creatable SQL Server script is `database-schema.sql`. It does not change this
+localStorage app. Create the database with:
+
+```text
+sqlcmd -S <server> -E -i "CJISTracker\database-schema.sql"
+```
+
+or Execute the file in SSMS. Reserved API/SSO stubs live in `backend/`
+(see `backend/README.md` and `docs/architecture/sso-entra-id.md`). They are
+scaffolding only; this browser app is not wired to them.

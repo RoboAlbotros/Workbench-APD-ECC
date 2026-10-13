@@ -19,7 +19,7 @@
   },
   "state": {
     "lifecycleStage": "development",
-    "frameworkPhase": "SPRINT-005",
+    "frameworkPhase": "SPRINT-006",
     "workStatus": "active",
     "blockingState": "clear",
     "blockers": [],
@@ -44,10 +44,10 @@
     "summary": {
       "outcome": "TBD — owner decision required.",
       "accountableOwner": "Jessica Solis (product owner)",
-      "nextMilestone": "SPRINT-005 (UI/UX redesign, compact operations layout) implementation in progress; then G-TEST and sprint close",
-      "nextRequiredDecision": "G-TEST when SPRINT-005 implementation is complete",
+      "nextMilestone": "SPRINT-006 SQL backend and Entra SSO scaffolding implemented as stubs; browser app remains localStorage until a later sprint wires the API",
+      "nextRequiredDecision": "G-TEST for SPRINT-006 scaffolding; G-ARCH and G-SEC remain pending before any live API or Entra login",
       "decisionsRequired": [],
-      "lastUpdated": "2026-10-13T01:30:00-06:00"
+      "lastUpdated": "2026-10-13T11:03:00-06:00"
     }
   },
   "release": {
@@ -96,7 +96,7 @@
     "G-SCOPE": { "state": "satisfied", "owner": "Jessica Solis (product) + Jessica Solis/Annamarie Zambrano (outcome, joint)", "decisionDate": "2026-10-08", "evidence": "docs/product/product-definition.md 0.1.0 APPROVED; confirmation relayed by project owner in agent session (history run 9)", "scope": "project" },
     "G-ARCH": { "state": "pending", "owner": "Technical owner (TBD)", "decisionDate": null, "evidence": null, "scope": "project" },
     "G-SEC": { "state": "pending", "owner": "Security/privacy authority (TBD)", "decisionDate": null, "evidence": null, "scope": "project" },
-    "G-TEST": { "state": "pending", "owner": "Annamarie Zambrano (QA)", "decisionDate": null, "evidence": "SPRINT-004 accepted as relayed (docs/reviews/sprint-004-test-evidence.md plus later owner confirmations: live import, hide import/export, seed, footer, admin 12345). SPRINT-005 G-TEST pending; evidence docs/reviews/sprint-005-test-evidence.md.", "scope": "per-sprint; current SPRINT-005" },
+    "G-TEST": { "state": "pending", "owner": "Annamarie Zambrano (QA)", "decisionDate": null, "evidence": "SPRINT-004 accepted as relayed (docs/reviews/sprint-004-test-evidence.md plus later owner confirmations: live import, hide import/export, seed, footer, admin 12345). SPRINT-005 G-TEST still pending (docs/reviews/sprint-005-test-evidence.md). Current work SPRINT-006 (SQL/SSO scaffolding) G-TEST pending.", "scope": "per-sprint; current SPRINT-006" },
     "G-CAND": { "state": "pending", "owner": "Release authority (TBD)", "decisionDate": null, "evidence": null, "scope": "release 0.1.0" },
     "G-REL": { "state": "pending", "owner": "Release authority (TBD)", "decisionDate": null, "evidence": null, "scope": "release 0.1.0" }
   },
@@ -144,9 +144,12 @@
     "futureConsiderations": "docs/planning/future-considerations.md",
     "sprintTemplate": "docs/planning/sprints/sprint-template.md",
     "nistAppendix": "docs/appendices/nist/README.md",
-    "prototype": "CJISTracker/README.md"
+    "prototype": "CJISTracker/README.md",
+    "backend": "backend/README.md",
+    "ssoArchitecture": "docs/architecture/sso-entra-id.md",
+    "sprint006": "docs/planning/sprints/sprint-006-sql-sso-scaffolding.md"
   },
-  "currentAuthorizedWork": "SPRINT-005",
+  "currentAuthorizedWork": "SPRINT-006",
   "history": [
     { "timestamp": "2026-10-05", "actor": "Codex primary agent (run 1)", "event": "Draft governing documents created in empty directory.", "basis": "User-pasted SGK initialization request" },
     { "timestamp": "2026-10-07", "actor": "Cursor primary agent (run 2)", "event": "SGK location preflight; authoritative package not found; repo initialized and pushed to GitHub.", "basis": "User continuation request" },
@@ -179,14 +182,15 @@
     { "timestamp": "2026-10-09T11:25:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 27)", "event": "C1 CSS-only: Access Type column nowrap with smaller font (0.78rem cells / 0.72rem badges); admin/limited records tables pack left (width: max-content, table-layout: auto, left-aligned) so columns do not stretch and Access Type does not wrap to fill space. Vendor group colors, bold headers, column order, and expired gray/black-bold style unchanged. currentAuthorizedWork remains SPRINT-005.", "basis": "Owner statement: 'Make Access Type  column no wraping of text instead push all coloumns to the left and make this coluns text smaller font size.'" },
     { "timestamp": "2026-10-09T14:25:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 28)", "event": "Export CSV hidden from the UI (id exportCsv retained with class hidden; downloadCsv and export logic remain in app.js). Four fictitious test applicants from the sanitized MasterSheet CSV (CJIS_MasterSheet_import.csv, outside the repository; headers confirmed no DOB/SSN/DL) are the empty-storage seed in CJISTracker/test-applicants.js. Cell values unchanged; existing localStorage is not replaced. Import panel remains hidden. currentAuthorizedWork remains SPRINT-005.", "basis": "Remove export button from view retain code for later use. Import samle data from C:\\Users\\E41646\\Documents\\ECC\\Worksheet Consolodation\\CJIS_MasterSheet_import.csv do not change values the records are test applicants" },
     { "timestamp": "2026-10-13T01:24:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "C1 UI-only: compact application footer added to the CJISTracker main shell showing the canonical developmentVersion 0.1.0-dev.1 in footnote size (11px, --muted). Visible on all views, signed in or not. developmentVersion unchanged.", "basis": "add a version number in the footer of the application in footnote font size." },
-    { "timestamp": "2026-10-13T01:30:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "SPRINT-004 close confirmed COMPLETE as relayed by project owner on behalf of Jessica Solis and Annamarie Zambrano (G-TEST evidence: docs/reviews/sprint-004-test-evidence.md plus later owner confirmations: live import, hide import/export, seed, footer, admin 12345). SPRINT-005 (UI/UX redesign — compact operations layout, C2 presentation) authorized; currentAuthorizedWork = SPRINT-005; lifecycle development/active; G-TEST set pending for SPRINT-005 (004 accepted as relayed). Implementation: compact chrome, inline sign-in, collapsed session bar, unified metrics/search/filter toolbar, table-first admin editor. No data-model change; Import/Export remain hidden.", "basis": "Owner statement: 'go' after designating SPRINT-005 UI/UX redesign to eliminate whitespace and provide an easier experience." }
+    { "timestamp": "2026-10-13T01:30:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "SPRINT-004 close confirmed COMPLETE as relayed by project owner on behalf of Jessica Solis and Annamarie Zambrano (G-TEST evidence: docs/reviews/sprint-004-test-evidence.md plus later owner confirmations: live import, hide import/export, seed, footer, admin 12345). SPRINT-005 (UI/UX redesign — compact operations layout, C2 presentation) authorized; currentAuthorizedWork = SPRINT-005; lifecycle development/active; G-TEST set pending for SPRINT-005 (004 accepted as relayed). Implementation: compact chrome, inline sign-in, collapsed session bar, unified metrics/search/filter toolbar, table-first admin editor. No data-model change; Import/Export remain hidden.", "basis": "Owner statement: 'go' after designating SPRINT-005 UI/UX redesign to eliminate whitespace and provide an easier experience." },
+    { "timestamp": "2026-10-13T11:03:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "SPRINT-006 (SQL backend + future Entra SSO scaffolding, Class C3) authorized and scaffolding implemented. currentAuthorizedWork = SPRINT-006; frameworkPhase SPRINT-006; workStatus active. Extended CJISTracker/database-schema.sql (idempotent creatable T-SQL aligned to app.js: ControlNumber unique secondary key, SourceName, all current applicant fields, access types, documents, change log, Limited/Records/Admin; no DOB/SSN/DL per DEC-012/017). Added backend/ stubs (README, .env.example with TBD placeholders only, db/health/applicants repository stubs; no npm install). Added docs/architecture/sso-entra-id.md and backend/sso.config.example.json (DEC-015 City SSO / Entra ID, server-side RBAC, prototype PINs never production; all tenant/client IDs TBD). Browser app remains localStorage. No live API, no live Entra login, no secrets committed. Deployment target remains null.", "basis": "Create scafolding for a SQL DB backend and provide SQL schema so database can be created for this application. Create scafolding for future SSO connection." }
   ],
   "validation": {
     "validator": "python-jsonschema (Draft202012Validator), Python 3.14.0",
     "validatorVersion": "4.26.0",
     "schemaVersion": "3.0.0",
     "result": "pass",
-    "timestamp": "2026-10-13T01:30:00-06:00",
+    "timestamp": "2026-10-13T11:03:00-06:00",
     "limitations": "Structural conformance only; proves canonical values and shape, not factual accuracy, evidence sufficiency, approvals, gate satisfaction, or policy compliance. Schema is the project-authored profile, not an official SGK schema."
   },
   "extensions": {

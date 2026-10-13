@@ -1,0 +1,16 @@
+{
+  "name": "cjis-tracker-backend",
+  "version": "0.0.0-scaffold",
+  "private": true,
+  "description": "SPRINT-006 scaffolding only. Not a production API. Do not npm install until a trusted-source decision is recorded.",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "health": "node src/index.js"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
