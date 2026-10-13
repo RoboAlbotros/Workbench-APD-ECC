@@ -87,3 +87,12 @@ behavior; no trust-boundary change (import is gated behind existing Full Admin a
   (`CJIS_MasterSheet_import.csv`, outside the repository) are the empty-storage seed
   (`CJISTracker/test-applicants.js`). Values are unchanged; existing stored records
   are not replaced.
+
+## Completion record (2026-10-13)
+
+SPRINT-004 remains COMPLETE. Project owner Brett reconfirmed close on 2026-10-13
+as relayed on behalf of Jessica Solis and Annamarie Zambrano (same pattern as prior
+sprints; ratification still open). G-TEST evidence remains
+`docs/reviews/sprint-004-test-evidence.md` plus later owner confirmations: live
+import, hide Import/Export on the main screen, test-applicant seed, application
+footer Version 0.1.0-dev.1, and Full Admin access via owner code 12345.

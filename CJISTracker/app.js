@@ -229,7 +229,7 @@ if (importForm) importForm.addEventListener("submit", handleCsvImport);
 function updateSetupVisibility() {
   const needsSetup = !accessCodes;
   accessSetupForm.classList.toggle("hidden", !needsSetup);
-  accessForm.classList.toggle("hidden", needsSetup);
+  accessForm.classList.toggle("hidden", needsSetup || Boolean(currentUser));
 }
 
 function completeAccessSetup(event) {
@@ -452,7 +452,7 @@ function signInManagementUser(event) {
 
   currentUser = { name, role };
   managementAccessCode.value = "";
-  showMessage(accessMessage, `Signed in as ${name}.`);
+  showMessage(accessMessage, "");
   updateAccessControls();
   setView(role);
 }
@@ -477,7 +477,9 @@ function updateAccessControls() {
   const signedIn = Boolean(currentUser);
   document.body.classList.toggle("signed-in", signedIn);
   document.body.classList.toggle("signed-out", !signedIn);
-  accessPanel.classList.toggle("hidden", signedIn);
+  accessPanel.classList.toggle("session-bar", signedIn);
+  accessPanel.classList.remove("hidden");
+  accessForm.classList.toggle("hidden", signedIn || !accessCodes);
   headerMetrics.classList.toggle("hidden", !signedIn);
   viewSwitch.classList.toggle("hidden", !signedIn);
   sessionControls.classList.toggle("hidden", !signedIn);

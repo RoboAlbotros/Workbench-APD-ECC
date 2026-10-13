@@ -1,200 +1,115 @@
-# Sprint 005 — UI/UX redesign: Tabbed Workspace with Form Drawer (Option B)
+# Sprint 005 — UI/UX redesign: compact operations layout
 
-Status: IN PROGRESS
+Status: ACTIVE
 Owner: Brett (technical and UX/accessibility owner); product impact approval Jessica Solis
 Version: 0.1.0
-Approval: Direction selected 2026-10-09 by project owner Brett (DEC-019). Owner go
-recorded 2026-10-09T10:27:00-06:00 ("go") — project.json history run 24. Sprint
-approval relayed by the project owner on behalf of joint governance authorities
-Jessica Solis and Annamarie Zambrano, consistent with prior sprints; ratification open.
-Date: 2026-10-09
+Approval: Authorized 2026-10-13 — project owner Brett said "go" after designating
+SPRINT-005 as the UI/UX redesign to eliminate whitespace and provide an easier
+daily experience. Sprint approval relayed by the project owner on behalf of joint
+governance authorities Jessica Solis and Annamarie Zambrano, consistent with prior
+sprints; ratification open.
+Date: 2026-10-13
 Controlling work ID: SPRINT-005
 
 ## Sprint objective
 
-Redesign the CJISTracker single-page app (vanilla JS, `CJISTracker/`) per Option B —
-"Tabbed Workspace with Form Drawer" — so that applicant data is visible on the first
-screen when signed in, the admin table fits without horizontal scrolling at common
-widths, and all behaviors currently supplied by the `tracker-list-overrides.js` overlay
-are folded natively into `app.js`/`styles.css`/`index.html`, allowing the overlay file
-to be retired.
+Compact the CJISTracker chrome so daily operators see applicant records first:
+collapse Management Access after sign-in, put metrics/search/filters on one
+toolbar row, reduce heading and panel spacing, and keep the applicant editor
+closed until View, Edit, or New Applicant. Class C2 presentation only.
 
-## Authorized basis (verbatim owner statements)
+## Authorized basis
 
-Direction selection and the three design answers, project owner Brett,
-2026-10-09 10:23 AM (UTC-06:00):
+Owner designation (session preceding 2026-10-13T01:30:00-06:00): SPRINT-005 is
+the UI/UX redesign to eliminate whitespace and provide an easier experience.
+Owner go recorded 2026-10-13 ("go"). Compact operations layout is the
+implementation direction for this authorization (no option selection was made
+in this go).
 
-> "Yes to Option B,
->
-> 1. the 8 coluns that stay visable are Actions, Clearance Type, Access Type, Name,
-> Requestor,III - Status, CJIS Security Role, NCIC Certification
-> 2. Default grouping - keep current grouping
-> 3. This field should be a calculated value of field Date of III Completion + 5 years
-> = Next III Inquiry Due (5 yrs) date."
-
-Sprint designation, earlier the same session:
-
-> "I agree we will redesign in sprint SPRINT-005."
-
-Recorded interpretations of the owner answers:
-
-1. Visible admin-table columns = the Actions column plus seven data columns
-   (mapping table below; all seven map to existing field keys — no new fields).
-2. "Keep current grouping" = the grouping users currently see, i.e. the vendor
-   grouping applied today by `tracker-list-overrides.js`, carried into the base app
-   as the default.
-3. `queriedEveryFiveYears` becomes a calculated, read-only due date =
-   Date of III Completion (`dateOfIiiCompletion`) + 5 years, displayed as
-   "Next III Inquiry Due (5 yrs)", with a one-time migration of stored records on
-   load and the "Query Due" metric updated to compare that due date against today.
-
-Date display format (C1, owner 2026-10-09): all date UX uses MM/DD/YYYY, not
-DD/MM/YYYY. Date of III Completion stays a text input with MM/DD/YYYY
-placeholder/pattern; the stored value is ISO YYYY-MM-DD. Existing slash dates
-are migrated once on load by interpreting them as legacy DD/MM/YYYY and rewriting
-to ISO so the calendar day is preserved (example: `10/02/2026` meaning 10 Feb
-becomes `2026-02-10`). Native `type=date` fields keep ISO storage and browser-locale
-display.
-
-## Column-to-field mapping (admin "All Applicant Records" table)
-
-All owner-named columns map to existing field keys in `app.js`; no field invention
-is required.
-
-| Owner-named column | Field key (`app.js`) | Current base label |
-| --- | --- | --- |
-| Actions | — (row action buttons, not a data field) | "Actions" |
-| Clearance Type | `clearanceType` | "Clearance Type" |
-| Access Type | `accessType` | "Access Type" |
-| Name | `name` | "Name (Last, First, MI, Suffix)" |
-| Requestor | `requestor` | "Requestor" |
-| III - Status | `iiiStatus` | "III - Status" |
-| CJIS Security Role | `cjisSecurityAwarenessRole` | "CJIS Security and Awareness Role" |
-| NCIC Certification | `ncicCertification` | "NCIC Certification" |
-
-All other admin fields remain in the data model, search, CSV export, and the record
-drawer (read/edit); they are removed only from the table display. This extends the
-precedent of the SPRINT-004 Control ID / Source column hiding (history run 18).
+Already-landed presentation work from earlier SPRINT-005 sessions remains in
+force and is not reversed: table-first admin with a record drawer, DEC-019
+admin column set and vendor grouping, calculated Next III Inquiry Due, hidden
+Import/Export on the main screen, Control ID and Source in the form only,
+and footer Version 0.1.0-dev.1.
 
 ## Change classification
 
-Class: C2-C3 — material user-visible restructuring of the interface plus one governed
-data-semantics change (`queriedEveryFiveYears` becomes a calculated due date, with a
-one-time stored-record migration). No trust-boundary change: views, sign-in model, and
-localStorage persistence are unchanged.
+Class: C2 — presentation. Backward-compatible UI density and chrome layout
+within approved product scope. No data-model change, no new fields, no
+re-enable of Import/Export on the main screen, no authentication or server work.
 
 ## In-scope work
 
-1. **Slim sticky header (~56px)** — app title, inline metric counts, view switch,
-   signed-in badge. Replaces the current full-height header region.
-2. **Sign-in collapse** — the sign-in card is shown only when signed out; after
-   sign-in it disappears entirely (reclaiming ~424px of vertical space), with
-   sign-out available from the header badge.
-3. **Sticky toolbar** — search, filters, and a "New Applicant" button pinned below
-   the header.
-4. **Admin table column diet** — table shows only the eight columns in the mapping
-   table above; all other fields visible in the record drawer.
-5. **Record/edit drawer** — the edit form becomes a slide-in drawer with grouped
-   sections (Identity, Clearance & Access, Certifications & Dates, Contact & Notes),
-   keyboard- and focus-trap-accessible (Escape closes, focus returns to the invoking
-   control), eliminating the current jump-to-top behavior.
-6. **Overlay retirement** — stop loading `tracker-list-overrides.js` from `index.html`
-   after folding ALL of its behaviors into `app.js`/`styles.css` (file retained unused):
-   - Label renames: "Query Date (every 5 years)" → "Next III Inquiry Due (5 yrs)";
-     "Security and Awareness Expiration Annually" → "Security and Awareness Cert";
-     "Phone Number" → "Applicant Phone Number".
-   - "Next III Inquiry Due (5 yrs)" auto-calculation (form field read-only; value =
-     III Completion + 5 years) — superseded by the native data fix below.
-   - Expired-certification row highlighting (row tint + emphasized cell, tooltip,
-     aria-label) on limited and admin tables.
-   - Vendor grouping as the default grouping (group header rows, sort by vendor then
-     name) with Vendor and Fingerprint Outcome columns hidden from the table,
-     per owner answer 2.
-   - Compact table density (reduced cell padding).
-   - Export CSV button removal — see open questions before carrying this forward.
-7. **queriedEveryFiveYears data fix + migration (DEC-019 answer 3)** — resolve the
-   current inconsistency (`app.js` `isQueryDue` treats the stored value as a
-   last-queried date and adds 5 years; the overlay treats the field as a due date =
-   III Completion + 5 years):
-   - The field becomes a calculated, read-only due date =
-     `dateOfIiiCompletion` + 5 years, labeled "Next III Inquiry Due (5 yrs)".
-   - One-time migration of stored records on load: recompute the stored value from
-     `dateOfIiiCompletion` where present (blank where III Completion is absent),
-     recorded in the change log.
-   - The "Query Due" metric compares the stored due date against today
-     (due ≤ today ⇒ due), replacing the +5-years arithmetic in `isQueryDue`.
-8. **Density pass** — spacing/typography review so admin data fits the first screen
-   at common desktop widths.
+1. **Collapsed session bar** — after sign-in, Management Access becomes a single
+   compact bar: user badge + Sign Out. View switch stays in the topbar.
+2. **Compact signed-out sign-in** — not a full-page card; three fields inline
+   (User Name, Access Level, Access Code) plus Sign In.
+3. **Unified operations toolbar** — metrics as inline pills on the same row as
+   search and filters (not 88px metric cards; no separate search band).
+4. **Density** — h1 about 22px; tighter panel padding; metric min-height removed.
+5. **Table-first editor** — do not show an empty full form occupying the first
+   admin screen. Open the editor only on View, Edit, or New Applicant. New
+   Applicant remains available in admin (table header or toolbar). Records view
+   still requires selecting a record.
+6. **Preserve hidden controls and fields** — Control ID and Source stay in the
+   form and stay hidden from the admin table. Import panel stays commented/hidden.
+   Export button stays hidden; `downloadCsv` retained.
+7. **Footer** — Version 0.1.0-dev.1 remains, footnote size.
+8. **Overlay visuals** — prefer absorbing vendor grouping, expired-cert
+   highlight, and query-date readonly in CSS/app. Do not delete
+   `tracker-list-overrides.js` this sprint if retirement is risky; file may
+   remain unloaded.
 
-## Explicit exclusions (out of scope)
+## Explicit exclusions
 
-- No frameworks, build step, or new dependencies — the app remains vanilla
-  HTML/CSS/JS served as static files.
+- No data-model change and no change to business rules, field set, or seed
+  data values.
+- No re-enabling Import/Export on the main screen.
+- No authentication, PIN, or server-side work.
+- No frameworks, build step, or new dependencies.
 - No new PII fields and no data-scope change (DEC-012/DEC-017 unchanged).
-- localStorage persistence model unchanged (same storage keys; only the documented
-  `queriedEveryFiveYears` value migration).
-- The commented-out import panel stays commented out (SPRINT-004 owner direction,
-  history run 19).
-- No changes to sign-in/PIN mechanics or the three-view access model.
 
 ## Acceptance criteria
 
-- No horizontal scroll on the admin records table at 1280px viewport width.
-- Signed in (any view), applicant data is visible on the first screen without
-  scrolling past chrome; signed out, the sign-in card is presented.
-- `tracker-list-overrides.js` is removed and every overlay behavior listed above is
-  preserved natively (labels, vendor grouping, expired-cert highlighting, compact
-  density, calculated due date), subject to the Export CSV open question.
-- Metric/column agreement: the "Query Due" metric count equals the number of rows
-  whose displayed "Next III Inquiry Due (5 yrs)" date is on or before today.
-- Drawer accessibility: focus trapped while open, Escape closes, focus returns to
-  the invoking control, all form controls reachable by keyboard, no jump-to-top.
-- Existing records and CSV export are unaffected apart from the documented
-  `queriedEveryFiveYears` migration; export columns and values otherwise unchanged.
-- Test evidence recorded; project.json updated and schema-validated.
+- Signed in: Management Access is a compact bar (badge + Sign Out); view switch
+  remains in the topbar; metrics, search, and filters share one compact toolbar
+  row.
+- Signed out: compact inline sign-in row (three fields, not stacked full width).
+- Admin: applicant table is visible without scrolling past a giant empty form;
+  New Applicant is available; editor opens only on View/Edit/New Applicant.
+- Four fictitious test applicants remain listed; seed values unchanged.
+- Limited and Records tabs still function; Records still requires a selected
+  record to edit.
+- Footer Version 0.1.0-dev.1 is present; Import and Export buttons are not
+  visible on the main screen.
+- Vendor grouping, expired-cert highlighting, and Next III Inquiry Due
+  readonly calculation remain intact.
+- Test evidence recorded; `project.json` updated and schema-validated.
 
-## Test plan
+## Required artifacts
 
-- Scripted browser acceptance tests (same approach as SPRINT-002/003/004), using
-  7 fictitious test records covering: multiple vendors (grouping), a record with an
-  expired Security and Awareness cert (highlighting), records with and without
-  Date of III Completion (migration/blank due date), a due and a non-due III inquiry
-  date (metric agreement), and a One Time Visit clearance (group/filter behavior).
-- Checks: 1280px no-horizontal-scroll; first-screen data visibility signed in;
-  column set exactly per the mapping table; drawer keyboard/focus behavior;
-  migration result in localStorage and change log; CSV export before/after
-  comparison; reload persistence.
-- Evidence recorded in `docs/reviews/sprint-005-test-evidence.md`.
+- `CJISTracker/index.html`, `CJISTracker/styles.css`, `CJISTracker/app.js`
+- `docs/reviews/sprint-005-test-evidence.md`
+- Updated `project.json`
 
-## Risks
+## Required tests
 
-- **Migration risk:** the one-time `queriedEveryFiveYears` recompute overwrites
-  stored values; mitigated by deriving strictly from `dateOfIiiCompletion`, logging
-  the migration in the change log, and testing on fictitious records first.
-- **Behavior-parity risk:** the overlay mutates the DOM generically (MutationObserver
-  over all tables); folding into `app.js` must reproduce outcomes, not mechanisms —
-  the acceptance criteria pin the observable behaviors.
-- **Semantics change:** users who relied on "Query Date" as a last-queried date will
-  now see a due date; label and read-only state make this explicit, and DEC-019
-  records the owner decision.
-- **Layout regressions** at other viewport widths; density pass tested at common
-  desktop widths, 1280px as the measured floor.
+Browser acceptance on a desktop viewport (Full Admin / owner code 12345):
+signed-in chrome is compact; table visible without scrolling past a giant form;
+four test applicants listed; sign-out/sign-in still works; Limited and Records
+tabs work; footer present; no Import/Export buttons visible.
 
-## Open questions
+## Review and approval gates
 
-- **Export CSV button removal:** the overlay currently removes any "Export CSV"
-  button from the UI. Carrying this forward natively conflicts in spirit with the
-  acceptance criterion that CSV export be unaffected (export code remains, but the
-  control is inaccessible). Implementation keeps the Export CSV button visible in
-  the admin table heading pending owner confirmation. Owner to confirm: keep the
-  Export CSV button removed in the redesigned UI, or restore it?
-- None on column mapping: "Requestor" maps to the existing `requestor` field key
-  (resolved — see mapping table).
+- Sprint approval: Jessica Solis + Annamarie Zambrano (governance, joint) —
+  relayed by project owner; ratification open.
+- G-TEST: Annamarie Zambrano (QA) — pending for SPRINT-005. SPRINT-004 G-TEST
+  was accepted as relayed (evidence: `docs/reviews/sprint-004-test-evidence.md`
+  plus later owner confirmations).
 
-## Follow-up (C1, 2026-10-09T11:14:00-06:00)
+## Definition of done
 
-Owner direction: tighten column whitespace; bold vendor group headers and color
-rows by vendor group (same color within a group, alternating colors between
-groups); admin column order is now Actions, Name, Clearance Type, Access Type,
-III - Status, CJIS Security Role, NCIC Certification, Requestor. Limited view
-already had Name before Clearance Type. Field keys and data model unchanged.
+- All acceptance criteria met with recorded evidence
+- G-TEST accepted by QA authority (outstanding at implementation)
+- project.json updated and validated
+- Documentation updated
