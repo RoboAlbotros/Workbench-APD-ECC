@@ -5,8 +5,8 @@ Open `index.html` in a browser to use the CJIS Applicant Tracker.
 ## Views
 
 - Limited View is read-only and hides sensitive personal fields.
-- Records View uses the Limited View table style and allows applicant view/edit actions without delete access.
-- Full Admin View requires the admin access code and can create, view, edit, delete, and filter applicant records. The Export CSV control is hidden in the UI (owner 2026-10-09); `downloadCsv` and export logic remain in `app.js` for later use.
+- Records View uses the Limited View table style and allows applicant view/edit actions without archive access.
+- Full Admin View requires the admin access code and can create, view, edit, archive, restore, and filter applicant records. The Export CSV control is hidden in the UI (owner 2026-10-09); `downloadCsv` and export logic remain in `app.js` for later use.
 
 The Full Admin access code is operator-set to `12345` (local prototype only; not a
 production control). On load the app writes that admin code into this browser's
@@ -20,7 +20,9 @@ strings. Existing distinct Limited/Records codes are kept. Codes live only in th
 browser's local storage. Clearing local storage for this page resets codes and
 applicant records; Full Admin will again be `12345` on the next load.
 
-Full Admin includes a change log for created, updated, and deleted applicant records.
+Full Admin includes a change log for created, updated, archived, and restored applicant records.
+
+Applicant records are archived, not permanently deleted. Archive sets `archived`, `archivedAt`, and `archivedBy` and leaves the record in local storage. Default lists, metrics, and search (Limited, Records, and Admin All Applicant Records) exclude archived records. Only Full Admin can archive, review archived applicants in the Admin "Archived records" panel, View an archived record, or Restore it. Limited and Records cannot archive or restore. Seed test applicants stay active. CSV import does not import records as archived or deleted.
 
 ## Importing records from CSV
 

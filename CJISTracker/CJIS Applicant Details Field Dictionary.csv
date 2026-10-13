@@ -23,3 +23,6 @@ Applicant Email Address,emailAddress,String,Email
 Applicant Phone Number,phoneNumber,String,Telephone
 Last Changed By,lastChangedBy,String,System-maintained user name
 Notes,notes,String,Multiline text
+Archived,archived,Boolean,System-maintained; true when Full Admin archives the record. Records are archived not deleted. Default lists/metrics/search exclude archived records. Review and restore are Full Admin only.
+Archived At,archivedAt,DateTime,System-maintained ISO timestamp of the last archive
+Archived By,archivedBy,String,System-maintained Full Admin display name who archived the record

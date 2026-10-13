@@ -207,7 +207,10 @@ const changeLogPanel = document.querySelector("#changeLogPanel");
 const applicantForm = document.querySelector("#applicantForm");
 const saveApplicantButton = document.querySelector("#saveApplicantButton");
 const resetForm = document.querySelector("#resetForm");
-const deleteRecord = document.querySelector("#deleteRecord");
+const archiveRecord = document.querySelector("#archiveRecord");
+const restoreRecord = document.querySelector("#restoreRecord");
+const archivedTable = document.querySelector("#archivedTable");
+const archivedCountPill = document.querySelector("#archivedCountPill");
 const exportCsv = document.querySelector("#exportCsv");
 const formMessage = document.querySelector("#formMessage");
 const searchInput = document.querySelector("#searchInput");
@@ -266,7 +269,8 @@ applicantForm.addEventListener("submit", saveApplicant);
 resetForm.addEventListener("click", openNewApplicant);
 closeDrawer.addEventListener("click", closeApplicantDrawer);
 drawerBackdrop.addEventListener("click", closeApplicantDrawer);
-deleteRecord.addEventListener("click", deleteApplicant);
+archiveRecord.addEventListener("click", archiveApplicant);
+restoreRecord.addEventListener("click", () => restoreApplicant());
 document.querySelector("#dateOfIiiCompletion").addEventListener("input", syncInquiryDueField);
 document.querySelector("#dateOfIiiCompletion").addEventListener("change", syncInquiryDueField);
 document.addEventListener("keydown", handleDrawerKeydown);
@@ -349,6 +353,9 @@ function normalizeRecords(recordSet) {
       lastChangedBy: record.lastChangedBy || "",
       documents: Array.isArray(record.documents) ? record.documents : [],
       notes: record.notes || "",
+      archived: Boolean(record.archived),
+      archivedAt: Boolean(record.archived) ? String(record.archivedAt || "") : "",
+      archivedBy: Boolean(record.archived) ? String(record.archivedBy || "") : "",
     };
 
     if (legacyDate && !nextRecord.completedFullProcess && !nextRecord.dateOfSiteVisitOnly) {
@@ -363,6 +370,8 @@ function normalizeRecords(recordSet) {
     delete nextRecord.dateOfBirth;
     delete nextRecord.socialSecurityNumber;
     delete nextRecord.driversLicense;
+    delete nextRecord.isDeleted;
+    delete nextRecord.deleted;
     return nextRecord;
   });
 
@@ -528,7 +537,7 @@ function setView(view) {
   if (!isAdmin && !isRecords) closeApplicantDrawer({ restoreFocus: false });
   updateFormMode();
   updateEditorVisibility();
-  updateDeleteVisibility();
+  updateArchiveVisibility();
   updateChangeLogVisibility();
   renderAll();
 }
@@ -615,6 +624,9 @@ function saveApplicant(event) {
 
   const existingIndex = records.findIndex((record) => record.id === id);
   const previousRecord = existingIndex >= 0 ? records[existingIndex] : null;
+  nextRecord.archived = Boolean(previousRecord?.archived);
+  nextRecord.archivedAt = previousRecord?.archived ? String(previousRecord.archivedAt || "") : "";
+  nextRecord.archivedBy = previousRecord?.archived ? String(previousRecord.archivedBy || "") : "";
   if (existingIndex >= 0) {
     records[existingIndex] = nextRecord;
     logRecordChange("Updated", nextRecord, getChangedFields(previousRecord, nextRecord));
@@ -641,7 +653,7 @@ function resetApplicantForm() {
   updateFormMode();
   updateChangeLogVisibility();
   updateEditorVisibility();
-  updateDeleteVisibility();
+  updateArchiveVisibility();
   showMessage(formMessage, "");
 }
 
@@ -709,16 +721,74 @@ function handleDrawerKeydown(event) {
   }
 }
 
-function deleteApplicant() {
+function isFullAdmin() {
+  return Boolean(currentUser && currentUser.role === "admin" && canAccessView("admin"));
+}
+
+function isArchivedRecord(record) {
+  return Boolean(record && record.archived);
+}
+
+function getActiveRecords(recordSet = records) {
+  return recordSet.filter((record) => !isArchivedRecord(record));
+}
+
+function getArchivedApplicantRecords(recordSet = records) {
+  return recordSet.filter(isArchivedRecord);
+}
+
+function archiveApplicant() {
+  if (!isFullAdmin()) {
+    showMessage(formMessage, "Only Full Admin can archive applicant records.", true);
+    return;
+  }
   const id = document.querySelector("#recordId").value;
-  if (!id || !confirm("Delete this applicant record?")) return;
-  const deletedRecord = records.find((record) => record.id === id);
-  records = records.filter((record) => record.id !== id);
-  if (deletedRecord) logRecordChange("Deleted", deletedRecord, ["Record deleted"]);
+  if (!id || !confirm("Archive this applicant record? It will leave the default lists. Full Admin can review and restore it.")) {
+    return;
+  }
+  const index = records.findIndex((record) => record.id === id);
+  if (index < 0) return;
+  const now = new Date().toISOString();
+  const archivedApplicant = {
+    ...records[index],
+    archived: true,
+    archivedAt: now,
+    archivedBy: currentUser.name,
+    lastChangedBy: currentUser.name,
+    updatedAt: now,
+  };
+  records[index] = archivedApplicant;
+  logRecordChange("Archived", archivedApplicant, ["Record archived"]);
   saveRecords();
   resetApplicantForm();
   renderAll();
-  showMessage(formMessage, "Applicant record deleted.");
+  showMessage(formMessage, "Applicant record archived.");
+}
+
+function restoreApplicant(recordId) {
+  if (!isFullAdmin()) {
+    showMessage(formMessage, "Only Full Admin can restore archived applicant records.", true);
+    return;
+  }
+  const id = recordId || document.querySelector("#recordId").value;
+  if (!id || !confirm("Restore this applicant record to the active lists?")) return;
+  const index = records.findIndex((record) => record.id === id);
+  if (index < 0) return;
+  const now = new Date().toISOString();
+  const restoredApplicant = {
+    ...records[index],
+    archived: false,
+    archivedAt: "",
+    archivedBy: "",
+    lastChangedBy: currentUser.name,
+    updatedAt: now,
+  };
+  records[index] = restoredApplicant;
+  logRecordChange("Restored", restoredApplicant, ["Record restored"]);
+  saveRecords();
+  resetApplicantForm();
+  renderAll();
+  showMessage(formMessage, "Applicant record restored.");
 }
 
 function handleDocumentUpload() {
@@ -805,7 +875,7 @@ function loadApplicantForm(id, mode) {
   updateFormMode();
   updateChangeLogVisibility();
   updateEditorVisibility();
-  updateDeleteVisibility();
+  updateArchiveVisibility();
   showMessage(formMessage, mode === "view" ? "Viewing applicant record in read-only mode." : "Editing applicant record.");
   const firstField = document.querySelector("#name");
   firstField?.focus();
@@ -829,12 +899,13 @@ function renderAll() {
   renderRecordsTable();
   if (canAccessView("admin")) {
     renderAdminTable();
+    renderArchivedTable();
     updateChangeLogVisibility();
   }
 }
 
 function renderVendorOptions() {
-  const vendors = [...new Set(records.map((record) => record.vendor).filter(Boolean))]
+  const vendors = [...new Set(getActiveRecords().map((record) => record.vendor).filter(Boolean))]
     .sort((a, b) => a.localeCompare(b));
   vendorOptions.innerHTML = vendors.map((vendor) => `<option value="${escapeHtml(vendor)}"></option>`).join("");
 }
@@ -844,7 +915,7 @@ function getFilteredRecords() {
   const clearance = clearanceFilter.value;
   const outcome = outcomeFilter.value;
 
-  return records.filter((record) => {
+  return getActiveRecords().filter((record) => {
     const haystack = [
       record.name,
       record.controlNumber,
@@ -865,7 +936,7 @@ function getFilteredRecords() {
 
 function renderOutcomeFilter() {
   const current = outcomeFilter.value || "all";
-  const outcomes = [...new Set(records.map((record) => record.outcome).filter(Boolean))].sort();
+  const outcomes = [...new Set(getActiveRecords().map((record) => record.outcome).filter(Boolean))].sort();
   outcomeFilter.innerHTML = `<option value="all">All fingerprint outcomes</option>${outcomes
     .map((outcome) => `<option value="${escapeHtml(outcome)}">${escapeHtml(outcome)}</option>`)
     .join("")}`;
@@ -873,12 +944,13 @@ function renderOutcomeFilter() {
 }
 
 function renderMetrics() {
-  const queryDue = records.filter(isQueryDue).length;
-  document.querySelector("#totalCount").textContent = records.length;
-  document.querySelector("#fullClearanceCount").textContent = records.filter((record) => {
+  const activeRecords = getActiveRecords();
+  const queryDue = activeRecords.filter(isQueryDue).length;
+  document.querySelector("#totalCount").textContent = activeRecords.length;
+  document.querySelector("#fullClearanceCount").textContent = activeRecords.filter((record) => {
     return record.clearanceType === "Full Clearance";
   }).length;
-  document.querySelector("#siteVisitCount").textContent = records.filter((record) => {
+  document.querySelector("#siteVisitCount").textContent = activeRecords.filter((record) => {
     return record.clearanceType === "One Time Visit";
   }).length;
   document.querySelector("#queryDueCount").textContent = queryDue;
@@ -992,6 +1064,60 @@ function renderAdminRow(record, groupTone) {
       })
       .join("")}
   </tr>`;
+}
+
+function renderArchivedTable() {
+  if (!archivedTable) return;
+  const archivedRecords = getSortedRecords(getArchivedApplicantRecords());
+  if (archivedCountPill) {
+    const count = archivedRecords.length;
+    archivedCountPill.textContent = `${count} archived`;
+  }
+  if (!isFullAdmin()) {
+    archivedTable.innerHTML = `<p class="empty-state">Archived records are available to Full Admin only.</p>`;
+    return;
+  }
+  if (!archivedRecords.length) {
+    archivedTable.innerHTML = `<p class="empty-state">No archived applicant records.</p>`;
+    return;
+  }
+
+  archivedTable.innerHTML = `<table class="admin-records-table archived-records-table">
+    <thead>
+      <tr>
+        <th class="field-admin">Actions</th>
+        <th>Name</th>
+        <th>Vendor</th>
+        <th>Archived By</th>
+        <th>Archived At</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${archivedRecords
+        .map((record) => {
+          return `<tr>
+            <td class="field-admin">
+              <div class="record-actions">
+                <button class="admin-action" type="button" data-view-archived="${record.id}">View</button>
+                <button class="admin-action" type="button" data-restore="${record.id}">Restore</button>
+              </div>
+            </td>
+            <td>${escapeHtml(record.name)}</td>
+            <td>${escapeHtml(record.vendor)}</td>
+            <td>${escapeHtml(record.archivedBy)}</td>
+            <td>${formatDateTime(record.archivedAt)}</td>
+          </tr>`;
+        })
+        .join("")}
+    </tbody>
+  </table>`;
+
+  archivedTable.querySelectorAll("[data-view-archived]").forEach((button) => {
+    button.addEventListener("click", () => viewApplicant(button.dataset.viewArchived, button));
+  });
+  archivedTable.querySelectorAll("[data-restore]").forEach((button) => {
+    button.addEventListener("click", () => restoreApplicant(button.dataset.restore));
+  });
 }
 
 function renderChangeLog() {
@@ -1181,12 +1307,16 @@ function renderBadgeList(value) {
     .join(" ");
 }
 
-function updateDeleteVisibility() {
-  const hasSelectedRecord = Boolean(document.querySelector("#recordId").value);
-  deleteRecord.classList.toggle(
+function updateArchiveVisibility() {
+  const id = document.querySelector("#recordId").value;
+  const selected = records.find((record) => record.id === id);
+  const canReview = currentView === "admin" && isFullAdmin();
+  const archived = Boolean(selected && isArchivedRecord(selected));
+  archiveRecord.classList.toggle(
     "hidden",
-    currentView !== "admin" || !canAccessView("admin") || !hasSelectedRecord || currentFormMode === "view",
+    !canReview || !selected || archived || currentFormMode === "view",
   );
+  restoreRecord.classList.toggle("hidden", !canReview || !selected || !archived);
 }
 
 function updateEditorVisibility() {
@@ -1473,6 +1603,9 @@ function importCsvText(csvText, replaceAll) {
       }
     });
     record.lastChangedBy = currentUser.name;
+    record.archived = false;
+    record.archivedAt = "";
+    record.archivedBy = "";
 
     if (!String(record.name || "").trim()) {
       errors.push(`Row ${rowIndex + 2}: missing applicant name; row skipped.`);
@@ -1549,7 +1682,7 @@ function handleCsvImport(event) {
 
 function downloadCsv() {
   const header = adminFields.map((field) => labels[field]);
-  const rows = records.map((record) => adminFields.map((field) => exportFieldValue(field, record[field])));
+  const rows = getActiveRecords().map((record) => adminFields.map((field) => exportFieldValue(field, record[field])));
   const csv = [header, ...rows]
     .map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(","))
     .join("\n");

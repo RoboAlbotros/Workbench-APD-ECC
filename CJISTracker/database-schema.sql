@@ -41,6 +41,11 @@
     Applicant Documents field.
   - The browser app (CJISTracker/) still uses localStorage until a later sprint
     wires an API. This schema does not change that.
+  - Records are archived, not permanently deleted. Applicants.IsArchived is the
+    product flag (Full Admin archive/review/restore only). Applicants.IsDeleted
+    is unused leftover and MUST NOT be used for the UI archive action.
+    SecurityRoles.CanDeleteApplicants is unused; archive/restore is Full Admin
+    only. Default lists, metrics, and search exclude IsArchived = 1.
 
   APP.JS FIELD MAP (current model → column)
   ----------------------------------------
@@ -70,6 +75,9 @@
                                  (+ LastChangedByUserId when SSO users exist)
   documents                    → ApplicantDocuments
   notes                        → Applicants.Notes
+  archived                     → Applicants.IsArchived
+  archivedAt                   → Applicants.ArchivedAtUtc
+  archivedBy                   → Applicants.ArchivedByDisplayName
   roles                        → SecurityRoles RoleCode: limited | records | admin
 */
 
@@ -216,7 +224,11 @@ BEGIN
     LastChangedByDisplayName NVARCHAR(160) NULL,
     CreatedAtUtc DATETIME2(0) NOT NULL CONSTRAINT DF_Applicants_CreatedAtUtc DEFAULT (SYSUTCDATETIME()),
     UpdatedAtUtc DATETIME2(0) NOT NULL CONSTRAINT DF_Applicants_UpdatedAtUtc DEFAULT (SYSUTCDATETIME()),
+    /* Unused leftover. Product language is archive (IsArchived). Do not hard-delete from the UI. */
     IsDeleted BIT NOT NULL CONSTRAINT DF_Applicants_IsDeleted DEFAULT (0),
+    IsArchived BIT NOT NULL CONSTRAINT DF_Applicants_IsArchived DEFAULT (0),
+    ArchivedAtUtc DATETIME2(0) NULL,
+    ArchivedByDisplayName NVARCHAR(160) NULL,
     CONSTRAINT CK_Applicants_NcicCertification CHECK (NcicCertification IS NULL OR NcicCertification IN ('Y', 'N')),
     CONSTRAINT FK_Applicants_Vendors
       FOREIGN KEY (VendorId) REFERENCES dbo.Vendors(VendorId),
@@ -249,6 +261,24 @@ GO
 IF COL_LENGTH(N'dbo.Applicants', N'ControlNumber') IS NULL
 BEGIN
   ALTER TABLE dbo.Applicants ADD ControlNumber NVARCHAR(40) NULL;
+END;
+GO
+
+IF COL_LENGTH(N'dbo.Applicants', N'IsArchived') IS NULL
+BEGIN
+  ALTER TABLE dbo.Applicants ADD IsArchived BIT NOT NULL CONSTRAINT DF_Applicants_IsArchived DEFAULT (0);
+END;
+GO
+
+IF COL_LENGTH(N'dbo.Applicants', N'ArchivedAtUtc') IS NULL
+BEGIN
+  ALTER TABLE dbo.Applicants ADD ArchivedAtUtc DATETIME2(0) NULL;
+END;
+GO
+
+IF COL_LENGTH(N'dbo.Applicants', N'ArchivedByDisplayName') IS NULL
+BEGIN
+  ALTER TABLE dbo.Applicants ADD ArchivedByDisplayName NVARCHAR(160) NULL;
 END;
 GO
 
@@ -380,6 +410,19 @@ BEGIN
   CREATE INDEX IX_Applicants_SourceName
     ON dbo.Applicants (SourceName)
     WHERE IsDeleted = 0;
+END;
+GO
+
+/* Default lists exclude archived applicants. IsDeleted remains unused. */
+IF NOT EXISTS (
+  SELECT 1 FROM sys.indexes
+  WHERE name = N'IX_Applicants_IsArchived'
+    AND object_id = OBJECT_ID(N'dbo.Applicants')
+)
+BEGIN
+  CREATE INDEX IX_Applicants_IsArchived
+    ON dbo.Applicants (IsArchived, ApplicantName)
+    WHERE IsArchived = 0;
 END;
 GO
 

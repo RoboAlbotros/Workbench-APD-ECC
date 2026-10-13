@@ -34,6 +34,12 @@
  *   lastChangedBy                 LastChangedByDisplayName
  *   documents                     ApplicantDocuments
  *   notes                         Notes
+ *   archived                      IsArchived
+ *   archivedAt                    ArchivedAtUtc
+ *   archivedBy                    ArchivedByDisplayName
+ *
+ * Product action is archive/restore (Full Admin), not hard-delete.
+ * remove() remains an unimplemented stub; do not map it to a UI delete.
  */
 
 function notImplemented(methodName) {

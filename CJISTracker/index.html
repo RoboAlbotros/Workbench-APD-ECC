@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>CJIS Applicant Tracker</title>
-    <link rel="stylesheet" href="styles.css?v=sprint-005-center" />
+    <link rel="stylesheet" href="styles.css?v=sprint-006-archive" />
   </head>
   <body class="signed-out">
     <header class="app-header" aria-label="Application header">
@@ -138,7 +138,7 @@
               <p class="eyebrow">Editable Records</p>
               <h2 id="recordsHeading">Records View</h2>
             </div>
-            <span class="status-pill">Delete disabled</span>
+            <span class="status-pill">Archive disabled</span>
           </div>
           <div id="recordsTable" class="table-wrap" aria-live="polite"></div>
         </section>
@@ -187,6 +187,20 @@
               </div>
             </div>
             <div id="adminTable" class="table-wrap" aria-live="polite"></div>
+          </section>
+          <section class="panel archived-review-panel" aria-labelledby="archivedTableHeading">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Full Admin review</p>
+                <h2 id="archivedTableHeading">Archived records</h2>
+              </div>
+              <span id="archivedCountPill" class="status-pill">0 archived</span>
+            </div>
+            <p class="field-caption archived-review-caption">
+              Archived applicants stay in local storage. Only Full Admin can review or restore them.
+              Default lists, metrics, and search exclude archived records.
+            </p>
+            <div id="archivedTable" class="table-wrap" aria-live="polite"></div>
           </section>
         </section>
       </section>
@@ -366,7 +380,8 @@
 
         <div class="form-actions">
           <button id="saveApplicantButton" class="primary-action" type="submit">Save Applicant</button>
-          <button id="deleteRecord" class="secondary-action danger hidden" type="button">Delete</button>
+          <button id="archiveRecord" class="secondary-action danger hidden" type="button">Archive</button>
+          <button id="restoreRecord" class="secondary-action hidden" type="button">Restore</button>
         </div>
         <p id="formMessage" class="form-message" role="status"></p>
       </form>
@@ -382,8 +397,8 @@
       </section>
     </aside>
 
-    <script src="test-applicants.js?v=sprint-005"></script>
-    <script src="app.js?v=sprint-005-fp-outcome"></script>
+    <script src="test-applicants.js?v=sprint-006-archive"></script>
+    <script src="app.js?v=sprint-006-archive"></script>
     <!-- tracker-list-overrides.js retired in SPRINT-005; behaviors folded into app.js and styles.css. -->
   </body>
 </html>

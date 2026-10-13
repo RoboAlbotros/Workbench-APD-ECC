@@ -329,6 +329,15 @@ h2 {
   font-size: 13px;
 }
 
+.archived-review-caption {
+  margin: 0;
+  padding: 8px 10px 0;
+}
+
+.archived-records-table {
+  width: max-content;
+}
+
 .status-pill {
   display: inline-flex;
   align-items: center;
