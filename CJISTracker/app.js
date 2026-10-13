@@ -96,8 +96,9 @@ const limitedFields = [
 ];
 
 const adminFields = fields.filter((field) => !["notes", "documents"].includes(field));
-// Admin table diet (DEC-019): Actions plus seven data columns. All other fields stay
-// in the data model, form, search, and CSV export.
+// Admin table diet (DEC-019): Actions plus slim data columns. Fingerprint
+// Outcome stays on the admin list. All other fields stay in the data model,
+// form, search, and CSV export.
 const adminTableFields = [
   "name",
   "clearanceType",
@@ -105,6 +106,7 @@ const adminTableFields = [
   "iiiStatus",
   "cjisSecurityAwarenessRole",
   "ncicCertification",
+  "outcome",
   "requestor",
 ];
 const formFields = fields.filter((field) => field !== "documents");

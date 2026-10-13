@@ -195,13 +195,21 @@
     });
   }
 
-  function isLimitedOrAdminTable(table) {
+  function tableScope(table) {
     const ancestorIds = Array.from(document.querySelectorAll("[id]"))
       .filter((element) => element.contains(table))
       .map((element) => element.id.toLowerCase())
       .join(" ");
-    const scope = `${table.id || ""} ${ancestorIds}`.toLowerCase();
+    return `${table.id || ""} ${table.className || ""} ${ancestorIds}`.toLowerCase();
+  }
+
+  function isLimitedOrAdminTable(table) {
+    const scope = tableScope(table);
     return scope.includes("limited") || scope.includes("admin");
+  }
+
+  function isAdminTable(table) {
+    return tableScope(table).includes("admin");
   }
 
   function applyComplianceAlerts(table) {
@@ -245,7 +253,7 @@
       row.cells.length !== expectedCellCount;
   }
 
-  function preferredOrder(labels) {
+  function preferredOrder(labels, { hideFingerprintOutcome = false } = {}) {
     const prioritized = [
       labels.findIndex(isAction),
       labels.findIndex(isName),
@@ -253,10 +261,11 @@
       labels.findIndex(isAccess)
     ].filter((index, position, indexes) => index >= 0 && indexes.indexOf(index) === position);
 
-    const hidden = new Set([
-      labels.findIndex(isVendor),
-      labels.findIndex(isFingerprintOutcome)
-    ].filter((index) => index >= 0));
+    const hiddenIndexes = [labels.findIndex(isVendor)];
+    if (hideFingerprintOutcome) {
+      hiddenIndexes.push(labels.findIndex(isFingerprintOutcome));
+    }
+    const hidden = new Set(hiddenIndexes.filter((index) => index >= 0));
 
     const remaining = labels
       .map((_, index) => index)
@@ -295,7 +304,9 @@
     if (vendorIndex < 0 || firstDataRow.cells.length !== sourceLabels.length) return;
 
     const nameIndex = sourceLabels.findIndex(isName);
-    const order = preferredOrder(sourceLabels);
+    const order = preferredOrder(sourceLabels, {
+      hideFingerprintOutcome: !isAdminTable(table)
+    });
     const dataRows = currentRows.filter((row) => !isGroupRow(row, sourceLabels.length));
     if (!dataRows.length) return;
 
