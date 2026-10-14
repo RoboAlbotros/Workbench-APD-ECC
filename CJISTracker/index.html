@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>CJIS Applicant Tracker</title>
-    <link rel="stylesheet" href="styles.css?v=sprint-006-focus-yellow-v2" />
+    <link rel="stylesheet" href="styles.css?v=sprint-006-passport-beside-dl" />
   </head>
   <body class="signed-out">
     <header class="app-header" aria-label="Application header">
@@ -247,6 +247,10 @@
               title="Two-letter state prefix and 9 digits, no hyphens or spaces (example: NM123456789)"
             />
           </label>
+          <label class="checkbox-flag field-passport">
+            <input id="passport" type="checkbox" />
+            Passport
+          </label>
           <div id="duplicateDriversLicensePanel" class="duplicate-dl-panel hidden" hidden>
             <p id="duplicateDriversLicenseMessage" class="duplicate-dl-message">applicant is already on file</p>
             <div id="duplicateDriversLicenseList" class="duplicate-dl-list"></div>
@@ -309,10 +313,6 @@
             <label><input type="checkbox" name="accessTypeValues" value="System Access" /> System Access</label>
             <label><input type="checkbox" name="accessTypeValues" value="System/Building" /> System/Building</label>
           </fieldset>
-          <label class="checkbox-flag">
-            <input id="passport" type="checkbox" />
-            Passport
-          </label>
           <label>
             III - Status
             <select id="iiiStatus">

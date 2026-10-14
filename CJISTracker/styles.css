@@ -392,6 +392,15 @@ h2 {
   min-height: 38px;
 }
 
+.form-section .field-passport {
+  align-self: end;
+  min-height: 38px;
+}
+
+.form-section .duplicate-dl-panel {
+  grid-column: 1 / -1;
+}
+
 .form-section .checkbox-flag input {
   width: 16px;
   min-height: 16px;
