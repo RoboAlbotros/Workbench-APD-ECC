@@ -67,7 +67,6 @@ const CREATE_REQUIRED_FIELDS = [
   { field: "driversLicense", label: "Driver Lic Num" },
   { field: "vendor", label: "Vendor" },
   { field: "requestor", label: "Requestor" },
-  { field: "source", label: "Source" },
 ];
 
 function sanitizeDriversLicenseInput(value) {

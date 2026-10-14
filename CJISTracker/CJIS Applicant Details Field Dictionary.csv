@@ -2,7 +2,7 @@ Field Name,Internal Field Name,Data Type,Input Type / Allowed Values
 Name,name,String,Text; Last First Middle Initial Suffix; required
 Control ID,controlNumber,String,Text; unique secondary key retained in storage and import mapping; hidden from the UI (DEC-020)
 Driver Lic Num,driversLicense,String,Text; required on create (no recordId); maxlength 11; two-letter state prefix + 9 digits with no hyphens or spaces (example: NM123456789); extra characters stripped on input; stored uppercase; empty allowed when editing existing imported/seed records; DEC-020 in-scope; duplicate values warn applicant is already on file (including archived) and offer create-new copy of name/DL/phone/email (vendor/requestor/source left empty for the new entry)
-Source,source,String,Required and editable on create; read-only when editing an existing record so import-populated source is not casually overwritten (DEC-018); empty allowed on existing imported/seed records
+Source,source,String,Optional; editable on create (empty allowed); read-only when editing an existing record so import-populated source is not casually overwritten (DEC-018)
 Vendor,vendor,String,Dropdown populated from entered vendor values; required on create; empty allowed when editing existing records
 Requestor,requestor,String,Text; required on create; empty allowed when editing existing records
 Date Information Provided,dateInformationProvided,Date,Date
