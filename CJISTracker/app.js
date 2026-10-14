@@ -70,19 +70,57 @@ const CREATE_REQUIRED_FIELDS = [
   { field: "source", label: "Source" },
 ];
 
+function sanitizeDriversLicenseInput(value) {
+  const chars = String(value || "").toUpperCase();
+  let result = "";
+  for (const ch of chars) {
+    if (result.length >= 11) break;
+    if (result.length < 2) {
+      if (/[A-Z]/.test(ch)) result += ch;
+    } else if (/\d/.test(ch)) {
+      result += ch;
+    }
+  }
+  return result;
+}
+
 function normalizeDriversLicense(value) {
-  return String(value || "").trim().toUpperCase();
+  return sanitizeDriversLicenseInput(value);
+}
+
+const PHONE_DIGIT_LIMIT = 10;
+const PHONE_INVALID_MESSAGE =
+  "Applicant Phone Number must be 10 digits (example: 303-555-0174).";
+
+function extractPhoneDigits(value) {
+  return String(value || "").replace(/\D/g, "").slice(0, PHONE_DIGIT_LIMIT);
+}
+
+function formatPhoneNumber(value) {
+  const digits = extractPhoneDigits(value);
+  if (!digits) return "";
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+  return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
+}
+
+function normalizePhoneNumber(value) {
+  return formatPhoneNumber(value);
+}
+
+function isValidPhoneNumber(value) {
+  const text = String(value || "").trim();
+  if (text === "") return true;
+  return extractPhoneDigits(text).length === PHONE_DIGIT_LIMIT;
 }
 
 const UPPERCASE_APPLICANT_TEXT_FIELDS = new Set([
   "name",
   "controlNumber",
-  "driversLicense",
   "vendor",
   "requestor",
   "source",
   "emailAddress",
-  "phoneNumber",
 ]);
 
 function normalizeApplicantText(value) {
@@ -222,7 +260,7 @@ function startNewApplicantFromDuplicate(sourceId) {
 
   const copiedName = String(source.name || "");
   const copiedDl = normalizeDriversLicense(source.driversLicense);
-  const copiedPhone = String(source.phoneNumber || "");
+  const copiedPhone = formatPhoneNumber(source.phoneNumber);
   const copiedEmail = String(source.emailAddress || "");
 
   drawerOpen = true;
@@ -481,7 +519,20 @@ document.querySelector("#dateOfIiiCompletion").addEventListener("input", syncInq
 document.querySelector("#dateOfIiiCompletion").addEventListener("change", syncInquiryDueField);
 const driversLicenseInput = document.querySelector("#driversLicense");
 if (driversLicenseInput) {
+  const applyDriversLicenseInputLimit = () => {
+    const selectionStart = driversLicenseInput.selectionStart ?? 0;
+    const keptBefore = sanitizeDriversLicenseInput(String(driversLicenseInput.value).slice(0, selectionStart)).length;
+    const next = sanitizeDriversLicenseInput(driversLicenseInput.value);
+    if (driversLicenseInput.value !== next) {
+      driversLicenseInput.value = next;
+    }
+    if (typeof driversLicenseInput.setSelectionRange === "function") {
+      const pos = Math.min(keptBefore, next.length);
+      driversLicenseInput.setSelectionRange(pos, pos);
+    }
+  };
   const syncDriversLicenseValidity = () => {
+    applyDriversLicenseInputLimit();
     const raw = String(driversLicenseInput.value || "").trim();
     driversLicenseInput.setCustomValidity(isValidDriversLicense(raw) ? "" : DRIVERS_LICENSE_INVALID_MESSAGE);
     const normalized = normalizeDriversLicense(raw);
@@ -492,6 +543,20 @@ if (driversLicenseInput) {
   };
   driversLicenseInput.addEventListener("input", syncDriversLicenseValidity);
   driversLicenseInput.addEventListener("change", syncDriversLicenseValidity);
+  driversLicenseInput.addEventListener("paste", (event) => {
+    event.preventDefault();
+    const pasted = event.clipboardData ? event.clipboardData.getData("text") : "";
+    const start = driversLicenseInput.selectionStart ?? 0;
+    const end = driversLicenseInput.selectionEnd ?? 0;
+    const current = String(driversLicenseInput.value || "");
+    const merged = current.slice(0, start) + pasted + current.slice(end);
+    driversLicenseInput.value = sanitizeDriversLicenseInput(merged);
+    const cursor = sanitizeDriversLicenseInput(current.slice(0, start) + pasted).length;
+    if (typeof driversLicenseInput.setSelectionRange === "function") {
+      driversLicenseInput.setSelectionRange(cursor, cursor);
+    }
+    driversLicenseInput.dispatchEvent(new Event("input", { bubbles: true }));
+  });
 }
 
 function persistUppercaseApplicantTextInput(event) {
@@ -513,6 +578,70 @@ UPPERCASE_APPLICANT_TEXT_FIELDS.forEach((field) => {
   if (!control) return;
   control.addEventListener("input", persistUppercaseApplicantTextInput);
 });
+const phoneNumberInput = document.querySelector("#phoneNumber");
+if (phoneNumberInput) {
+  const persistPhoneNumberMask = () => {
+    if (phoneNumberInput.readOnly || phoneNumberInput.disabled) return;
+    const selectionStart = phoneNumberInput.selectionStart ?? 0;
+    const digitsBefore = String(phoneNumberInput.value)
+      .slice(0, selectionStart)
+      .replace(/\D/g, "").length;
+    const formatted = formatPhoneNumber(phoneNumberInput.value);
+    if (phoneNumberInput.value !== formatted) {
+      phoneNumberInput.value = formatted;
+    }
+    let seen = 0;
+    let pos = formatted.length;
+    if (digitsBefore === 0) {
+      pos = 0;
+    } else {
+      for (let i = 0; i < formatted.length; i += 1) {
+        if (/\d/.test(formatted[i])) {
+          seen += 1;
+          if (seen === digitsBefore) {
+            pos = i + 1;
+            break;
+          }
+        }
+      }
+    }
+    if (typeof phoneNumberInput.setSelectionRange === "function") {
+      phoneNumberInput.setSelectionRange(pos, pos);
+    }
+    phoneNumberInput.setCustomValidity(isValidPhoneNumber(phoneNumberInput.value) ? "" : PHONE_INVALID_MESSAGE);
+  };
+  phoneNumberInput.addEventListener("input", persistPhoneNumberMask);
+  phoneNumberInput.addEventListener("change", persistPhoneNumberMask);
+  phoneNumberInput.addEventListener("paste", (event) => {
+    event.preventDefault();
+    const pasted = event.clipboardData ? event.clipboardData.getData("text") : "";
+    const start = phoneNumberInput.selectionStart ?? 0;
+    const end = phoneNumberInput.selectionEnd ?? 0;
+    const current = String(phoneNumberInput.value || "");
+    const merged = current.slice(0, start) + pasted + current.slice(end);
+    phoneNumberInput.value = formatPhoneNumber(merged);
+    const digitsBefore = extractPhoneDigits(current.slice(0, start) + pasted).length;
+    let seen = 0;
+    let pos = phoneNumberInput.value.length;
+    if (digitsBefore === 0) {
+      pos = 0;
+    } else {
+      for (let i = 0; i < phoneNumberInput.value.length; i += 1) {
+        if (/\d/.test(phoneNumberInput.value[i])) {
+          seen += 1;
+          if (seen === digitsBefore) {
+            pos = i + 1;
+            break;
+          }
+        }
+      }
+    }
+    if (typeof phoneNumberInput.setSelectionRange === "function") {
+      phoneNumberInput.setSelectionRange(pos, pos);
+    }
+    phoneNumberInput.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+}
 document.addEventListener("keydown", handleDrawerKeydown);
 if (exportCsv) exportCsv.addEventListener("click", downloadCsv);
 documentUpload.addEventListener("change", handleDocumentUpload);
@@ -591,7 +720,7 @@ function normalizeRecords(recordSet) {
       ncicCertification: normalizeYesNo(record.ncicCertification),
       ncicCertificationExpiration: normalizeDateValue(record.ncicCertificationExpiration),
       emailAddress: normalizeApplicantText(record.emailAddress),
-      phoneNumber: normalizeApplicantText(record.phoneNumber),
+      phoneNumber: normalizePhoneNumber(record.phoneNumber),
       completedFullProcess: record.completedFullProcess || "",
       dateOfSiteVisitOnly: record.dateOfSiteVisitOnly || "",
       lastChangedBy: record.lastChangedBy || "",
@@ -811,6 +940,12 @@ function getFormFieldValue(field) {
   if (field === "dateOfIiiCompletion") {
     return toIsoDate(parseIiiCompletionDate(raw));
   }
+  if (field === "phoneNumber") {
+    return normalizePhoneNumber(raw);
+  }
+  if (field === "driversLicense") {
+    return normalizeDriversLicense(raw);
+  }
   if (UPPERCASE_APPLICANT_TEXT_FIELDS.has(field)) {
     return raw.toUpperCase();
   }
@@ -835,6 +970,16 @@ function setFormFieldValue(field, value) {
 
   if (field === "dateOfIiiCompletion") {
     document.querySelector(`#${field}`).value = toMmDdYyyy(parseIiiCompletionDate(value));
+    return;
+  }
+
+  if (field === "phoneNumber") {
+    document.querySelector("#phoneNumber").value = formatPhoneNumber(value);
+    return;
+  }
+
+  if (field === "driversLicense") {
+    document.querySelector("#driversLicense").value = sanitizeDriversLicenseInput(value);
     return;
   }
 
@@ -878,6 +1023,7 @@ function saveApplicant(event) {
   nextRecord.ncicCertification = normalizeYesNo(nextRecord.ncicCertification);
   nextRecord.controlNumber = String(nextRecord.controlNumber || "").trim();
   nextRecord.driversLicense = normalizeDriversLicense(nextRecord.driversLicense);
+  nextRecord.phoneNumber = normalizePhoneNumber(nextRecord.phoneNumber);
   if (!existingRecordId) {
     const missingCreateFields = getMissingCreateRequiredFields(nextRecord);
     if (missingCreateFields.length) {
@@ -891,6 +1037,10 @@ function saveApplicant(event) {
   }
   if (!isValidDriversLicense(nextRecord.driversLicense)) {
     showMessage(formMessage, DRIVERS_LICENSE_INVALID_MESSAGE, true);
+    return;
+  }
+  if (!isValidPhoneNumber(nextRecord.phoneNumber)) {
+    showMessage(formMessage, PHONE_INVALID_MESSAGE, true);
     return;
   }
   const duplicateDriversLicense = shouldBlockDuplicateDriversLicense(
@@ -1800,7 +1950,7 @@ const IMPORT_HEADER_MAP = [
   { match: /ncic.*(expiration|cert of)/i, field: "ncicCertificationExpiration", type: "isoDate" },
   { match: /^ncic certification$/i, field: "ncicCertification" },
   { match: /^passport$/i, field: "passport" },
-  { match: /phone/i, field: "phoneNumber" },
+  { match: /phone/i, field: "phoneNumber", type: "phoneNumber" },
   { match: /^completed full process$/i, field: "completedFullProcess", type: "isoDate" },
   { match: /site visit/i, field: "dateOfSiteVisitOnly", type: "isoDate" },
   { match: /quer/i, field: "queriedEveryFiveYears", type: "isoDate" },
@@ -1918,6 +2068,17 @@ function importCsvText(csvText, replaceAll) {
             `Row ${rowIndex + 2}: Driver Lic Num must be a two-letter state prefix and 9 digits with no hyphens or spaces (example: NM123456789); value omitted.`,
           );
           record.driversLicense = "";
+        }
+      } else if (column.type === "phoneNumber") {
+        if (!raw) {
+          record.phoneNumber = "";
+        } else if (extractPhoneDigits(raw).length === PHONE_DIGIT_LIMIT) {
+          record.phoneNumber = formatPhoneNumber(raw);
+        } else {
+          errors.push(
+            `Row ${rowIndex + 2}: Applicant Phone Number must be 10 digits (example: 303-555-0174); value omitted.`,
+          );
+          record.phoneNumber = "";
         }
       } else {
         record[column.field] = raw;

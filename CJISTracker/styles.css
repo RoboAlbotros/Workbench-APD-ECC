@@ -466,6 +466,43 @@ textarea {
   resize: vertical;
 }
 
+#applicantForm input[type="text"]:not(#dateOfIiiCompletion):not(#lastChangedBy),
+#applicantForm input[type="email"],
+#applicantForm input[type="tel"],
+#searchInput {
+  text-transform: uppercase;
+}
+
+#notes,
+textarea#notes,
+.field-notes textarea,
+input[type="password"],
+input[type="date"],
+input[type="file"],
+#dateOfIiiCompletion,
+#lastChangedBy,
+#managementUserName,
+#managementAccessCode {
+  text-transform: none;
+}
+
+td.field-name,
+td.field-vendor,
+td.field-requestor,
+td.field-source,
+td.field-emailAddress,
+td.field-phoneNumber,
+td.field-driversLicense,
+td.field-controlNumber,
+.duplicate-dl-name {
+  text-transform: uppercase;
+}
+
+td.field-notes,
+.field-notes {
+  text-transform: none;
+}
+
 .record-form .field-notes,
 .record-form .field-documents,
 .document-list-wrap {
@@ -569,6 +606,29 @@ textarea {
   background: #eef2f5;
   color: #435466;
   cursor: not-allowed;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  background: #fff3a0;
+  border-color: #d4a017;
+  outline: 2px solid #e6b800;
+  outline-offset: 1px;
+}
+
+input[type="checkbox"]:focus {
+  background: #fff3a0;
+  outline: 2px solid #e6b800;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px #fff3a0;
+}
+
+label:has(input[type="checkbox"]:focus) {
+  background: #fff3a0;
+  border-radius: 6px;
+  outline: 2px solid #e6b800;
+  outline-offset: 2px;
 }
 
 .form-message {
@@ -711,7 +771,7 @@ td {
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0;
-  text-transform: none;
+  text-transform: uppercase;
 }
 
 .admin-records-table tbody tr.vendor-group-0 > td,
