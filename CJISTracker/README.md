@@ -65,7 +65,7 @@ Access Type supports multiple selections.
 
 - Name (Last, First, MI, Suffix)
 - Control ID (unique secondary key; hidden from the UI; retained in storage)
-- Driver Lic Num (optional; two-letter state prefix + 9 digits, no hyphens or spaces; example: NM123456789; stored uppercase)
+- Driver Lic Num (optional; two-letter state prefix + 9 digits, 11-character input limit, no hyphens or spaces; example: NM123456789; stored uppercase)
 - Source (read-only in the UI)
 - Vendor
 - Requestor
@@ -82,7 +82,7 @@ Access Type supports multiple selections.
 - Security Addendum
 - NCIC Date of Cert Expiration
 - NCIC Certification
-- Applicant Phone Number
+- Applicant Phone Number (optional; 10 digits only; displayed and stored as XXX-XXX-XXXX)
 - Completed Full Process
 - Date of Site Visit Only
 - Next III Inquiry Due (5 yrs) (calculated from Date of III Completion + 5 years)
