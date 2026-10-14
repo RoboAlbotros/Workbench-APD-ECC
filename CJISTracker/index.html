@@ -260,6 +260,23 @@
             <input id="requestor" type="text" />
           </label>
           <label>
+            Applicant Phone Number
+            <input
+              id="phoneNumber"
+              type="tel"
+              autocomplete="tel"
+              inputmode="numeric"
+              maxlength="12"
+              placeholder="XXX-XXX-XXXX"
+              pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"
+              title="10-digit phone number as XXX-XXX-XXXX"
+            />
+          </label>
+          <label>
+            Applicant Email Address
+            <input id="emailAddress" type="email" autocomplete="email" />
+          </label>
+          <label>
             Source*
             <input id="source" type="text" />
           </label>
@@ -377,24 +394,7 @@
         </fieldset>
 
         <fieldset class="form-section">
-          <legend>Contact &amp; Notes</legend>
-          <label>
-            Applicant Phone Number
-            <input
-              id="phoneNumber"
-              type="tel"
-              autocomplete="tel"
-              inputmode="numeric"
-              maxlength="12"
-              placeholder="XXX-XXX-XXXX"
-              pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"
-              title="10-digit phone number as XXX-XXX-XXXX"
-            />
-          </label>
-          <label>
-            Applicant Email Address
-            <input id="emailAddress" type="email" autocomplete="email" />
-          </label>
+          <legend>Notes</legend>
           <label class="field-documents hidden">
             Applicant Documents
             <input id="documentUpload" type="file" multiple />
