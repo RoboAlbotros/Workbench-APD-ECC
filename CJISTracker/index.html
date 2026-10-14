@@ -228,7 +228,7 @@
         <fieldset class="form-section">
           <legend>Identity</legend>
           <label>
-            Name (Last, First, MI, Suffix)
+            Name (Last, First, MI, Suffix)*
             <input id="name" type="text" autocomplete="name" placeholder="Last, First M., Suffix" required />
           </label>
           <label class="hidden">
@@ -236,7 +236,7 @@
             <input id="controlNumber" type="text" tabindex="-1" autocomplete="off" />
           </label>
           <label>
-            Driver Lic Num
+            Driver Lic Num*
             <input
               id="driversLicense"
               type="text"
@@ -252,15 +252,15 @@
             <div id="duplicateDriversLicenseList" class="duplicate-dl-list"></div>
           </div>
           <label>
-            Vendor
+            Vendor*
             <input id="vendor" type="text" list="vendorOptions" />
           </label>
           <label>
-            Requestor
+            Requestor*
             <input id="requestor" type="text" />
           </label>
           <label>
-            Source
+            Source*
             <input id="source" type="text" />
           </label>
           <label>
@@ -428,8 +428,8 @@
       </section>
     </aside>
 
-    <script src="test-applicants.js?v=sprint-006-upper"></script>
-    <script src="app.js?v=sprint-006-upper"></script>
+    <script src="test-applicants.js?v=sprint-006-required-asterisk"></script>
+    <script src="app.js?v=sprint-006-required-asterisk"></script>
     <!-- tracker-list-overrides.js retired in SPRINT-005; behaviors folded into app.js and styles.css. -->
   </body>
 </html>
