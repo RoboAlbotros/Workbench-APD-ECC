@@ -62,14 +62,66 @@ const ACCESS_LABELS = {
 const DRIVERS_LICENSE_PATTERN = /^[A-Za-z]{2}\d{9}$/;
 const DRIVERS_LICENSE_INVALID_MESSAGE =
   "Driver Lic Num must be a two-letter state prefix and 9 digits with no hyphens or spaces (example: NM123456789).";
+const CREATE_REQUIRED_FIELDS = [
+  { field: "name", label: "Name (Last, First, MI, Suffix)" },
+  { field: "driversLicense", label: "Driver Lic Num" },
+  { field: "vendor", label: "Vendor" },
+  { field: "requestor", label: "Requestor" },
+  { field: "source", label: "Source" },
+];
 
 function normalizeDriversLicense(value) {
+  return String(value || "").trim().toUpperCase();
+}
+
+const UPPERCASE_APPLICANT_TEXT_FIELDS = new Set([
+  "name",
+  "controlNumber",
+  "driversLicense",
+  "vendor",
+  "requestor",
+  "source",
+  "emailAddress",
+  "phoneNumber",
+]);
+
+function normalizeApplicantText(value) {
   return String(value || "").trim().toUpperCase();
 }
 
 function isValidDriversLicense(value) {
   const text = String(value || "").trim();
   return text === "" || DRIVERS_LICENSE_PATTERN.test(text);
+}
+
+function isCreatingApplicant() {
+  return !String(document.querySelector("#recordId")?.value || "").trim();
+}
+
+function requiredCreateFieldValue(field, record) {
+  if (field === "driversLicense") {
+    return normalizeDriversLicense(record?.driversLicense);
+  }
+  return String(record?.[field] || "").trim();
+}
+
+function getMissingCreateRequiredFields(record) {
+  return CREATE_REQUIRED_FIELDS.filter(({ field }) => !requiredCreateFieldValue(field, record)).map(
+    ({ label }) => label,
+  );
+}
+
+function syncCreateRequiredAttributes() {
+  const requiredOnCreate = isCreatingApplicant() && currentFormMode !== "view";
+  CREATE_REQUIRED_FIELDS.forEach(({ field }) => {
+    const control = document.querySelector(`#${field}`);
+    if (!control) return;
+    if (field === "name") {
+      control.required = true;
+      return;
+    }
+    control.required = requiredOnCreate;
+  });
 }
 
 function findDuplicateDriversLicenseRecords(value, excludeId) {
@@ -189,6 +241,9 @@ function startNewApplicantFromDuplicate(sourceId) {
   setFormFieldValue("driversLicense", copiedDl);
   setFormFieldValue("phoneNumber", copiedPhone);
   setFormFieldValue("emailAddress", copiedEmail);
+  setFormFieldValue("vendor", "");
+  setFormFieldValue("requestor", "");
+  setFormFieldValue("source", "");
   syncInquiryDueField();
   hideDuplicateDriversLicensePanel();
   updateFormMode();
@@ -438,6 +493,26 @@ if (driversLicenseInput) {
   driversLicenseInput.addEventListener("input", syncDriversLicenseValidity);
   driversLicenseInput.addEventListener("change", syncDriversLicenseValidity);
 }
+
+function persistUppercaseApplicantTextInput(event) {
+  const control = event.target;
+  if (!(control instanceof HTMLInputElement)) return;
+  if (control.readOnly || control.disabled) return;
+  const start = control.selectionStart;
+  const end = control.selectionEnd;
+  const upper = control.value.toUpperCase();
+  if (control.value === upper) return;
+  control.value = upper;
+  if (typeof start === "number" && typeof end === "number") {
+    control.setSelectionRange(start, end);
+  }
+}
+
+UPPERCASE_APPLICANT_TEXT_FIELDS.forEach((field) => {
+  const control = document.querySelector(`#${field}`);
+  if (!control) return;
+  control.addEventListener("input", persistUppercaseApplicantTextInput);
+});
 document.addEventListener("keydown", handleDrawerKeydown);
 if (exportCsv) exportCsv.addEventListener("click", downloadCsv);
 documentUpload.addEventListener("change", handleDocumentUpload);
@@ -499,10 +574,11 @@ function normalizeRecords(recordSet) {
     const nextRecord = {
       ...record,
       name: normalizeApplicantName(record.name),
-      controlNumber: String(record.controlNumber || record.controlId || "").trim(),
+      controlNumber: normalizeApplicantText(record.controlNumber || record.controlId),
       driversLicense: normalizeDriversLicense(record.driversLicense),
-      source: String(record.source || "").trim(),
-      requestor: record.requestor || "",
+      source: normalizeApplicantText(record.source),
+      vendor: normalizeApplicantText(record.vendor),
+      requestor: normalizeApplicantText(record.requestor),
       outcome: normalizeOutcome(record.outcome),
       iiiStatus: normalizeIiiStatus(record.iiiStatus),
       clearanceType: normalizeClearanceType(record.clearanceType),
@@ -514,7 +590,8 @@ function normalizeRecords(recordSet) {
       cjisSecurityAwarenessRole: record.cjisSecurityAwarenessRole || "",
       ncicCertification: normalizeYesNo(record.ncicCertification),
       ncicCertificationExpiration: normalizeDateValue(record.ncicCertificationExpiration),
-      emailAddress: record.emailAddress || "",
+      emailAddress: normalizeApplicantText(record.emailAddress),
+      phoneNumber: normalizeApplicantText(record.phoneNumber),
       completedFullProcess: record.completedFullProcess || "",
       dateOfSiteVisitOnly: record.dateOfSiteVisitOnly || "",
       lastChangedBy: record.lastChangedBy || "",
@@ -548,12 +625,17 @@ function normalizeRecords(recordSet) {
 
 function normalizeApplicantName(value) {
   const text = String(value || "").trim();
-  if (!text || text.includes(",")) return text;
-  const parts = text.split(/\s+/);
-  if (parts.length < 2) return text;
-  const lastName = parts.at(-1);
-  const givenNames = parts.slice(0, -1).join(" ");
-  return `${lastName}, ${givenNames}`;
+  if (!text) return "";
+  let normalized = text;
+  if (!text.includes(",")) {
+    const parts = text.split(/\s+/);
+    if (parts.length >= 2) {
+      const lastName = parts.at(-1);
+      const givenNames = parts.slice(0, -1).join(" ");
+      normalized = `${lastName}, ${givenNames}`;
+    }
+  }
+  return normalized.toUpperCase();
 }
 
 function normalizeOutcome(value) {
@@ -729,6 +811,9 @@ function getFormFieldValue(field) {
   if (field === "dateOfIiiCompletion") {
     return toIsoDate(parseIiiCompletionDate(raw));
   }
+  if (UPPERCASE_APPLICANT_TEXT_FIELDS.has(field)) {
+    return raw.toUpperCase();
+  }
   return raw;
 }
 
@@ -753,7 +838,10 @@ function setFormFieldValue(field, value) {
     return;
   }
 
-  document.querySelector(`#${field}`).value = value || "";
+  const nextValue = UPPERCASE_APPLICANT_TEXT_FIELDS.has(field)
+    ? String(value || "").toUpperCase()
+    : value || "";
+  document.querySelector(`#${field}`).value = nextValue;
 }
 
 function saveApplicant(event) {
@@ -790,6 +878,17 @@ function saveApplicant(event) {
   nextRecord.ncicCertification = normalizeYesNo(nextRecord.ncicCertification);
   nextRecord.controlNumber = String(nextRecord.controlNumber || "").trim();
   nextRecord.driversLicense = normalizeDriversLicense(nextRecord.driversLicense);
+  if (!existingRecordId) {
+    const missingCreateFields = getMissingCreateRequiredFields(nextRecord);
+    if (missingCreateFields.length) {
+      showMessage(
+        formMessage,
+        `New applicants require ${missingCreateFields.join(", ")}.`,
+        true,
+      );
+      return;
+    }
+  }
   if (!isValidDriversLicense(nextRecord.driversLicense)) {
     showMessage(formMessage, DRIVERS_LICENSE_INVALID_MESSAGE, true);
     return;
@@ -1302,8 +1401,8 @@ function renderArchivedTable() {
                 <button class="admin-action" type="button" data-restore="${record.id}">Restore</button>
               </div>
             </td>
-            <td>${escapeHtml(record.name)}</td>
-            <td>${escapeHtml(record.vendor)}</td>
+            <td class="field-name">${escapeHtml(record.name)}</td>
+            <td class="field-vendor">${escapeHtml(record.vendor)}</td>
             <td>${escapeHtml(record.archivedBy)}</td>
             <td>${formatDateTime(record.archivedAt)}</td>
           </tr>`;
@@ -1533,6 +1632,7 @@ function updateEditorVisibility() {
 
 function updateFormMode() {
   const isReadOnly = currentFormMode === "view";
+  const creating = isCreatingApplicant();
   applicantForm.querySelectorAll("input, select, textarea").forEach((control) => {
     if (control.id === "recordId") return;
     if (control.id === "queriedEveryFiveYears") {
@@ -1544,9 +1644,11 @@ function updateFormMode() {
     if (control.type === "checkbox" || control.tagName === "SELECT") {
       control.disabled = isReadOnly;
     } else {
-      control.readOnly = isReadOnly || control.id === "lastChangedBy" || control.id === "source";
+      const preserveImportedSource = control.id === "source" && !creating;
+      control.readOnly = isReadOnly || control.id === "lastChangedBy" || preserveImportedSource;
     }
   });
+  syncCreateRequiredAttributes();
   saveApplicantButton.classList.toggle("hidden", isReadOnly);
   formHeading.textContent = isReadOnly ? "Applicant Details - Read Only" : "Applicant Details";
   editorEyebrow.textContent = isReadOnly ? "Read Only" : currentView === "admin" ? "Full Record" : "Records";
