@@ -72,6 +72,133 @@ function isValidDriversLicense(value) {
   return text === "" || DRIVERS_LICENSE_PATTERN.test(text);
 }
 
+function findDuplicateDriversLicenseRecords(value, excludeId) {
+  const normalized = normalizeDriversLicense(value);
+  if (!normalized) return [];
+  return records.filter((record) => {
+    return (
+      record.id !== excludeId &&
+      normalizeDriversLicense(record.driversLicense) === normalized
+    );
+  });
+}
+
+function shouldBlockDuplicateDriversLicense(value, excludeId) {
+  const normalized = normalizeDriversLicense(value);
+  const duplicates = findDuplicateDriversLicenseRecords(normalized, excludeId);
+  if (!normalized || !duplicates.length) {
+    return { block: false, duplicates };
+  }
+  if (acknowledgedDuplicateDriversLicense === normalized) {
+    return { block: false, duplicates };
+  }
+  if (excludeId) {
+    const existing = records.find((record) => record.id === excludeId);
+    if (existing && normalizeDriversLicense(existing.driversLicense) === normalized) {
+      return { block: false, duplicates };
+    }
+  }
+  return { block: true, duplicates };
+}
+
+function formatDuplicateDisplayValue(value) {
+  const text = String(value || "").trim();
+  return text ? escapeHtml(text) : "—";
+}
+
+function hideDuplicateDriversLicensePanel() {
+  if (!duplicateDriversLicensePanel) return;
+  duplicateDriversLicensePanel.hidden = true;
+  duplicateDriversLicensePanel.classList.add("hidden");
+  if (duplicateDriversLicenseList) duplicateDriversLicenseList.innerHTML = "";
+}
+
+function showDuplicateDriversLicenseWarning(duplicates) {
+  showMessage(formMessage, "applicant is already on file", true);
+  if (!duplicateDriversLicensePanel || !duplicateDriversLicenseList) return;
+  const canCreate = canAccessView("admin");
+  duplicateDriversLicenseList.innerHTML = duplicates
+    .map((record) => {
+      const archivedNote = isArchivedRecord(record)
+        ? `<p class="duplicate-dl-meta">Archived</p>`
+        : "";
+      const copyButton = canCreate
+        ? `<button class="admin-action duplicate-dl-copy" type="button" data-copy-applicant="${escapeHtml(record.id)}">Create new applicant</button>`
+        : "";
+      return `<article class="duplicate-dl-card">
+        <p class="duplicate-dl-name">${formatDuplicateDisplayValue(record.name)}</p>
+        <p>Driver Lic Num: ${formatDuplicateDisplayValue(record.driversLicense)}</p>
+        <p>Applicant Phone Number: ${formatDuplicateDisplayValue(record.phoneNumber)}</p>
+        <p>Applicant Email: ${formatDuplicateDisplayValue(record.emailAddress)}</p>
+        <p>Vendor: ${formatDuplicateDisplayValue(record.vendor)}</p>
+        <p>Clearance Type: ${formatDuplicateDisplayValue(record.clearanceType)}</p>
+        ${archivedNote}
+        ${copyButton}
+      </article>`;
+    })
+    .join("");
+  duplicateDriversLicensePanel.hidden = false;
+  duplicateDriversLicensePanel.classList.remove("hidden");
+  duplicateDriversLicenseList.querySelectorAll("[data-copy-applicant]").forEach((button) => {
+    button.addEventListener("click", () => {
+      startNewApplicantFromDuplicate(button.dataset.copyApplicant);
+    });
+  });
+}
+
+function reviewDriversLicenseDuplicates() {
+  if (currentFormMode === "view") {
+    hideDuplicateDriversLicensePanel();
+    return;
+  }
+  const excludeId = document.querySelector("#recordId")?.value || "";
+  const raw = driversLicenseInput ? driversLicenseInput.value : "";
+  const result = shouldBlockDuplicateDriversLicense(raw, excludeId);
+  if (result.block) {
+    showDuplicateDriversLicenseWarning(result.duplicates);
+    return;
+  }
+  hideDuplicateDriversLicensePanel();
+  if (formMessage && formMessage.textContent === "applicant is already on file") {
+    showMessage(formMessage, "");
+  }
+}
+
+function startNewApplicantFromDuplicate(sourceId) {
+  const source = records.find((record) => record.id === sourceId);
+  if (!source || !canAccessView("admin")) return;
+
+  const copiedName = String(source.name || "");
+  const copiedDl = normalizeDriversLicense(source.driversLicense);
+  const copiedPhone = String(source.phoneNumber || "");
+  const copiedEmail = String(source.emailAddress || "");
+
+  drawerOpen = true;
+  if (currentView !== "admin") {
+    setView("admin");
+  }
+
+  currentFormMode = "edit";
+  applicantForm.reset();
+  currentDocuments = [];
+  documentUpload.value = "";
+  renderDocumentList();
+  document.querySelector("#recordId").value = "";
+  acknowledgedDuplicateDriversLicense = copiedDl;
+  setFormFieldValue("name", copiedName);
+  setFormFieldValue("driversLicense", copiedDl);
+  setFormFieldValue("phoneNumber", copiedPhone);
+  setFormFieldValue("emailAddress", copiedEmail);
+  syncInquiryDueField();
+  hideDuplicateDriversLicensePanel();
+  updateFormMode();
+  updateChangeLogVisibility();
+  updateEditorVisibility();
+  updateArchiveVisibility();
+  showMessage(formMessage, "New applicant started from an existing record. Complete remaining fields and save.");
+  document.querySelector("#vendor")?.focus();
+}
+
 const fields = [
   "name",
   "controlNumber",
@@ -195,6 +322,7 @@ let currentDocuments = [];
 let currentFormMode = "edit";
 let drawerOpen = false;
 let drawerReturnFocus = null;
+let acknowledgedDuplicateDriversLicense = "";
 
 const accessPanel = document.querySelector("#accessPanel");
 const accessForm = document.querySelector("#accessForm");
@@ -234,6 +362,8 @@ const archivedTable = document.querySelector("#archivedTable");
 const archivedCountPill = document.querySelector("#archivedCountPill");
 const exportCsv = document.querySelector("#exportCsv");
 const formMessage = document.querySelector("#formMessage");
+const duplicateDriversLicensePanel = document.querySelector("#duplicateDriversLicensePanel");
+const duplicateDriversLicenseList = document.querySelector("#duplicateDriversLicenseList");
 const searchInput = document.querySelector("#searchInput");
 const clearanceFilter = document.querySelector("#clearanceFilter");
 const outcomeFilter = document.querySelector("#outcomeFilter");
@@ -299,6 +429,11 @@ if (driversLicenseInput) {
   const syncDriversLicenseValidity = () => {
     const raw = String(driversLicenseInput.value || "").trim();
     driversLicenseInput.setCustomValidity(isValidDriversLicense(raw) ? "" : DRIVERS_LICENSE_INVALID_MESSAGE);
+    const normalized = normalizeDriversLicense(raw);
+    if (acknowledgedDuplicateDriversLicense && acknowledgedDuplicateDriversLicense !== normalized) {
+      acknowledgedDuplicateDriversLicense = "";
+    }
+    reviewDriversLicenseDuplicates();
   };
   driversLicenseInput.addEventListener("input", syncDriversLicenseValidity);
   driversLicenseInput.addEventListener("change", syncDriversLicenseValidity);
@@ -659,6 +794,14 @@ function saveApplicant(event) {
     showMessage(formMessage, DRIVERS_LICENSE_INVALID_MESSAGE, true);
     return;
   }
+  const duplicateDriversLicense = shouldBlockDuplicateDriversLicense(
+    nextRecord.driversLicense,
+    existingRecordId,
+  );
+  if (duplicateDriversLicense.block) {
+    showDuplicateDriversLicenseWarning(duplicateDriversLicense.duplicates);
+    return;
+  }
   if (nextRecord.controlNumber) {
     const duplicate = records.some(
       (record) =>
@@ -701,6 +844,8 @@ function resetApplicantForm() {
   documentUpload.value = "";
   renderDocumentList();
   document.querySelector("#recordId").value = "";
+  acknowledgedDuplicateDriversLicense = "";
+  hideDuplicateDriversLicensePanel();
   syncInquiryDueField();
   updateFormMode();
   updateChangeLogVisibility();
@@ -916,6 +1061,8 @@ function loadApplicantForm(id, mode) {
 
   currentFormMode = mode;
   document.querySelector("#recordId").value = record.id;
+  acknowledgedDuplicateDriversLicense = "";
+  hideDuplicateDriversLicensePanel();
   formFields.forEach((field) => {
     setFormFieldValue(field, record[field]);
   });

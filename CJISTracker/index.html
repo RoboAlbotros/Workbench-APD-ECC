@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>CJIS Applicant Tracker</title>
-    <link rel="stylesheet" href="styles.css?v=sprint-006-dl" />
+    <link rel="stylesheet" href="styles.css?v=sprint-006-dldup" />
   </head>
   <body class="signed-out">
     <header class="app-header" aria-label="Application header">
@@ -246,6 +246,10 @@
               title="Two-letter state prefix and 9 digits, no hyphens or spaces (example: NM123456789)"
             />
           </label>
+          <div id="duplicateDriversLicensePanel" class="duplicate-dl-panel hidden" hidden>
+            <p id="duplicateDriversLicenseMessage" class="duplicate-dl-message">applicant is already on file</p>
+            <div id="duplicateDriversLicenseList" class="duplicate-dl-list"></div>
+          </div>
           <label>
             Vendor
             <input id="vendor" type="text" list="vendorOptions" required />
@@ -414,8 +418,8 @@
       </section>
     </aside>
 
-    <script src="test-applicants.js?v=sprint-006-dl"></script>
-    <script src="app.js?v=sprint-006-dl"></script>
+    <script src="test-applicants.js?v=sprint-006-dldup"></script>
+    <script src="app.js?v=sprint-006-dldup"></script>
     <!-- tracker-list-overrides.js retired in SPRINT-005; behaviors folded into app.js and styles.css. -->
   </body>
 </html>

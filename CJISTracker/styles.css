@@ -582,6 +582,58 @@ textarea {
   color: var(--danger);
 }
 
+.duplicate-dl-panel {
+  margin: 0 0 8px;
+  padding: 10px 12px;
+  border: 1px solid #e2c4b8;
+  border-radius: 8px;
+  background: #fff6f2;
+}
+
+.duplicate-dl-panel.hidden {
+  display: none;
+}
+
+.duplicate-dl-message {
+  margin: 0 0 8px;
+  color: var(--danger);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.duplicate-dl-list {
+  display: grid;
+  gap: 8px;
+}
+
+.duplicate-dl-card {
+  display: grid;
+  gap: 4px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fff;
+}
+
+.duplicate-dl-card p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.duplicate-dl-card .duplicate-dl-name {
+  font-weight: 800;
+}
+
+.duplicate-dl-meta {
+  color: var(--muted);
+}
+
+.duplicate-dl-card .duplicate-dl-copy {
+  justify-self: start;
+  margin-top: 4px;
+}
+
 .admin-login {
   max-width: 460px;
 }
