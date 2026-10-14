@@ -69,6 +69,7 @@ const fields = [
   "iiiStatus",
   "clearanceType",
   "accessType",
+  "passport",
   "cjisSecurityAwarenessRole",
   "fingerprintsNotifiedCompleted",
   "outcome",
@@ -106,6 +107,7 @@ const adminTableFields = [
   "iiiStatus",
   "cjisSecurityAwarenessRole",
   "ncicCertification",
+  "passport",
   "outcome",
   "requestor",
 ];
@@ -122,6 +124,7 @@ const labels = {
   dateOfIiiCompletion: "Date of III Completion",
   clearanceType: "Clearance Type",
   accessType: "Access Type",
+  passport: "Passport",
   cjisSecurityAwarenessRole: "CJIS Security and Awareness Role",
   ncicCertification: "NCIC Certification",
   ncicCertificationExpiration: "NCIC Date of Cert Expiration",
@@ -344,6 +347,7 @@ function normalizeRecords(recordSet) {
       dateOfIiiCompletion: storedIiiCompletion,
       queriedEveryFiveYears: computeInquiryDueDate(storedIiiCompletion),
       accessType: normalizeAccessType(record.accessType),
+      passport: normalizeYesNo(record.passport),
       cjisSecurityAwarenessRole: record.cjisSecurityAwarenessRole || "",
       ncicCertification: normalizeYesNo(record.ncicCertification),
       ncicCertificationExpiration: normalizeDateValue(record.ncicCertificationExpiration),
@@ -434,9 +438,15 @@ function normalizeDateValue(value) {
 }
 
 function normalizeYesNo(value) {
+  if (value === true || value === 1) return "Y";
+  if (value === false || value === 0) return "N";
   const normalized = String(value || "").trim().toLowerCase();
-  if (normalized === "yes" || normalized === "y") return "Y";
-  if (normalized === "no" || normalized === "n") return "N";
+  if (normalized === "yes" || normalized === "y" || normalized === "true" || normalized === "1" || normalized === "on") {
+    return "Y";
+  }
+  if (normalized === "no" || normalized === "n" || normalized === "false" || normalized === "0") {
+    return "N";
+  }
   return "";
 }
 
@@ -549,6 +559,10 @@ function getFormFieldValue(field) {
       .join(", ");
   }
 
+  if (field === "passport") {
+    return document.querySelector("#passport").checked ? "Y" : "N";
+  }
+
   const raw = document.querySelector(`#${field}`).value.trim();
   if (field === "dateOfIiiCompletion") {
     return toIsoDate(parseIiiCompletionDate(raw));
@@ -564,6 +578,11 @@ function setFormFieldValue(field, value) {
     document.querySelectorAll('input[name="accessTypeValues"]').forEach((input) => {
       input.checked = selectedValues.includes(input.value);
     });
+    return;
+  }
+
+  if (field === "passport") {
+    document.querySelector("#passport").checked = normalizeYesNo(value) === "Y";
     return;
   }
 
@@ -603,6 +622,7 @@ function saveApplicant(event) {
   );
   nextRecord.clearanceType = normalizeClearanceType(nextRecord.clearanceType);
   nextRecord.accessType = normalizeAccessType(nextRecord.accessType);
+  nextRecord.passport = normalizeYesNo(nextRecord.passport);
   nextRecord.outcome = normalizeOutcome(nextRecord.outcome);
   nextRecord.iiiStatus = normalizeIiiStatus(nextRecord.iiiStatus);
   nextRecord.ncicCertification = normalizeYesNo(nextRecord.ncicCertification);
@@ -1289,6 +1309,7 @@ function isBadgeField(field) {
     "accessType",
     "cjisSecurityAwarenessRole",
     "ncicCertification",
+    "passport",
   ].includes(field);
 }
 
@@ -1493,6 +1514,7 @@ const IMPORT_HEADER_MAP = [
   { match: /^security addendum$/i, field: "securityAddendum", type: "isoDate" },
   { match: /ncic.*(expiration|cert of)/i, field: "ncicCertificationExpiration", type: "isoDate" },
   { match: /^ncic certification$/i, field: "ncicCertification" },
+  { match: /^passport$/i, field: "passport" },
   { match: /phone/i, field: "phoneNumber" },
   { match: /^completed full process$/i, field: "completedFullProcess", type: "isoDate" },
   { match: /site visit/i, field: "dateOfSiteVisitOnly", type: "isoDate" },

@@ -384,6 +384,20 @@ h2 {
   grid-column: span 2;
 }
 
+.form-section .checkbox-flag {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  align-self: end;
+  min-height: 38px;
+}
+
+.form-section .checkbox-flag input {
+  width: 16px;
+  min-height: 16px;
+  padding: 0;
+}
+
 .form-section .field-caption {
   grid-column: 1 / -1;
 }
@@ -723,6 +737,7 @@ td {
 
 .admin-records-table .field-iiiStatus,
 .admin-records-table .field-ncicCertification,
+.admin-records-table .field-passport,
 .admin-records-table .field-phoneNumber {
   width: 96px;
 }
@@ -758,6 +773,17 @@ td {
   font-size: 0.72rem;
   min-height: 20px;
   padding: 0 6px;
+}
+
+.admin-records-table th.field-accessType,
+.admin-records-table td.field-accessType {
+  font-size: 0.64rem;
+}
+
+.admin-records-table .field-accessType .badge {
+  font-size: 0.56rem;
+  min-height: 16px;
+  padding: 0 4px;
 }
 
 .admin-records-table .field-cjisSecurityAwarenessRole,

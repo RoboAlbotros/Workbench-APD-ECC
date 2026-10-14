@@ -59,6 +59,7 @@
   iiiStatus                    → IiiStatuses.IiiStatusName / Applicants.IiiStatusId
   clearanceType                → ClearanceTypes.ClearanceTypeName / Applicants.ClearanceTypeId
   accessType                   → AccessTypes / ApplicantAccessTypes
+  passport                     → Applicants.Passport ('Y'/'N'; nullable yes/no flag only)
   cjisSecurityAwarenessRole    → CjisSecurityAwarenessRoles / Applicants.CjisSecurityAwarenessRoleId
   fingerprintsNotifiedCompleted→ Applicants.FingerprintsCompleted
   outcome                      → FingerprintOutcomes / Applicants.FingerprintOutcomeId
@@ -214,6 +215,8 @@ BEGIN
     SecurityAddendumDate DATE NULL,
     NcicCertificationExpiration DATE NULL,
     NcicCertification CHAR(1) NULL,
+    /* Yes/no flag only. Not treated as PII beyond Y/N. */
+    Passport CHAR(1) NULL,
     CompletedFullProcess DATE NULL,
     DateOfSiteVisitOnly DATE NULL,
     QueryDateEveryFiveYears DATE NULL,
@@ -230,6 +233,7 @@ BEGIN
     ArchivedAtUtc DATETIME2(0) NULL,
     ArchivedByDisplayName NVARCHAR(160) NULL,
     CONSTRAINT CK_Applicants_NcicCertification CHECK (NcicCertification IS NULL OR NcicCertification IN ('Y', 'N')),
+    CONSTRAINT CK_Applicants_Passport CHECK (Passport IS NULL OR Passport IN ('Y', 'N')),
     CONSTRAINT FK_Applicants_Vendors
       FOREIGN KEY (VendorId) REFERENCES dbo.Vendors(VendorId),
     CONSTRAINT FK_Applicants_ClearanceTypes
@@ -279,6 +283,24 @@ GO
 IF COL_LENGTH(N'dbo.Applicants', N'ArchivedByDisplayName') IS NULL
 BEGIN
   ALTER TABLE dbo.Applicants ADD ArchivedByDisplayName NVARCHAR(160) NULL;
+END;
+GO
+
+IF COL_LENGTH(N'dbo.Applicants', N'Passport') IS NULL
+BEGIN
+  ALTER TABLE dbo.Applicants ADD Passport CHAR(1) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+  SELECT 1
+  FROM sys.check_constraints
+  WHERE name = N'CK_Applicants_Passport'
+    AND parent_object_id = OBJECT_ID(N'dbo.Applicants')
+)
+BEGIN
+  ALTER TABLE dbo.Applicants ADD CONSTRAINT CK_Applicants_Passport
+    CHECK (Passport IS NULL OR Passport IN ('Y', 'N'));
 END;
 GO
 

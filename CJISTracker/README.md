@@ -43,9 +43,10 @@ unchanged. Existing localStorage records are not replaced; clearing storage and
 reloading restores the seed.
 Notes remain editable on applicant records but are hidden from list tables.
 Applicant list tables are grouped by Vendor (default grouping).
-The Full Admin table shows Actions plus Clearance Type, Access Type, Name,
-Requestor, III - Status, CJIS Security Role, and NCIC Certification. Remaining
-fields are edited in the slide-in record drawer.
+The Full Admin table shows Actions plus Name, Clearance Type, Access Type,
+III - Status, CJIS Security Role, NCIC Certification, Passport, Fingerprint
+Outcome, and Requestor. Remaining fields are edited in the slide-in record
+drawer. Control ID and Source stay off the admin list.
 Next III Inquiry Due (5 yrs) is a calculated, read-only date equal to Date of
 III Completion plus 5 years. The Query Due metric counts records whose due date
 is on or before today.
@@ -68,6 +69,7 @@ Access Type supports multiple selections.
 - III - Status
 - Clearance Type
 - Access Type
+- Passport (Y/N checkbox; yes/no flag only)
 - CJIS Security and Awareness Role
 - Fingerprints Completed
 - Fingerprint Outcome

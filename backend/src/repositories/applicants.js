@@ -19,6 +19,7 @@
  *   iiiStatus                     IiiStatusId
  *   clearanceType                 ClearanceTypeId
  *   accessType                    ApplicantAccessTypes
+ *   passport                      Passport
  *   cjisSecurityAwarenessRole     CjisSecurityAwarenessRoleId
  *   fingerprintsNotifiedCompleted FingerprintsCompleted
  *   outcome                       FingerprintOutcomeId
