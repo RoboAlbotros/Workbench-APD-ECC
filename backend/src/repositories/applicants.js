@@ -5,12 +5,15 @@
  *
  * Persist blank Control ID as NULL (not '') so UX_Applicants_ControlNumber
  * allows many unset values and unique non-null Control IDs (DEC-018).
- * Do not persist Date of Birth, SSN, or Driver's License (DEC-012 / DEC-017).
+ * Control ID is hidden from the UI (DEC-020); do not drop stored values.
+ * Persist DriverLicenseNumber when present (DEC-020); format ST + 9 digits.
+ * Do not persist Date of Birth or SSN (DEC-012 / DEC-017).
  * SourceName is read-only in the UI (DEC-018).
  *
  * app.js field → column:
  *   name                          ApplicantName
  *   controlNumber                 ControlNumber
+ *   driversLicense                DriverLicenseNumber
  *   source                        SourceName
  *   vendor                        VendorId / Vendors.VendorName
  *   requestor                     Requestor

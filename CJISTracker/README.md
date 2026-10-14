@@ -30,8 +30,11 @@ Full Admin includes an "Import Applicants from CSV" panel. Columns are mapped by
 name per `docs/planning/import-crosswalk-mastersheet.md`. US-format dates (MM/DD/YYYY) and ISO dates (YYYY-MM-DD) are
 accepted; Date of III Completion is stored as ISO like other date fields. "Replace all existing records" (default) clears current records
 first; unchecked, rows are added and rows whose Control ID already exists are skipped.
-Date of Birth, Social Security Number, and Driver's License columns are always excluded
-and never stored (DEC-012), and every import is recorded in the change log.
+Date of Birth and Social Security Number columns are always excluded and never
+stored (DEC-012). Raw MasterSheet "State / Driver's License" headers stay excluded.
+A Driver Lic Num column is accepted only when the value matches two letters plus
+9 digits with no hyphens (example: NM123456789). Every import is recorded in the
+change log.
 
 The import panel is currently commented out in `index.html` at owner direction (it is a
 one-time pre-go-live function); re-enable it by uncommenting that section.
@@ -43,24 +46,26 @@ unchanged. Existing localStorage records are not replaced; clearing storage and
 reloading restores the seed.
 Notes remain editable on applicant records but are hidden from list tables.
 Applicant list tables are grouped by Vendor (default grouping).
-The Full Admin table shows Actions plus Name, Clearance Type, Access Type,
-III - Status, CJIS Security Role, NCIC Certification, Passport, Fingerprint
-Outcome, and Requestor. Remaining fields are edited in the slide-in record
-drawer. Control ID and Source stay off the admin list.
+The Full Admin table shows Actions plus Name, Driver Lic Num, Clearance Type,
+Access Type, III - Status, CJIS Security Role, NCIC Certification, Passport,
+Fingerprint Outcome, and Requestor. Remaining fields are edited in the slide-in
+record drawer. Control ID is hidden from the form and all lists (retained in
+storage). Source stays off the admin list.
 Next III Inquiry Due (5 yrs) is a calculated, read-only date equal to Date of
 III Completion plus 5 years. The Query Due metric counts records whose due date
 is on or before today.
 
 These access codes are local prototype controls. For production use, replace them with server-side authentication, authorization, and audit logging (recorded direction: City SSO / Entra ID with server-side role-based access, decision DEC-015).
 
-Vendor uses suggestions from existing records. Search checks name, vendor, and Applicant Email Address.
+Vendor uses suggestions from existing records. Search checks name, Driver Lic Num, vendor, and Applicant Email Address.
 Applicant document data remains in the data model, but the Applicant Documents field is hidden in the UI.
 Access Type supports multiple selections.
 
 ## Tracked fields
 
 - Name (Last, First, MI, Suffix)
-- Control ID (unique secondary key)
+- Control ID (unique secondary key; hidden from the UI; retained in storage)
+- Driver Lic Num (optional; two-letter state prefix + 9 digits, no hyphens or spaces; example: NM123456789; stored uppercase)
 - Source (read-only in the UI)
 - Vendor
 - Requestor

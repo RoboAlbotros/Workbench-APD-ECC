@@ -24,9 +24,14 @@
 
   GOVERNANCE NOTES
   ----------------
-  - DEC-012 / DEC-017: no Date of Birth, Social Security Number, or Driver's
-    License columns. Do not add them.
-  - DEC-018: ControlNumber is the unique secondary key (UI label: Control ID).
+  - DEC-012 / DEC-017: no Date of Birth or Social Security Number columns.
+    Do not add them.
+  - DEC-020 (2026-10-14): DriverLicenseNumber is in-scope (UI: Driver Lic Num).
+    Format: two-letter state prefix + 9 digits, no hyphens (example: NM123456789).
+    Persist blank as NULL. Owner directed this field in; Privacy Framework / PIA
+    revisit remains TBD for the authority (DEC-014/016).
+  - DEC-018 / DEC-020: ControlNumber remains the unique secondary key. It is
+    hidden from the UI and unused for display/edit; existing values are retained.
     Persist a blank Control ID as NULL (not '') so multiple unset values are
     allowed. Non-null values are unique. Default CI collation makes uniqueness
     case-insensitive, matching app.js.
@@ -50,7 +55,8 @@
   APP.JS FIELD MAP (current model → column)
   ----------------------------------------
   name                         → Applicants.ApplicantName
-  controlNumber                → Applicants.ControlNumber
+  controlNumber                → Applicants.ControlNumber (hidden secondary key)
+  driversLicense               → Applicants.DriverLicenseNumber
   source                       → Applicants.SourceName
   vendor                       → Vendors.VendorName / Applicants.VendorId
   requestor                    → Applicants.Requestor
@@ -197,8 +203,11 @@ IF OBJECT_ID(N'dbo.Applicants', N'U') IS NULL
 BEGIN
   CREATE TABLE dbo.Applicants (
     ApplicantId UNIQUEIDENTIFIER NOT NULL CONSTRAINT PK_Applicants PRIMARY KEY DEFAULT (NEWID()),
-    /* DEC-018 secondary key. Unique when present; persist blanks as NULL. */
+    /* DEC-018 secondary key. Unique when present; persist blanks as NULL.
+       DEC-020: hidden from the UI; unused for display/edit. */
     ControlNumber NVARCHAR(40) NULL,
+    /* DEC-020: format ST + 9 digits (example: NM123456789). Blank is NULL. */
+    DriverLicenseNumber NVARCHAR(11) NULL,
     /* DEC-018 Source; read-only in the UI. */
     SourceName NVARCHAR(160) NULL,
     VendorId INT NOT NULL,
@@ -234,6 +243,13 @@ BEGIN
     ArchivedByDisplayName NVARCHAR(160) NULL,
     CONSTRAINT CK_Applicants_NcicCertification CHECK (NcicCertification IS NULL OR NcicCertification IN ('Y', 'N')),
     CONSTRAINT CK_Applicants_Passport CHECK (Passport IS NULL OR Passport IN ('Y', 'N')),
+    CONSTRAINT CK_Applicants_DriverLicenseNumber CHECK (
+      DriverLicenseNumber IS NULL
+      OR (
+        LEN(DriverLicenseNumber) = 11
+        AND DriverLicenseNumber LIKE N'[A-Z][A-Z][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'
+      )
+    ),
     CONSTRAINT FK_Applicants_Vendors
       FOREIGN KEY (VendorId) REFERENCES dbo.Vendors(VendorId),
     CONSTRAINT FK_Applicants_ClearanceTypes
@@ -289,6 +305,30 @@ GO
 IF COL_LENGTH(N'dbo.Applicants', N'Passport') IS NULL
 BEGIN
   ALTER TABLE dbo.Applicants ADD Passport CHAR(1) NULL;
+END;
+GO
+
+IF COL_LENGTH(N'dbo.Applicants', N'DriverLicenseNumber') IS NULL
+BEGIN
+  ALTER TABLE dbo.Applicants ADD DriverLicenseNumber NVARCHAR(11) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+  SELECT 1
+  FROM sys.check_constraints
+  WHERE name = N'CK_Applicants_DriverLicenseNumber'
+    AND parent_object_id = OBJECT_ID(N'dbo.Applicants')
+)
+BEGIN
+  ALTER TABLE dbo.Applicants ADD CONSTRAINT CK_Applicants_DriverLicenseNumber
+    CHECK (
+      DriverLicenseNumber IS NULL
+      OR (
+        LEN(DriverLicenseNumber) = 11
+        AND DriverLicenseNumber LIKE N'[A-Z][A-Z][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'
+      )
+    );
 END;
 GO
 

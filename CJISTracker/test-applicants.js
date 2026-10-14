@@ -1,9 +1,11 @@
 // Fictitious test applicants copied from the sanitized MasterSheet CSV
 // (CJIS_MasterSheet_import.csv, outside the repository). Source cell values
 // are unchanged. Date fields that use type=date (or ISO-stored III completion)
-// are stored as YYYY-MM-DD so the same calendar day displays. DOB/SSN/DL were
-// already absent from the source headers (DEC-012). Used only as the empty-
-// storage seed; existing localStorage records are never replaced.
+// are stored as YYYY-MM-DD so the same calendar day displays. DOB/SSN were
+// already absent from the source headers (DEC-012). Seeds stay without Driver
+// Lic Num values (DEC-020 field exists; no spreadsheet PII is committed).
+// Used only as the empty-storage seed; existing localStorage records are never
+// replaced.
 
 function getTestApplicantSeed() {
   return TEST_APPLICANT_RECORDS.map((record) => ({

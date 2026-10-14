@@ -24,7 +24,7 @@ outcomes) that the tracker normalizes on save/load.
 | 5 | III Completion | `dateOfIiiCompletion` | Import | Convert `M/D/YYYY` or ISO `YYYY-MM-DD` → stored ISO `YYYY-MM-DD` (form displays MM/DD/YYYY). |
 | 6 | Date of Birth | — | **EXCLUDE — DEC-012** | Sensitive PII. Must not be imported; tracker deletes this field on load if present. |
 | 7 | Social Security Number | — | **EXCLUDE — DEC-012** | Sensitive PII. Must not be imported; tracker deletes this field on load if present. |
-| 8 | State / Driver's License Number | — | **EXCLUDE — DEC-012** | Sensitive PII. Must not be imported; tracker deletes this field on load if present. |
+| 8 | State / Driver's License Number | — | **EXCLUDE raw MasterSheet header** | Raw MasterSheet column stays blocked. DEC-020 added a separate in-scope `driversLicense` (Driver Lic Num) accepted only as ST + 9 digits with no hyphens (example: NM123456789). Do not auto-ingest this spreadsheet column. Never commit spreadsheet PII. |
 | 9 | III - Status | `iiiStatus` | Import | Normalized: "clear" → Clear; "felony"/"review needed" → Felony; anything else → Misd/Clear. Verify source vocabulary before import. |
 | 10 | Type of Clearance | `clearanceType` | Import | Normalized case-insensitively to Full Clearance / One Time Visit / No Access Given; **unrecognized values become blank** — pre-validate source values. |
 | 11 | Fingerprints Completed | `fingerprintsNotifiedCompleted` | Import | Convert `M/D/YYYY` → ISO `YYYY-MM-DD` (invalid dates are blanked by the tracker). |
@@ -73,9 +73,11 @@ outcomes) that the tracker normalizes on save/load.
 
 ## Security constraints (binding)
 
-- Columns 6–8 (DOB, SSN, driver's license) MUST NOT be imported in any form — DEC-012
-  as interpreted by DEC-017. The tracker's `normalizeRecords` deletes these fields as a
-  backstop, but the importer must exclude them at the source.
+- Columns 6–7 (DOB, SSN) MUST NOT be imported — DEC-012 as interpreted by DEC-017.
+  The tracker's `normalizeRecords` still deletes those fields as a backstop.
+- Column 8 (raw MasterSheet "State / Driver's License Number") MUST NOT be
+  auto-ingested. DEC-020 allows a separate Driver Lic Num value only when it
+  already matches ST + 9 digits. Never commit spreadsheet PII.
 - The source spreadsheet contains PII and MUST remain outside the repository. No
   spreadsheet rows, values, or extracts may be committed.
 - Import of real applicant data is out of scope until the governance authorities

@@ -1,6 +1,7 @@
 Field Name,Internal Field Name,Data Type,Input Type / Allowed Values
 Name,name,String,Text; Last First Middle Initial Suffix
-Control ID,controlNumber,String,Text; manually entered unique external reference (secondary key; matches SQL ControlNumber)
+Control ID,controlNumber,String,Text; unique secondary key retained in storage and import mapping; hidden from the UI (DEC-020)
+Driver Lic Num,driversLicense,String,Text; optional; two-letter state prefix + 9 digits with no hyphens or spaces (example: NM123456789); stored uppercase; empty allowed; DEC-020 in-scope
 Source,source,String,Read-only text; populated at import or left blank
 Vendor,vendor,String,Dropdown populated from entered vendor values
 Requestor,requestor,String,Text

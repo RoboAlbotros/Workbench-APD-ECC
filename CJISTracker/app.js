@@ -59,9 +59,23 @@ const ACCESS_LABELS = {
   admin: "Full Admin",
 };
 
+const DRIVERS_LICENSE_PATTERN = /^[A-Za-z]{2}\d{9}$/;
+const DRIVERS_LICENSE_INVALID_MESSAGE =
+  "Driver Lic Num must be a two-letter state prefix and 9 digits with no hyphens or spaces (example: NM123456789).";
+
+function normalizeDriversLicense(value) {
+  return String(value || "").trim().toUpperCase();
+}
+
+function isValidDriversLicense(value) {
+  const text = String(value || "").trim();
+  return text === "" || DRIVERS_LICENSE_PATTERN.test(text);
+}
+
 const fields = [
   "name",
   "controlNumber",
+  "driversLicense",
   "vendor",
   "requestor",
   "dateInformationProvided",
@@ -90,7 +104,7 @@ const fields = [
 
 const limitedFields = [
   "name",
-  "controlNumber",
+  "driversLicense",
   "clearanceType",
   "securityAwarenessExpiration",
   "lastChangedBy",
@@ -98,10 +112,12 @@ const limitedFields = [
 
 const adminFields = fields.filter((field) => !["notes", "documents"].includes(field));
 // Admin table diet (DEC-019): Actions plus slim data columns. Fingerprint
-// Outcome stays on the admin list. All other fields stay in the data model,
+// Outcome stays on the admin list. Control ID stays off lists (DEC-020).
+// Driver Lic Num is shown near Name. All other fields stay in the data model,
 // form, search, and CSV export.
 const adminTableFields = [
   "name",
+  "driversLicense",
   "clearanceType",
   "accessType",
   "iiiStatus",
@@ -116,6 +132,7 @@ const formFields = fields.filter((field) => field !== "documents");
 const labels = {
   name: "Name (Last, First, MI, Suffix)",
   controlNumber: "Control ID",
+  driversLicense: "Driver Lic Num",
   source: "Source",
   vendor: "Vendor",
   requestor: "Requestor",
@@ -144,6 +161,7 @@ const labels = {
 
 const tableLabels = {
   name: "Name",
+  driversLicense: "Driver Lic Num",
   cjisSecurityAwarenessRole: "CJIS Security Role",
   securityAwarenessExpiration: "Security and Awareness Cert",
 };
@@ -276,6 +294,15 @@ archiveRecord.addEventListener("click", archiveApplicant);
 restoreRecord.addEventListener("click", () => restoreApplicant());
 document.querySelector("#dateOfIiiCompletion").addEventListener("input", syncInquiryDueField);
 document.querySelector("#dateOfIiiCompletion").addEventListener("change", syncInquiryDueField);
+const driversLicenseInput = document.querySelector("#driversLicense");
+if (driversLicenseInput) {
+  const syncDriversLicenseValidity = () => {
+    const raw = String(driversLicenseInput.value || "").trim();
+    driversLicenseInput.setCustomValidity(isValidDriversLicense(raw) ? "" : DRIVERS_LICENSE_INVALID_MESSAGE);
+  };
+  driversLicenseInput.addEventListener("input", syncDriversLicenseValidity);
+  driversLicenseInput.addEventListener("change", syncDriversLicenseValidity);
+}
 document.addEventListener("keydown", handleDrawerKeydown);
 if (exportCsv) exportCsv.addEventListener("click", downloadCsv);
 documentUpload.addEventListener("change", handleDocumentUpload);
@@ -338,6 +365,7 @@ function normalizeRecords(recordSet) {
       ...record,
       name: normalizeApplicantName(record.name),
       controlNumber: String(record.controlNumber || record.controlId || "").trim(),
+      driversLicense: normalizeDriversLicense(record.driversLicense),
       source: String(record.source || "").trim(),
       requestor: record.requestor || "",
       outcome: normalizeOutcome(record.outcome),
@@ -373,7 +401,6 @@ function normalizeRecords(recordSet) {
     delete nextRecord.completedProcessOrSiteVisit;
     delete nextRecord.dateOfBirth;
     delete nextRecord.socialSecurityNumber;
-    delete nextRecord.driversLicense;
     delete nextRecord.isDeleted;
     delete nextRecord.deleted;
     return nextRecord;
@@ -627,6 +654,11 @@ function saveApplicant(event) {
   nextRecord.iiiStatus = normalizeIiiStatus(nextRecord.iiiStatus);
   nextRecord.ncicCertification = normalizeYesNo(nextRecord.ncicCertification);
   nextRecord.controlNumber = String(nextRecord.controlNumber || "").trim();
+  nextRecord.driversLicense = normalizeDriversLicense(nextRecord.driversLicense);
+  if (!isValidDriversLicense(nextRecord.driversLicense)) {
+    showMessage(formMessage, DRIVERS_LICENSE_INVALID_MESSAGE, true);
+    return;
+  }
   if (nextRecord.controlNumber) {
     const duplicate = records.some(
       (record) =>
@@ -939,6 +971,7 @@ function getFilteredRecords() {
     const haystack = [
       record.name,
       record.controlNumber,
+      record.driversLicense,
       record.vendor,
       record.requestor,
       record.emailAddress,
@@ -1492,9 +1525,12 @@ function logInquiryDueMigration(changedCount) {
 
 // --- CSV import (SPRINT-004) -------------------------------------------------
 // Maps spreadsheet columns to tracker fields per docs/planning/import-crosswalk-mastersheet.md.
-// Sensitive PII columns (DOB, SSN, driver's license) are excluded unconditionally (DEC-012).
+// DOB and SSN columns stay excluded (DEC-012). Raw MasterSheet "State / Driver's
+// License" headers stay blocked. A Driver Lic Num header is accepted only when
+// the value matches ST + 9 digits (DEC-020). Never commit spreadsheet PII.
 
 const IMPORT_BLOCKED_HEADER_PATTERNS = [/birth/i, /social\s*security/i, /\bssn\b/i, /licen[cs]e/i];
+const IMPORT_DRIVERS_LICENSE_HEADER = /^(driver\s*lic(\.|ense)?\s*num(ber)?|drivers?License(Number)?)$/i;
 
 const IMPORT_HEADER_MAP = [
   { match: /^source$/i, field: "source" },
@@ -1596,6 +1632,9 @@ function importCsvText(csvText, replaceAll) {
   const headers = rows[0].map((header) => header.trim());
   const columnMap = headers.map((header) => {
     if (!header) return null;
+    if (IMPORT_DRIVERS_LICENSE_HEADER.test(header)) {
+      return { field: "driversLicense", type: "driversLicense", header };
+    }
     if (IMPORT_BLOCKED_HEADER_PATTERNS.some((pattern) => pattern.test(header))) {
       return { blocked: true, header };
     }
@@ -1620,6 +1659,17 @@ function importCsvText(csvText, replaceAll) {
       const raw = String(cells[columnIndex] ?? "").trim();
       if (column.type === "isoDate") {
         record[column.field] = toIsoDate(parseUsOrIsoDate(raw));
+      } else if (column.type === "driversLicense") {
+        if (!raw) {
+          record.driversLicense = "";
+        } else if (DRIVERS_LICENSE_PATTERN.test(raw)) {
+          record.driversLicense = raw.toUpperCase();
+        } else {
+          errors.push(
+            `Row ${rowIndex + 2}: Driver Lic Num must be a two-letter state prefix and 9 digits with no hyphens or spaces (example: NM123456789); value omitted.`,
+          );
+          record.driversLicense = "";
+        }
       } else {
         record[column.field] = raw;
       }

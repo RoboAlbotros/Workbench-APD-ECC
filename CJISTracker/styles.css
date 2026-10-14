@@ -713,6 +713,12 @@ td {
   width: 160px;
 }
 
+.admin-records-table .field-driversLicense,
+.limited-records-table .field-driversLicense {
+  width: 118px;
+  white-space: nowrap;
+}
+
 .admin-records-table .field-requestor {
   width: 140px;
 }

@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>CJIS Applicant Tracker</title>
-    <link rel="stylesheet" href="styles.css?v=sprint-006-archive" />
+    <link rel="stylesheet" href="styles.css?v=sprint-006-dl" />
   </head>
   <body class="signed-out">
     <header class="app-header" aria-label="Application header">
@@ -99,7 +99,7 @@
         </div>
         <label class="search-field">
           Search applicants
-          <input id="searchInput" type="search" placeholder="Name, Control ID, vendor, requestor, or applicant email" />
+          <input id="searchInput" type="search" placeholder="Name, Driver Lic Num, vendor, requestor, or applicant email" />
         </label>
         <label>
           Clearance Type
@@ -168,9 +168,11 @@
               </div>
               <p id="importMessage" class="form-message" role="status"></p>
               <p class="field-caption">
-                Columns are mapped by header name per the import crosswalk. Date of Birth,
-                Social Security Number, and Driver's License columns are always excluded
-                and never stored (DEC-012).
+                Columns are mapped by header name per the import crosswalk. Date of Birth
+                and Social Security Number columns are always excluded (DEC-012). Raw
+                MasterSheet State / Driver's License headers stay excluded. A Driver Lic
+                Num column is accepted only when the value is two letters plus 9 digits
+                with no hyphens (example: NM123456789).
               </p>
             </form>
           </section>
@@ -229,9 +231,20 @@
             Name (Last, First, MI, Suffix)
             <input id="name" type="text" autocomplete="name" placeholder="Last, First M., Suffix" required />
           </label>
-          <label>
+          <label class="hidden">
             Control ID
-            <input id="controlNumber" type="text" placeholder="Unique external reference (e.g. CJIS-ECCID-001)" />
+            <input id="controlNumber" type="text" tabindex="-1" autocomplete="off" />
+          </label>
+          <label>
+            Driver Lic Num
+            <input
+              id="driversLicense"
+              type="text"
+              autocomplete="off"
+              placeholder="NM123456789"
+              pattern="[A-Za-z]{2}[0-9]{9}"
+              title="Two-letter state prefix and 9 digits, no hyphens or spaces (example: NM123456789)"
+            />
           </label>
           <label>
             Vendor
@@ -401,8 +414,8 @@
       </section>
     </aside>
 
-    <script src="test-applicants.js?v=sprint-006-archive"></script>
-    <script src="app.js?v=sprint-006-archive"></script>
+    <script src="test-applicants.js?v=sprint-006-dl"></script>
+    <script src="app.js?v=sprint-006-dl"></script>
     <!-- tracker-list-overrides.js retired in SPRINT-005; behaviors folded into app.js and styles.css. -->
   </body>
 </html>
