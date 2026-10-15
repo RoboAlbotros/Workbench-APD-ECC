@@ -47,10 +47,13 @@ reloading restores the seed.
 Notes remain editable on applicant records but are hidden from list tables.
 Applicant list tables are grouped by Vendor (default grouping).
 The Full Admin table shows Actions plus Name, Driver Lic Num, Clearance Type,
-Tour/Orientation, Access Type, III - Status, CJIS Security Role, NCIC Certification, Passport,
-Fingerprint Outcome, Department, Position/Role, and Requestor. Remaining fields are edited in the slide-in
+Department, Position/Role, and Requestor. Limited View shows Name, Driver Lic Num,
+Vendor, Department, Position/Role, Status (Active or InActive), Clearance Type,
+Security and Awareness Cert, and Last Changed By. Tour/Orientation,
+Source, III - Status, CJIS Security Role, NCIC Certification, Passport, Fingerprint
+Outcome, and Access Type stay off both listings and are edited in the slide-in
 record drawer. Control ID is hidden from the form and all lists (retained in
-storage). Source stays off the admin list.
+storage).
 Next III Inquiry Due (5 yrs) is a calculated, read-only date equal to Date of
 III Completion plus 5 years. The Query Due metric counts records whose due date
 is on or before today.
@@ -59,7 +62,8 @@ These access codes are local prototype controls. For production use, replace the
 
 Vendor uses suggestions from existing records and is optional. Department is a closed city-code list (AV-Aviation through TR-Transit). Position/Role uses suggestions from existing records. Search checks name, Driver Lic Num, vendor, department, position/role, requestor, and Applicant Email Address.
 Applicant document data remains in the data model, but the Applicant Documents field is hidden in the UI.
-Access Type supports multiple selections.
+Access Type supports multiple selections. VPN, Non VPN, Security Groups, and
+System/Building are grayed out and read-only on the applicant form in every view.
 
 ## Tracked fields
 

@@ -670,6 +670,17 @@ label {
   padding: 0;
 }
 
+.checkbox-group label.access-type-readonly {
+  color: #8b939c;
+  cursor: not-allowed;
+}
+
+.checkbox-group label.access-type-readonly input:disabled {
+  accent-color: #9aa3ad;
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .search-field {
   min-width: 0;
 }
@@ -1074,6 +1085,11 @@ td {
   border-bottom-color: #b7d8bb;
 }
 
+.admin-records-table tbody tr.grouped-record-row > td:first-child,
+.limited-records-table tbody tr.grouped-record-row > td:first-child {
+  padding-left: 1.85rem;
+}
+
 .admin-records-table tbody tr.vendor-group-0.compliance-expired-row > td,
 .admin-records-table tbody tr.vendor-group-1.compliance-expired-row > td,
 .limited-records-table tbody tr.vendor-group-0.compliance-expired-row > td,
@@ -1202,6 +1218,16 @@ td {
 .limited-records-table .field-name,
 .limited-records-table .field-vendor {
   width: 160px;
+}
+
+.limited-records-table .field-department,
+.limited-records-table .field-positionRole {
+  width: 150px;
+}
+
+.limited-records-table .field-activityStatus {
+  width: 96px;
+  white-space: nowrap;
 }
 
 .limited-records-table .field-securityAddendum,

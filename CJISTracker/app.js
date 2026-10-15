@@ -179,6 +179,31 @@ const DEFAULT_ACCESS_TYPE_OPTIONS = [
   "System/Building",
 ];
 
+const READONLY_ACCESS_TYPE_OPTIONS = new Set([
+  "VPN",
+  "Non VPN",
+  "Security Groups",
+  "System/Building",
+]);
+
+function isReadOnlyAccessTypeOption(value) {
+  return READONLY_ACCESS_TYPE_OPTIONS.has(String(value || "").trim());
+}
+
+function applyAccessTypeOptionState(input) {
+  if (!input || input.name !== "accessTypeValues") return;
+  const locked = isReadOnlyAccessTypeOption(input.value);
+  const label = input.closest("label");
+  if (locked) {
+    input.disabled = true;
+    input.setAttribute("aria-disabled", "true");
+    label?.classList.add("access-type-readonly");
+    return;
+  }
+  input.removeAttribute("aria-disabled");
+  label?.classList.remove("access-type-readonly");
+}
+
 const DEFAULT_OPTION_LISTS = {
   department: DEFAULT_DEPARTMENT_OPTIONS.slice(),
   clearanceType: ["Full Clearance", "One Time Visit", "InProgress", "No Access Given"],
@@ -529,27 +554,25 @@ const fields = [
 const limitedFields = [
   "name",
   "driversLicense",
+  "vendor",
+  "department",
+  "positionRole",
+  "activityStatus",
   "clearanceType",
   "securityAwarenessExpiration",
   "lastChangedBy",
 ];
 
 const adminFields = fields.filter((field) => !["notes", "documents"].includes(field));
-// Admin table diet (DEC-019): Actions plus slim data columns. Fingerprint
-// Outcome stays on the admin list. Control ID stays off lists (DEC-020).
-// Driver Lic Num is shown near Name. All other fields stay in the data model,
-// form, search, and CSV export.
+// Admin table diet (DEC-019): Actions plus slim data columns. Control ID stays
+// off lists (DEC-020). Driver Lic Num is shown near Name. Tour/Orientation,
+// Source, III - Status, CJIS Security Role, NCIC Certification, Passport,
+// Fingerprint Outcome, and Access Type stay in the form, search, and data
+// model, not on Limited or All Applicant Records listings.
 const adminTableFields = [
   "name",
   "driversLicense",
   "clearanceType",
-  "tourOrientation",
-  "accessType",
-  "iiiStatus",
-  "cjisSecurityAwarenessRole",
-  "ncicCertification",
-  "passport",
-  "outcome",
   "department",
   "positionRole",
   "requestor",
@@ -605,6 +628,7 @@ const tableLabels = {
   driversLicense: "Driver Lic Num",
   cjisSecurityAwarenessRole: "CJIS Security Role",
   securityAwarenessExpiration: "Security and Awareness Cert",
+  activityStatus: "Status",
 };
 
 let optionLists = loadOptionLists();
@@ -1815,6 +1839,7 @@ function renderAccessTypeCheckboxes() {
     input.value = option;
     input.checked = checked.has(option);
     label.append(input, document.createTextNode(` ${option}`));
+    applyAccessTypeOptionState(input);
     if (tourLabel) {
       fieldset.insertBefore(label, tourLabel);
     } else {
@@ -1951,8 +1976,8 @@ function renderRecordsTable() {
   });
 }
 
-function renderRecordsRow(record, groupTone) {
-  return `<tr${rowClassAttributes(record, groupTone)}>
+function renderRecordsRow(record, groupTone, grouped) {
+  return `<tr${rowClassAttributes(record, groupTone, grouped)}>
     ${limitedFields
       .map((field) => {
         return renderDataCell(field, record[field], record);
@@ -1967,8 +1992,8 @@ function renderRecordsRow(record, groupTone) {
   </tr>`;
 }
 
-function renderLimitedRow(record, groupTone) {
-  return `<tr${rowClassAttributes(record, groupTone)}>
+function renderLimitedRow(record, groupTone, grouped) {
+  return `<tr${rowClassAttributes(record, groupTone, grouped)}>
     ${limitedFields
       .map((field) => {
         const value = record[field];
@@ -2007,8 +2032,8 @@ function renderAdminTable() {
   });
 }
 
-function renderAdminRow(record, groupTone) {
-  return `<tr${rowClassAttributes(record, groupTone)}>
+function renderAdminRow(record, groupTone, grouped) {
+  return `<tr${rowClassAttributes(record, groupTone, grouped)}>
     <td class="field-admin">
       <div class="record-actions">
         <button class="admin-action" type="button" data-view="${record.id}">View</button>
@@ -2607,7 +2632,7 @@ function renderGroupedRows(sortedRecords, rowRenderer, columnCount) {
         ? `<tr class="vendor-group-row vendor-group-${groupTone}"><th colspan="${columnCount}">${escapeHtml(vendor)}</th></tr>`
         : "";
 
-      return `${vendorHeader}${rowRenderer(record, groupTone)}`;
+      return `${vendorHeader}${rowRenderer(record, groupTone, true)}`;
     })
     .join("");
 }
@@ -2631,6 +2656,12 @@ function getDateSortValue(value) {
 }
 
 function renderDataCell(field, value, record) {
+  if (field === "activityStatus") {
+    const status = record ? getRecordActivityStatus(record) : "InActive";
+    const tone = status === "Active" ? "active" : "inactive";
+    return `<td class="field-activityStatus"><span class="badge ${tone}">${escapeHtml(status)}</span></td>`;
+  }
+
   if (field === "documents") {
     return `<td class="field-documents">${renderDocumentSummary(value)}</td>`;
   }
@@ -2682,8 +2713,9 @@ function syncApplicantActivityStatus() {
   statusEl.className = `applicant-activity-status badge ${status === "Active" ? "active" : "inactive"}`;
 }
 
-function rowClassAttributes(record, groupTone) {
+function rowClassAttributes(record, groupTone, grouped) {
   const classes = [`vendor-group-${groupTone}`];
+  if (grouped) classes.push("grouped-record-row");
   const expired = isSecurityCertExpired(record);
   if (expired) classes.push("compliance-expired-row");
   const title = expired
@@ -2760,6 +2792,10 @@ function updateFormMode() {
       control.readOnly = true;
       control.setAttribute("aria-readonly", "true");
       control.classList.add("calculated-readonly-field");
+      return;
+    }
+    if (control.name === "accessTypeValues" && isReadOnlyAccessTypeOption(control.value)) {
+      applyAccessTypeOptionState(control);
       return;
     }
     if (control.type === "checkbox" || control.tagName === "SELECT") {
