@@ -4,7 +4,7 @@ Open `index.html` in a browser to use the CJIS Applicant Tracker.
 
 ## Views
 
-- Limited View is read-only and hides sensitive personal fields.
+- Limited View is read-only, hides sensitive personal fields, and filters Clearance Type to One Time Visit.
 - Records View uses the Limited View table style and allows applicant view/edit actions without archive access.
 - Full Admin View requires the admin access code and can create, view, edit, archive, restore, and filter applicant records. The Export CSV control is hidden in the UI (owner 2026-10-09); `downloadCsv` and export logic remain in `app.js` for later use.
 
@@ -45,7 +45,7 @@ the repository). Source, Control ID, names, vendors, and other cell values are
 unchanged. Existing localStorage records are not replaced; clearing storage and
 reloading restores the seed.
 Notes remain editable on applicant records but are hidden from list tables.
-Applicant list tables are grouped by Vendor (default grouping).
+Applicant list tables are a flat name-sorted list (not grouped by vendor).
 The Full Admin table shows Actions plus Name, Driver Lic Num, Clearance Type,
 Department, Position/Role, and Requestor. Limited View shows Name, Driver Lic Num,
 Vendor, Department, Position/Role, Status (Active or InActive), Clearance Type,

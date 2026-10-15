@@ -185,6 +185,7 @@ const READONLY_ACCESS_TYPE_OPTIONS = new Set([
   "Security Groups",
   "System/Building",
 ]);
+const LIMITED_VIEW_CLEARANCE_TYPE = "One Time Visit";
 
 function isReadOnlyAccessTypeOption(value) {
   return READONLY_ACCESS_TYPE_OPTIONS.has(String(value || "").trim());
@@ -655,6 +656,7 @@ let drawerReturnFocus = null;
 let acknowledgedDuplicateDriversLicense = "";
 let optionListEdit = null;
 let adminListSort = { field: "", direction: "asc" };
+let adminClearanceFilterValue = "all";
 
 const accessPanel = document.querySelector("#accessPanel");
 const accessForm = document.querySelector("#accessForm");
@@ -920,7 +922,13 @@ document.addEventListener("keydown", handleDrawerKeydown);
 if (exportCsv) exportCsv.addEventListener("click", downloadCsv);
 documentUpload.addEventListener("change", handleDocumentUpload);
 [searchInput, activityFilter, clearanceFilter, outcomeFilter].forEach((control) => {
-  if (control) control.addEventListener("input", renderAll);
+  if (!control) return;
+  control.addEventListener("input", () => {
+    if (control === clearanceFilter && currentView !== "limited") {
+      adminClearanceFilterValue = clearanceFilter.value || "all";
+    }
+    renderAll();
+  });
 });
 if (adminTable) {
   adminTable.addEventListener("click", handleAdminTableSortClick);
@@ -1785,6 +1793,7 @@ function viewApplicant(id, invoker) {
 function renderAll() {
   renderManagedDropdowns();
   renderOutcomeFilter();
+  syncLimitedClearanceFilter();
   renderMetrics();
   renderVendorOptions();
   renderLimitedTable();
@@ -1885,10 +1894,30 @@ function getRecordActivityStatus(record) {
   return getApplicantActivityStatus(record.securityAwarenessExpiration, record.ncicCertificationExpiration);
 }
 
-function getFilteredRecords() {
+function syncLimitedClearanceFilter() {
+  if (!clearanceFilter) return;
+  const wrap = clearanceFilter.closest("label");
+  const limited = currentView === "limited";
+  if (limited) {
+    if (!clearanceFilter.disabled) {
+      adminClearanceFilterValue = clearanceFilter.value || "all";
+    }
+    clearanceFilter.value = LIMITED_VIEW_CLEARANCE_TYPE;
+    clearanceFilter.disabled = true;
+    wrap?.classList.add("filter-locked");
+    return;
+  }
+  clearanceFilter.disabled = false;
+  wrap?.classList.remove("filter-locked");
+  const options = [...clearanceFilter.options].map((option) => option.value);
+  clearanceFilter.value = options.includes(adminClearanceFilterValue) ? adminClearanceFilterValue : "all";
+}
+
+function getFilteredRecords(view = currentView) {
   const query = searchInput.value.trim().toLowerCase();
   const activity = activityFilter ? activityFilter.value : "all";
-  const clearance = clearanceFilter.value;
+  const clearance =
+    view === "limited" ? LIMITED_VIEW_CLEARANCE_TYPE : adminClearanceFilterValue || clearanceFilter.value;
   const outcome = outcomeFilter.value;
 
   return getActiveRecords().filter((record) => {
@@ -1935,7 +1964,7 @@ function renderMetrics() {
 }
 
 function renderLimitedTable() {
-  const visibleRecords = getSortedRecords(getFilteredRecords());
+  const visibleRecords = getSortedRecords(getFilteredRecords("limited"));
   if (!visibleRecords.length) {
     limitedTable.innerHTML = `<p class="empty-state">No applicant records match the current filters.</p>`;
     return;
@@ -1947,12 +1976,12 @@ function renderLimitedTable() {
         ${limitedFields.map(renderHeaderCell).join("")}
       </tr>
     </thead>
-    <tbody>${renderGroupedRows(visibleRecords, renderLimitedRow, limitedFields.length)}</tbody>
+    <tbody>${visibleRecords.map((record, index) => renderLimitedRow(record, index % 2)).join("")}</tbody>
   </table>`;
 }
 
 function renderRecordsTable() {
-  const visibleRecords = getSortedRecords(getFilteredRecords());
+  const visibleRecords = getSortedRecords(getFilteredRecords("records"));
   if (!visibleRecords.length) {
     recordsTable.innerHTML = `<p class="empty-state">No applicant records match the current filters.</p>`;
     return;
@@ -1965,7 +1994,7 @@ function renderRecordsTable() {
         <th class="field-admin">Actions</th>
       </tr>
     </thead>
-    <tbody>${renderGroupedRows(visibleRecords, renderRecordsRow, limitedFields.length + 1)}</tbody>
+    <tbody>${visibleRecords.map((record, index) => renderRecordsRow(record, index % 2)).join("")}</tbody>
   </table>`;
 
   recordsTable.querySelectorAll("[data-edit]").forEach((button) => {
@@ -1976,8 +2005,8 @@ function renderRecordsTable() {
   });
 }
 
-function renderRecordsRow(record, groupTone, grouped) {
-  return `<tr${rowClassAttributes(record, groupTone, grouped)}>
+function renderRecordsRow(record, stripeTone) {
+  return `<tr${rowClassAttributes(record, stripeTone)}>
     ${limitedFields
       .map((field) => {
         return renderDataCell(field, record[field], record);
@@ -1992,8 +2021,8 @@ function renderRecordsRow(record, groupTone, grouped) {
   </tr>`;
 }
 
-function renderLimitedRow(record, groupTone, grouped) {
-  return `<tr${rowClassAttributes(record, groupTone, grouped)}>
+function renderLimitedRow(record, stripeTone) {
+  return `<tr${rowClassAttributes(record, stripeTone)}>
     ${limitedFields
       .map((field) => {
         const value = record[field];
@@ -2004,15 +2033,13 @@ function renderLimitedRow(record, groupTone, grouped) {
 }
 
 function renderAdminTable() {
-  const visibleRecords = getAdminSortedRecords(getFilteredRecords());
+  const visibleRecords = getAdminSortedRecords(getFilteredRecords("admin"));
   if (!visibleRecords.length) {
     adminTable.innerHTML = `<p class="empty-state">No applicant records match the current filters.</p>`;
     return;
   }
 
-  const bodyRows = adminListSort.field
-    ? visibleRecords.map((record, index) => renderAdminRow(record, index % 2)).join("")
-    : renderGroupedRows(visibleRecords, renderAdminRow, adminTableFields.length + 1);
+  const bodyRows = visibleRecords.map((record, index) => renderAdminRow(record, index % 2)).join("");
 
   adminTable.innerHTML = `<table class="admin-records-table">
     <thead>
@@ -2032,8 +2059,8 @@ function renderAdminTable() {
   });
 }
 
-function renderAdminRow(record, groupTone, grouped) {
-  return `<tr${rowClassAttributes(record, groupTone, grouped)}>
+function renderAdminRow(record, stripeTone) {
+  return `<tr${rowClassAttributes(record, stripeTone)}>
     <td class="field-admin">
       <div class="record-actions">
         <button class="admin-action" type="button" data-view="${record.id}">View</button>
@@ -2588,9 +2615,7 @@ function getAdminSortedRecords(recordSet) {
   return [...recordSet].sort((a, b) => {
     const compared = compareRecordsByField(a, b, adminListSort.field);
     if (compared !== 0) return compared * direction;
-    const nameCompare = String(a.name || "").localeCompare(String(b.name || ""), undefined, { sensitivity: "base" });
-    if (nameCompare !== 0) return nameCompare;
-    return getVendorGroupName(a).localeCompare(getVendorGroupName(b), undefined, { sensitivity: "base" });
+    return String(a.name || "").localeCompare(String(b.name || ""), undefined, { sensitivity: "base" });
   });
 }
 
@@ -2616,37 +2641,10 @@ function getAccessTypeSortValue(record) {
   return String(value || "");
 }
 
-function renderGroupedRows(sortedRecords, rowRenderer, columnCount) {
-  let currentVendor = "";
-  let groupIndex = -1;
-  return sortedRecords
-    .map((record) => {
-      const vendor = getVendorGroupName(record);
-      const isNewGroup = vendor !== currentVendor;
-      if (isNewGroup) {
-        groupIndex += 1;
-        currentVendor = vendor;
-      }
-      const groupTone = groupIndex % 2;
-      const vendorHeader = isNewGroup
-        ? `<tr class="vendor-group-row vendor-group-${groupTone}"><th colspan="${columnCount}">${escapeHtml(vendor)}</th></tr>`
-        : "";
-
-      return `${vendorHeader}${rowRenderer(record, groupTone, true)}`;
-    })
-    .join("");
-}
-
 function getSortedRecords(recordSet) {
   return [...recordSet].sort((a, b) => {
-    const vendorCompare = getVendorGroupName(a).localeCompare(getVendorGroupName(b), undefined, { sensitivity: "base" });
-    if (vendorCompare !== 0) return vendorCompare;
     return String(a.name || "").localeCompare(String(b.name || ""), undefined, { sensitivity: "base" });
   });
-}
-
-function getVendorGroupName(record) {
-  return String(record.vendor || "").trim() || "Vendor Not Specified";
 }
 
 function getDateSortValue(value) {
@@ -2713,9 +2711,8 @@ function syncApplicantActivityStatus() {
   statusEl.className = `applicant-activity-status badge ${status === "Active" ? "active" : "inactive"}`;
 }
 
-function rowClassAttributes(record, groupTone, grouped) {
-  const classes = [`vendor-group-${groupTone}`];
-  if (grouped) classes.push("grouped-record-row");
+function rowClassAttributes(record, stripeTone) {
+  const classes = [`vendor-group-${stripeTone}`];
   const expired = isSecurityCertExpired(record);
   if (expired) classes.push("compliance-expired-row");
   const title = expired
