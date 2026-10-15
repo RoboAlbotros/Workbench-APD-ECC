@@ -3,6 +3,8 @@ const STORAGE_KEYS = {
   changeLog: "cjisApplicantTracker.changeLog",
   accessCodes: "cjisApplicantTracker.accessCodes",
   iiiCompletionIsoMigrated: "cjisApplicantTracker.iiiCompletionIsoMigrated",
+  optionLists: "cjisApplicantTracker.optionLists",
+  managedUsers: "cjisApplicantTracker.managedUsers",
 };
 
 // Access codes are local prototype controls. Full Admin is operator-set to 12345
@@ -56,27 +58,60 @@ ensureOwnerAccessCodes();
 const ACCESS_LABELS = {
   limited: "Limited View",
   records: "Records View",
-  admin: "Full Admin",
+  adminGlobal: "Admin-Global",
+  adminStaff: "Admin-Staff",
+  admin: "Admin-Full",
 };
 
-const DRIVERS_LICENSE_PATTERN = /^[A-Za-z]{2}\d{9}$/;
+const DRIVERS_LICENSE_MAX_DIGITS = 15;
+const DRIVERS_LICENSE_MAX_LENGTH = 17;
+const DRIVERS_LICENSE_PATTERN = /^[A-Za-z]{2}\d{1,15}$/;
 const DRIVERS_LICENSE_INVALID_MESSAGE =
-  "Driver Lic Num must be a two-letter state prefix and 9 digits with no hyphens or spaces (example: NM123456789).";
+  "Driver Lic Num must be a two-letter state prefix and up to 15 digits with no hyphens or spaces (example: NM123456789012345).";
 const CREATE_REQUIRED_FIELDS = [
   { field: "name", label: "Name (Last, First, MI, Suffix)" },
   { field: "driversLicense", label: "Driver Lic Num" },
-  { field: "vendor", label: "Vendor" },
   { field: "requestor", label: "Requestor" },
+];
+const DEFAULT_DEPARTMENT_OPTIONS = [
+  "AV-Aviation",
+  "AW-Animal Welfare",
+  "CA-Chief Administrative Office",
+  "CC-Office of the City Clerk",
+  "CL-Council Services",
+  "CM-Community Safety Department",
+  "CP-Civilian Police OS Dept",
+  "CS-Cultural Services",
+  "ED-Economic Development",
+  "EH-Environmental Health",
+  "FA-Finance Admin Svc",
+  "FC-Youth and Family Svcs Dept",
+  "FD-Fire",
+  "GS-General Services Department",
+  "HH-Health,Housing,Hmlsns Dept",
+  "HR-Human Resources",
+  "IA-Internal Audit",
+  "IG-Office of Inspector GenDept",
+  "LG-Legal",
+  "MA-Mayor's Office Department",
+  "MD-Municipal Development",
+  "PD-Police",
+  "PL-Planning Department",
+  "PR-Parks and Recreation",
+  "SA-Senior Affairs",
+  "SW-Solid Waste",
+  "TI-Technology and Innovation",
+  "TR-Transit",
 ];
 
 function sanitizeDriversLicenseInput(value) {
   const chars = String(value || "").toUpperCase();
   let result = "";
   for (const ch of chars) {
-    if (result.length >= 11) break;
+    if (result.length >= DRIVERS_LICENSE_MAX_LENGTH) break;
     if (result.length < 2) {
       if (/[A-Z]/.test(ch)) result += ch;
-    } else if (/\d/.test(ch)) {
+    } else if (/\d/.test(ch) && result.length < 2 + DRIVERS_LICENSE_MAX_DIGITS) {
       result += ch;
     }
   }
@@ -120,6 +155,7 @@ const UPPERCASE_APPLICANT_TEXT_FIELDS = new Set([
   "requestor",
   "source",
   "emailAddress",
+  "positionRole",
 ]);
 
 function normalizeApplicantText(value) {
@@ -129,6 +165,169 @@ function normalizeApplicantText(value) {
 function isValidDriversLicense(value) {
   const text = String(value || "").trim();
   return text === "" || DRIVERS_LICENSE_PATTERN.test(text);
+}
+
+const DEFAULT_ACCESS_TYPE_OPTIONS = [
+  "VPN",
+  "Non VPN",
+  "Security Groups",
+  "Facility Access",
+  "Unescorted Access",
+  "Building Access",
+  "Escorted Access",
+  "System Access",
+  "System/Building",
+];
+
+const DEFAULT_OPTION_LISTS = {
+  department: DEFAULT_DEPARTMENT_OPTIONS.slice(),
+  clearanceType: ["Full Clearance", "One Time Visit", "InProgress", "No Access Given"],
+  accessType: DEFAULT_ACCESS_TYPE_OPTIONS.slice(),
+  iiiStatus: ["Clear", "Misd/Clear", "Felony"],
+  cjisSecurityAwarenessRole: ["Basic", "General", "Privileged", "Security"],
+  outcome: ["Clear", "Misd/Clear", "Felony", "Needs Follow Up"],
+  ncicCertification: ["Y", "N"],
+  positionRole: [],
+};
+
+const OPTION_LIST_DEFINITIONS = [
+  { key: "department", label: "Department", selectIds: ["department"], placeholder: "Select department" },
+  {
+    key: "clearanceType",
+    label: "Clearance Type",
+    selectIds: ["clearanceType"],
+    placeholder: "Select type",
+    filterId: "clearanceFilter",
+    filterAllLabel: "All types",
+  },
+  { key: "accessType", label: "Access Type", checkboxName: "accessTypeValues" },
+  { key: "iiiStatus", label: "III - Status", selectIds: ["iiiStatus"], placeholder: "Select status" },
+  {
+    key: "cjisSecurityAwarenessRole",
+    label: "CJIS Security and Awareness Role",
+    selectIds: ["cjisSecurityAwarenessRole"],
+    placeholder: "Select role",
+  },
+  {
+    key: "outcome",
+    label: "Fingerprint Outcome",
+    selectIds: ["outcome"],
+    placeholder: "Select outcome",
+    filterId: "outcomeFilter",
+    filterAllLabel: "All fingerprint outcomes",
+  },
+  { key: "ncicCertification", label: "NCIC Certification", selectIds: ["ncicCertification"], placeholder: "Select Y/N" },
+  { key: "positionRole", label: "Position/Role", datalistId: "positionRoleOptions" },
+];
+
+const USER_TYPE_LABELS = {
+  admin: "Admin-Full",
+  adminGlobal: "Admin-Global",
+  adminStaff: "Admin-Staff",
+  readOnly: "Read Only",
+};
+
+function normalizeManagedUserType(value) {
+  if (value === "adminGlobal") return "adminGlobal";
+  if (value === "adminStaff") return "adminStaff";
+  if (value === "admin") return "admin";
+  return "readOnly";
+}
+
+function isNamedOnlyAccessLevel(role) {
+  return role === "adminGlobal" || role === "adminStaff";
+}
+
+function uniqueOptions(values) {
+  const seen = new Map();
+  (Array.isArray(values) ? values : []).forEach((value) => {
+    const text = String(value || "").trim();
+    if (!text) return;
+    const key = text.toUpperCase();
+    if (!seen.has(key)) seen.set(key, text);
+  });
+  return [...seen.values()];
+}
+
+function loadOptionLists() {
+  const lists = {};
+  Object.entries(DEFAULT_OPTION_LISTS).forEach(([key, defaults]) => {
+    lists[key] = uniqueOptions(defaults);
+  });
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.optionLists);
+    if (!raw) return lists;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return lists;
+    Object.keys(DEFAULT_OPTION_LISTS).forEach((key) => {
+      if (Array.isArray(parsed[key])) {
+        const merged = uniqueOptions(parsed[key]);
+        lists[key] = merged.length ? merged : uniqueOptions(DEFAULT_OPTION_LISTS[key]);
+      }
+    });
+    return lists;
+  } catch {
+    return lists;
+  }
+}
+
+function saveOptionLists() {
+  localStorage.setItem(STORAGE_KEYS.optionLists, JSON.stringify(optionLists));
+}
+
+function getOptionList(key) {
+  const lists = optionLists || DEFAULT_OPTION_LISTS;
+  const values = lists[key];
+  if (Array.isArray(values) && values.length) return uniqueOptions(values);
+  return uniqueOptions(DEFAULT_OPTION_LISTS[key] || []);
+}
+
+function matchClosedOption(value, options, aliases = {}) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  const exact = options.find((option) => option.toUpperCase() === raw.toUpperCase());
+  if (exact) return exact;
+  const alias = aliases[raw.toLowerCase()];
+  if (alias) {
+    const aliased = options.find((option) => option.toUpperCase() === alias.toUpperCase());
+    return aliased || alias;
+  }
+  return raw;
+}
+
+function loadManagedUsers() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.managedUsers);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .map((user) => ({
+        id: String(user.id || crypto.randomUUID()),
+        name: String(user.name || "").trim(),
+        userType: normalizeManagedUserType(user.userType),
+        accessCode: String(user.accessCode || ""),
+      }))
+      .filter((user) => user.name && user.accessCode.length >= 4);
+  } catch {
+    return [];
+  }
+}
+
+function saveManagedUsers() {
+  localStorage.setItem(STORAGE_KEYS.managedUsers, JSON.stringify(managedUsers));
+}
+
+function currentUserAccessLabel() {
+  if (!currentUser) return "";
+  if (currentUser.userType && USER_TYPE_LABELS[currentUser.userType]) {
+    return USER_TYPE_LABELS[currentUser.userType];
+  }
+  return ACCESS_LABELS[currentUser.role] || currentUser.role;
+}
+
+function normalizeDepartment(value) {
+  return matchClosedOption(value, getOptionList("department"));
 }
 
 function isCreatingApplicant() {
@@ -279,9 +478,12 @@ function startNewApplicantFromDuplicate(sourceId) {
   setFormFieldValue("phoneNumber", copiedPhone);
   setFormFieldValue("emailAddress", copiedEmail);
   setFormFieldValue("vendor", "");
+  setFormFieldValue("department", "");
+  setFormFieldValue("positionRole", "");
   setFormFieldValue("requestor", "");
   setFormFieldValue("source", "");
   syncInquiryDueField();
+  syncApplicantActivityStatus();
   hideDuplicateDriversLicensePanel();
   updateFormMode();
   updateChangeLogVisibility();
@@ -296,11 +498,14 @@ const fields = [
   "controlNumber",
   "driversLicense",
   "vendor",
+  "department",
+  "positionRole",
   "requestor",
   "dateInformationProvided",
   "dateOfIiiCompletion",
   "iiiStatus",
   "clearanceType",
+  "tourOrientation",
   "accessType",
   "passport",
   "cjisSecurityAwarenessRole",
@@ -338,14 +543,28 @@ const adminTableFields = [
   "name",
   "driversLicense",
   "clearanceType",
+  "tourOrientation",
   "accessType",
   "iiiStatus",
   "cjisSecurityAwarenessRole",
   "ncicCertification",
   "passport",
   "outcome",
+  "department",
+  "positionRole",
   "requestor",
 ];
+const dateSortFields = new Set([
+  "dateInformationProvided",
+  "dateOfIiiCompletion",
+  "fingerprintsNotifiedCompleted",
+  "securityAwarenessExpiration",
+  "securityAddendum",
+  "ncicCertificationExpiration",
+  "completedFullProcess",
+  "dateOfSiteVisitOnly",
+  "queriedEveryFiveYears",
+]);
 const formFields = fields.filter((field) => field !== "documents");
 
 const labels = {
@@ -354,11 +573,14 @@ const labels = {
   driversLicense: "Driver Lic Num",
   source: "Source",
   vendor: "Vendor",
+  department: "Department",
+  positionRole: "Position/Role",
   requestor: "Requestor",
   dateInformationProvided: "Date Information Provided",
   iiiStatus: "III - Status",
   dateOfIiiCompletion: "Date of III Completion",
   clearanceType: "Clearance Type",
+  tourOrientation: "Tour/Orientation",
   accessType: "Access Type",
   passport: "Passport",
   cjisSecurityAwarenessRole: "CJIS Security and Awareness Role",
@@ -385,18 +607,8 @@ const tableLabels = {
   securityAwarenessExpiration: "Security and Awareness Cert",
 };
 
-const ACCESS_TYPE_OPTIONS = [
-  "VPN",
-  "Non VPN",
-  "Security Groups",
-  "Facility Access",
-  "Unescorted Access",
-  "Building Access",
-  "Escorted Access",
-  "System Access",
-  "System/Building",
-];
-
+let optionLists = loadOptionLists();
+let managedUsers = loadManagedUsers();
 let inquiryDueMigrationCount = 0;
 let iiiCompletionMigrationCount = 0;
 let iiiCompletionIsoMigrated = localStorage.getItem(STORAGE_KEYS.iiiCompletionIsoMigrated) === "1";
@@ -410,11 +622,15 @@ if (iiiCompletionMigrationCount) {
 }
 let currentUser = null;
 let currentView = "limited";
+let fullScreenView = null;
+let viewBeforeFullScreen = "admin";
 let currentDocuments = [];
 let currentFormMode = "edit";
 let drawerOpen = false;
 let drawerReturnFocus = null;
 let acknowledgedDuplicateDriversLicense = "";
+let optionListEdit = null;
+let adminListSort = { field: "", direction: "asc" };
 
 const accessPanel = document.querySelector("#accessPanel");
 const accessForm = document.querySelector("#accessForm");
@@ -422,7 +638,19 @@ const managementUserName = document.querySelector("#managementUserName");
 const managementAccessLevel = document.querySelector("#managementAccessLevel");
 const managementAccessCode = document.querySelector("#managementAccessCode");
 const currentUserBadge = document.querySelector("#currentUserBadge");
+const archivedRecordsButton = document.querySelector("#archivedRecordsButton");
+const adminConsoleButton = document.querySelector("#adminConsoleButton");
 const signOutButton = document.querySelector("#signOutButton");
+const adminConsole = document.querySelector("#adminConsole");
+const archivedRecordsPage = document.querySelector("#archivedRecordsPage");
+const closeAdminConsoleButton = document.querySelector("#closeAdminConsole");
+const closeArchivedRecordsButton = document.querySelector("#closeArchivedRecords");
+const archivedSearchInput = document.querySelector("#archivedSearchInput");
+const optionListEditors = document.querySelector("#optionListEditors");
+const optionListMessage = document.querySelector("#optionListMessage");
+const addManagedUserForm = document.querySelector("#addManagedUserForm");
+const managedUserMessage = document.querySelector("#managedUserMessage");
+const managedUserTable = document.querySelector("#managedUserTable");
 const accessMessage = document.querySelector("#accessMessage");
 const headerMetrics = document.querySelector("#headerMetrics");
 const viewSwitch = document.querySelector("#viewSwitch");
@@ -457,9 +685,11 @@ const formMessage = document.querySelector("#formMessage");
 const duplicateDriversLicensePanel = document.querySelector("#duplicateDriversLicensePanel");
 const duplicateDriversLicenseList = document.querySelector("#duplicateDriversLicenseList");
 const searchInput = document.querySelector("#searchInput");
+const activityFilter = document.querySelector("#activityFilter");
 const clearanceFilter = document.querySelector("#clearanceFilter");
 const outcomeFilter = document.querySelector("#outcomeFilter");
 const vendorOptions = document.querySelector("#vendorOptions");
+const positionRoleOptions = document.querySelector("#positionRoleOptions");
 const documentUpload = document.querySelector("#documentUpload");
 const documentList = document.querySelector("#documentList");
 
@@ -505,8 +735,19 @@ function completeAccessSetup(event) {
   showMessage(accessMessage, "Access codes saved. Sign in to continue.");
 }
 signOutButton.addEventListener("click", signOutManagementUser);
+if (archivedRecordsButton) archivedRecordsButton.addEventListener("click", openArchivedRecordsPage);
+if (adminConsoleButton) adminConsoleButton.addEventListener("click", openAdminConsole);
+if (closeAdminConsoleButton) closeAdminConsoleButton.addEventListener("click", closeFullScreenPage);
+if (closeArchivedRecordsButton) closeArchivedRecordsButton.addEventListener("click", closeFullScreenPage);
+if (archivedSearchInput) archivedSearchInput.addEventListener("input", renderArchivedTable);
+if (optionListEditors) {
+  optionListEditors.addEventListener("submit", handleOptionListSubmit);
+  optionListEditors.addEventListener("click", handleOptionListClick);
+}
+if (addManagedUserForm) addManagedUserForm.addEventListener("submit", addManagedUser);
+if (managedUserTable) managedUserTable.addEventListener("click", handleManagedUserTableClick);
 limitedViewButton.addEventListener("click", () => setView("limited"));
-recordsViewButton.addEventListener("click", () => setView("records"));
+if (recordsViewButton) recordsViewButton.addEventListener("click", () => setView("records"));
 adminViewButton.addEventListener("click", () => setView("admin"));
 applicantForm.addEventListener("submit", saveApplicant);
 resetForm.addEventListener("click", openNewApplicant);
@@ -516,6 +757,16 @@ archiveRecord.addEventListener("click", archiveApplicant);
 restoreRecord.addEventListener("click", () => restoreApplicant());
 document.querySelector("#dateOfIiiCompletion").addEventListener("input", syncInquiryDueField);
 document.querySelector("#dateOfIiiCompletion").addEventListener("change", syncInquiryDueField);
+const securityAwarenessExpirationInput = document.querySelector("#securityAwarenessExpiration");
+if (securityAwarenessExpirationInput) {
+  securityAwarenessExpirationInput.addEventListener("input", syncApplicantActivityStatus);
+  securityAwarenessExpirationInput.addEventListener("change", syncApplicantActivityStatus);
+}
+const ncicCertificationExpirationInput = document.querySelector("#ncicCertificationExpiration");
+if (ncicCertificationExpirationInput) {
+  ncicCertificationExpirationInput.addEventListener("input", syncApplicantActivityStatus);
+  ncicCertificationExpirationInput.addEventListener("change", syncApplicantActivityStatus);
+}
 const driversLicenseInput = document.querySelector("#driversLicense");
 if (driversLicenseInput) {
   const applyDriversLicenseInputLimit = () => {
@@ -644,9 +895,12 @@ if (phoneNumberInput) {
 document.addEventListener("keydown", handleDrawerKeydown);
 if (exportCsv) exportCsv.addEventListener("click", downloadCsv);
 documentUpload.addEventListener("change", handleDocumentUpload);
-[searchInput, clearanceFilter, outcomeFilter].forEach((control) => {
-  control.addEventListener("input", renderAll);
+[searchInput, activityFilter, clearanceFilter, outcomeFilter].forEach((control) => {
+  if (control) control.addEventListener("input", renderAll);
 });
+if (adminTable) {
+  adminTable.addEventListener("click", handleAdminTableSortClick);
+}
 
 function loadRecords() {
   const raw = localStorage.getItem(STORAGE_KEYS.records);
@@ -706,17 +960,30 @@ function normalizeRecords(recordSet) {
       driversLicense: normalizeDriversLicense(record.driversLicense),
       source: normalizeApplicantText(record.source),
       vendor: normalizeApplicantText(record.vendor),
+      department: normalizeDepartment(record.department),
+      positionRole: normalizeApplicantText(record.positionRole),
       requestor: normalizeApplicantText(record.requestor),
       outcome: normalizeOutcome(record.outcome),
       iiiStatus: normalizeIiiStatus(record.iiiStatus),
       clearanceType: normalizeClearanceType(record.clearanceType),
+      tourOrientation: normalizeYesNo(record.tourOrientation),
       securityAddendum: normalizeDateValue(record.securityAddendum),
       dateOfIiiCompletion: storedIiiCompletion,
       queriedEveryFiveYears: computeInquiryDueDate(storedIiiCompletion),
       accessType: normalizeAccessType(record.accessType),
       passport: normalizeYesNo(record.passport),
       cjisSecurityAwarenessRole: record.cjisSecurityAwarenessRole || "",
-      ncicCertification: normalizeYesNo(record.ncicCertification),
+      ncicCertification: matchClosedOption(record.ncicCertification, getOptionList("ncicCertification"), {
+        yes: "Y",
+        y: "Y",
+        true: "Y",
+        "1": "Y",
+        on: "Y",
+        no: "N",
+        n: "N",
+        false: "N",
+        "0": "N",
+      }),
       ncicCertificationExpiration: normalizeDateValue(record.ncicCertificationExpiration),
       emailAddress: normalizeApplicantText(record.emailAddress),
       phoneNumber: normalizePhoneNumber(record.phoneNumber),
@@ -767,39 +1034,45 @@ function normalizeApplicantName(value) {
 }
 
 function normalizeOutcome(value) {
-  const normalized = String(value || "").trim().toLowerCase();
-  if (!normalized) return "";
-  if (normalized === "approved" || normalized === "clear") return "Clear";
-  if (normalized === "misd/clear" || normalized === "misd clear") return "Misd/Clear";
-  if (normalized === "denied" || normalized === "unauthorized" || normalized === "felony") return "Felony";
-  return "Needs Follow Up";
+  return matchClosedOption(value, getOptionList("outcome"), {
+    approved: "Clear",
+    clear: "Clear",
+    "misd/clear": "Misd/Clear",
+    "misd clear": "Misd/Clear",
+    denied: "Felony",
+    unauthorized: "Felony",
+    felony: "Felony",
+  });
 }
 
 function normalizeIiiStatus(value) {
-  const normalized = String(value || "").trim().toLowerCase();
-  if (!normalized) return "";
-  if (normalized === "clear") return "Clear";
-  if (normalized === "felony" || normalized === "review needed") return "Felony";
-  return "Misd/Clear";
+  return matchClosedOption(value, getOptionList("iiiStatus"), {
+    clear: "Clear",
+    felony: "Felony",
+    "review needed": "Felony",
+    "misd/clear": "Misd/Clear",
+    "misd clear": "Misd/Clear",
+  });
 }
 
 function normalizeClearanceType(value) {
-  const normalized = String(value || "").trim().toLowerCase();
-  if (!normalized) return "";
-  if (normalized === "full clearance") return "Full Clearance";
-  if (normalized === "one time visit") return "One Time Visit";
-  if (normalized === "no access given") return "No Access Given";
-  return "";
+  return matchClosedOption(value, getOptionList("clearanceType"), {
+    "full clearance": "Full Clearance",
+    "one time visit": "One Time Visit",
+    "in-progress": "InProgress",
+    "in progress": "InProgress",
+    inprogress: "InProgress",
+    "no access given": "No Access Given",
+  });
 }
 
 function normalizeAccessType(value) {
   const values = Array.isArray(value) ? value : String(value || "").split(",");
-  const allowed = new Map(ACCESS_TYPE_OPTIONS.map((option) => [option.toLowerCase(), option]));
+  const allowed = new Map(getOptionList("accessType").map((option) => [option.toLowerCase(), option]));
   return values
-    .map((item) => String(item).trim().toLowerCase())
+    .map((item) => String(item).trim())
     .filter(Boolean)
-    .map((item) => allowed.get(item))
-    .filter(Boolean)
+    .map((item) => allowed.get(item.toLowerCase()) || item)
     .filter((item, index, list) => list.indexOf(item) === index)
     .join(", ");
 }
@@ -822,15 +1095,62 @@ function normalizeYesNo(value) {
   return "";
 }
 
+function findManagedUserByCredentials(name, code) {
+  const needle = String(name || "").trim().toLowerCase();
+  if (!needle || !code) return null;
+  return managedUsers.find((user) => user.name.toLowerCase() === needle && user.accessCode === code) || null;
+}
+
+function managedUserRole(user) {
+  return user.userType === "readOnly" ? "limited" : "admin";
+}
+
+function managedUserSignInLevel(user) {
+  if (user.userType === "readOnly") return "limited";
+  if (user.userType === "adminStaff") return "adminStaff";
+  if (user.userType === "adminGlobal") return "adminGlobal";
+  return "admin";
+}
+
 function signInManagementUser(event) {
   event.preventDefault();
   const name = managementUserName.value.trim();
   const role = managementAccessLevel.value;
   const code = managementAccessCode.value;
+  const managed = findManagedUserByCredentials(name, code);
 
   if (role === "admin" && code === OWNER_ADMIN_CODE) {
     ensureOwnerAccessCodes();
     updateSetupVisibility();
+  }
+
+  if (!name || !role) {
+    showMessage(accessMessage, "Invalid management access.", true);
+    return;
+  }
+
+  if (managed) {
+    const mappedRole = managedUserRole(managed);
+    const expectedLevel = managedUserSignInLevel(managed);
+    if (role !== expectedLevel) {
+      showMessage(
+        accessMessage,
+        `This account is ${USER_TYPE_LABELS[managed.userType]}. Select ${ACCESS_LABELS[expectedLevel]}.`,
+        true,
+      );
+      return;
+    }
+    currentUser = { name: managed.name, role: mappedRole, userType: managed.userType };
+    managementAccessCode.value = "";
+    showMessage(accessMessage, "");
+    updateAccessControls();
+    setView(mappedRole);
+    return;
+  }
+
+  if (isNamedOnlyAccessLevel(role)) {
+    showMessage(accessMessage, `${ACCESS_LABELS[role]} sign-in requires a named ${ACCESS_LABELS[role]} user.`, true);
+    return;
   }
 
   if (!accessCodes) {
@@ -838,7 +1158,7 @@ function signInManagementUser(event) {
     return;
   }
 
-  if (!name || !role || accessCodes[role] !== code) {
+  if (accessCodes[role] !== code) {
     showMessage(accessMessage, "Invalid management access.", true);
     return;
   }
@@ -853,6 +1173,7 @@ function signInManagementUser(event) {
 function signOutManagementUser() {
   currentUser = null;
   currentFormMode = "edit";
+  fullScreenView = null;
   closeApplicantDrawer({ restoreFocus: false });
   showMessage(accessMessage, "Signed out.");
   updateAccessControls();
@@ -866,25 +1187,103 @@ function canAccessView(view) {
   return view === "limited";
 }
 
+function isAdminPageOpen() {
+  return fullScreenView === "admin" || fullScreenView === "archived";
+}
+
 function updateAccessControls() {
   const signedIn = Boolean(currentUser);
+  const showFullPage = signedIn && isAdminPageOpen() && isFullAdmin();
   document.body.classList.toggle("signed-in", signedIn);
   document.body.classList.toggle("signed-out", !signedIn);
+  document.body.classList.toggle("admin-console-open", showFullPage);
   accessPanel.classList.toggle("session-bar", signedIn);
   accessPanel.classList.remove("hidden");
   accessForm.classList.toggle("hidden", signedIn || !accessCodes);
   headerMetrics.classList.toggle("hidden", !signedIn);
-  viewSwitch.classList.toggle("hidden", !signedIn);
+  viewSwitch.classList.toggle("hidden", !signedIn || showFullPage);
   sessionControls.classList.toggle("hidden", !signedIn);
-  toolbar.classList.toggle("hidden", !signedIn);
-  currentUserBadge.textContent = signedIn ? `${currentUser.name} - ${ACCESS_LABELS[currentUser.role]}` : "";
+  toolbar.classList.toggle("hidden", !signedIn || showFullPage);
+  currentUserBadge.textContent = signedIn ? `${currentUser.name} - ${currentUserAccessLabel()}` : "";
+  if (archivedRecordsButton) {
+    archivedRecordsButton.classList.toggle(
+      "hidden",
+      !signedIn || !isFullAdmin() || fullScreenView === "archived",
+    );
+  }
+  if (adminConsoleButton) {
+    adminConsoleButton.classList.toggle(
+      "hidden",
+      !signedIn || !canAccessAdminConsole() || fullScreenView === "admin",
+    );
+  }
 
   limitedViewButton.disabled = !canAccessView("limited");
-  recordsViewButton.disabled = !canAccessView("records");
+  if (recordsViewButton) recordsViewButton.disabled = !canAccessView("records");
   adminViewButton.disabled = !canAccessView("admin");
 }
 
+function updateFullScreenVisibility() {
+  const showAdmin = Boolean(currentUser) && fullScreenView === "admin" && canAccessAdminConsole();
+  const showArchived = Boolean(currentUser) && fullScreenView === "archived" && canReviewArchived();
+  if (adminConsole) adminConsole.classList.toggle("hidden", !showAdmin);
+  if (archivedRecordsPage) archivedRecordsPage.classList.toggle("hidden", !showArchived);
+  if (fullScreenView === "admin" && !canAccessAdminConsole()) {
+    fullScreenView = null;
+  }
+  if (fullScreenView === "archived" && !canReviewArchived()) {
+    fullScreenView = null;
+  }
+}
+
+function openFullScreenView(page) {
+  const allowed =
+    page === "admin" ? canAccessAdminConsole() : page === "archived" ? canReviewArchived() : false;
+  if (!allowed) {
+    showMessage(
+      accessMessage,
+      page === "admin"
+        ? "Only Admin-Full and Admin-Global can open the Settings Console."
+        : "Only Full Admin can open this page.",
+      true,
+    );
+    return;
+  }
+  if (!isAdminPageOpen()) {
+    viewBeforeFullScreen = currentView;
+  }
+  currentView = "admin";
+  fullScreenView = page;
+  closeApplicantDrawer({ restoreFocus: false });
+  updateAccessControls();
+  updateFullScreenVisibility();
+  limitedView.classList.add("hidden");
+  recordsView.classList.add("hidden");
+  adminView.classList.add("hidden");
+  renderAll();
+}
+
+function openAdminConsole() {
+  openFullScreenView("admin");
+}
+
+function openArchivedRecordsPage() {
+  openFullScreenView("archived");
+}
+
+function closeFullScreenPage() {
+  fullScreenView = null;
+  updateFullScreenVisibility();
+  const nextView = canAccessView(viewBeforeFullScreen) ? viewBeforeFullScreen : "admin";
+  updateAccessControls();
+  setView(nextView);
+}
+
 function setView(view) {
+  if (isAdminPageOpen() && view) {
+    fullScreenView = null;
+  }
+  updateFullScreenVisibility();
   if (!canAccessView(view)) {
     currentView = "limited";
     limitedView.classList.add("hidden");
@@ -892,10 +1291,10 @@ function setView(view) {
     adminView.classList.add("hidden");
     editorPanel.classList.add("hidden");
     limitedViewButton.classList.remove("active");
-    recordsViewButton.classList.remove("active");
+    recordsViewButton?.classList.remove("active");
     adminViewButton.classList.remove("active");
     limitedViewButton.setAttribute("aria-selected", "false");
-    recordsViewButton.setAttribute("aria-selected", "false");
+    recordsViewButton?.setAttribute("aria-selected", "false");
     adminViewButton.setAttribute("aria-selected", "false");
     if (currentUser) showMessage(accessMessage, `${ACCESS_LABELS[currentUser.role]} cannot open ${ACCESS_LABELS[view]}.`, true);
     renderAll();
@@ -909,10 +1308,10 @@ function setView(view) {
   recordsView.classList.toggle("hidden", !isRecords);
   adminView.classList.toggle("hidden", !isAdmin);
   limitedViewButton.classList.toggle("active", view === "limited");
-  recordsViewButton.classList.toggle("active", isRecords);
+  recordsViewButton?.classList.toggle("active", isRecords);
   adminViewButton.classList.toggle("active", isAdmin);
   limitedViewButton.setAttribute("aria-selected", String(view === "limited"));
-  recordsViewButton.setAttribute("aria-selected", String(isRecords));
+  recordsViewButton?.setAttribute("aria-selected", String(isRecords));
   adminViewButton.setAttribute("aria-selected", String(isAdmin));
   editorEyebrow.textContent = isAdmin ? "Full Record" : "Records";
   resetForm.classList.toggle("hidden", !isAdmin);
@@ -931,8 +1330,8 @@ function getFormFieldValue(field) {
       .join(", ");
   }
 
-  if (field === "passport") {
-    return document.querySelector("#passport").checked ? "Y" : "N";
+  if (field === "passport" || field === "tourOrientation") {
+    return document.querySelector(`#${field}`).checked ? "Y" : "N";
   }
 
   const raw = document.querySelector(`#${field}`).value.trim();
@@ -962,8 +1361,8 @@ function setFormFieldValue(field, value) {
     return;
   }
 
-  if (field === "passport") {
-    document.querySelector("#passport").checked = normalizeYesNo(value) === "Y";
+  if (field === "passport" || field === "tourOrientation") {
+    document.querySelector(`#${field}`).checked = normalizeYesNo(value) === "Y";
     return;
   }
 
@@ -1015,6 +1414,7 @@ function saveApplicant(event) {
     { id, updatedAt: new Date().toISOString() },
   );
   nextRecord.clearanceType = normalizeClearanceType(nextRecord.clearanceType);
+  nextRecord.tourOrientation = normalizeYesNo(nextRecord.tourOrientation);
   nextRecord.accessType = normalizeAccessType(nextRecord.accessType);
   nextRecord.passport = normalizeYesNo(nextRecord.passport);
   nextRecord.outcome = normalizeOutcome(nextRecord.outcome);
@@ -1022,6 +1422,8 @@ function saveApplicant(event) {
   nextRecord.ncicCertification = normalizeYesNo(nextRecord.ncicCertification);
   nextRecord.controlNumber = String(nextRecord.controlNumber || "").trim();
   nextRecord.driversLicense = normalizeDriversLicense(nextRecord.driversLicense);
+  nextRecord.department = normalizeDepartment(nextRecord.department);
+  nextRecord.positionRole = normalizeApplicantText(nextRecord.positionRole);
   nextRecord.phoneNumber = normalizePhoneNumber(nextRecord.phoneNumber);
   if (!existingRecordId) {
     const missingCreateFields = getMissingCreateRequiredFields(nextRecord);
@@ -1095,6 +1497,7 @@ function resetApplicantForm() {
   acknowledgedDuplicateDriversLicense = "";
   hideDuplicateDriversLicensePanel();
   syncInquiryDueField();
+  syncApplicantActivityStatus();
   updateFormMode();
   updateChangeLogVisibility();
   updateEditorVisibility();
@@ -1170,6 +1573,22 @@ function isFullAdmin() {
   return Boolean(currentUser && currentUser.role === "admin" && canAccessView("admin"));
 }
 
+function isAdminStaffUser() {
+  return Boolean(currentUser && currentUser.userType === "adminStaff");
+}
+
+function canAccessAdminConsole() {
+  return isFullAdmin() && !isAdminStaffUser();
+}
+
+function canReviewArchived() {
+  return isFullAdmin();
+}
+
+function canRestoreArchived() {
+  return isFullAdmin() && !isAdminStaffUser();
+}
+
 function isArchivedRecord(record) {
   return Boolean(record && record.archived);
 }
@@ -1211,8 +1630,8 @@ function archiveApplicant() {
 }
 
 function restoreApplicant(recordId) {
-  if (!isFullAdmin()) {
-    showMessage(formMessage, "Only Full Admin can restore archived applicant records.", true);
+  if (!canRestoreArchived()) {
+    showMessage(formMessage, "Only Admin-Full and Admin-Global can restore archived applicant records.", true);
     return;
   }
   const id = recordId || document.querySelector("#recordId").value;
@@ -1318,6 +1737,7 @@ function loadApplicantForm(id, mode) {
   documentUpload.value = "";
   renderDocumentList();
   syncInquiryDueField();
+  syncApplicantActivityStatus();
   drawerOpen = true;
   updateFormMode();
   updateChangeLogVisibility();
@@ -1339,6 +1759,7 @@ function viewApplicant(id, invoker) {
 }
 
 function renderAll() {
+  renderManagedDropdowns();
   renderOutcomeFilter();
   renderMetrics();
   renderVendorOptions();
@@ -1349,16 +1770,99 @@ function renderAll() {
     renderArchivedTable();
     updateChangeLogVisibility();
   }
+  if (fullScreenView === "admin" && canAccessAdminConsole()) {
+    renderOptionListEditors();
+    renderManagedUserTable();
+  }
+}
+
+function fillSelectOptions(select, options, placeholder) {
+  if (!select) return;
+  const current = select.value;
+  const extras = current && !options.includes(current) ? [current] : [];
+  select.innerHTML = [
+    `<option value="">${escapeHtml(placeholder)}</option>`,
+    ...[...options, ...extras].map((option) => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`),
+  ].join("");
+  if (current) select.value = current;
+}
+
+function fillFilterSelect(select, options, allLabel) {
+  if (!select) return;
+  const current = select.value || "all";
+  select.innerHTML = [
+    `<option value="all">${escapeHtml(allLabel)}</option>`,
+    ...options.map((option) => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`),
+  ].join("");
+  select.value = current === "all" || options.includes(current) ? current : "all";
+}
+
+function renderAccessTypeCheckboxes() {
+  const fieldset = document.querySelector("#accessType");
+  if (!fieldset) return;
+  const tourLabel = fieldset.querySelector(".field-tourOrientation");
+  const checked = new Set(
+    [...fieldset.querySelectorAll('input[name="accessTypeValues"]:checked')].map((input) => input.value),
+  );
+  [...fieldset.querySelectorAll("label")].forEach((label) => {
+    if (!label.classList.contains("field-tourOrientation")) label.remove();
+  });
+  getOptionList("accessType").forEach((option) => {
+    const label = document.createElement("label");
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.name = "accessTypeValues";
+    input.value = option;
+    input.checked = checked.has(option);
+    label.append(input, document.createTextNode(` ${option}`));
+    if (tourLabel) {
+      fieldset.insertBefore(label, tourLabel);
+    } else {
+      fieldset.append(label);
+    }
+  });
+}
+
+function renderManagedDropdowns() {
+  OPTION_LIST_DEFINITIONS.forEach((definition) => {
+    const options = getOptionList(definition.key);
+    (definition.selectIds || []).forEach((selectId) => {
+      fillSelectOptions(document.querySelector(`#${selectId}`), options, definition.placeholder || "Select");
+    });
+    if (definition.filterId) {
+      fillFilterSelect(document.querySelector(`#${definition.filterId}`), options, definition.filterAllLabel || "All");
+    }
+    if (definition.checkboxName === "accessTypeValues") {
+      renderAccessTypeCheckboxes();
+    }
+  });
+}
+
+function renderDepartmentOptions() {
+  const select = document.querySelector("#department");
+  fillSelectOptions(select, getOptionList("department"), "Select department");
 }
 
 function renderVendorOptions() {
   const vendors = [...new Set(getActiveRecords().map((record) => record.vendor).filter(Boolean))]
     .sort((a, b) => a.localeCompare(b));
   vendorOptions.innerHTML = vendors.map((vendor) => `<option value="${escapeHtml(vendor)}"></option>`).join("");
+  if (positionRoleOptions) {
+    const roles = uniqueOptions([
+      ...getOptionList("positionRole"),
+      ...getActiveRecords().map((record) => record.positionRole),
+    ]).sort((a, b) => a.localeCompare(b));
+    positionRoleOptions.innerHTML = roles.map((role) => `<option value="${escapeHtml(role)}"></option>`).join("");
+  }
+}
+
+function getRecordActivityStatus(record) {
+  return getApplicantActivityStatus(record.securityAwarenessExpiration, record.ncicCertificationExpiration);
 }
 
 function getFilteredRecords() {
   const query = searchInput.value.trim().toLowerCase();
+  const activity = activityFilter ? activityFilter.value : "all";
   const clearance = clearanceFilter.value;
   const outcome = outcomeFilter.value;
 
@@ -1368,6 +1872,8 @@ function getFilteredRecords() {
       record.controlNumber,
       record.driversLicense,
       record.vendor,
+      record.department,
+      record.positionRole,
       record.requestor,
       record.emailAddress,
     ]
@@ -1376,6 +1882,7 @@ function getFilteredRecords() {
 
     return (
       (!query || haystack.includes(query)) &&
+      (activity === "all" || getRecordActivityStatus(record) === activity) &&
       (clearance === "all" || record.clearanceType === clearance) &&
       (outcome === "all" || record.outcome === outcome)
     );
@@ -1383,18 +1890,16 @@ function getFilteredRecords() {
 }
 
 function renderOutcomeFilter() {
-  const current = outcomeFilter.value || "all";
-  const outcomes = [...new Set(getActiveRecords().map((record) => record.outcome).filter(Boolean))].sort();
-  outcomeFilter.innerHTML = `<option value="all">All fingerprint outcomes</option>${outcomes
-    .map((outcome) => `<option value="${escapeHtml(outcome)}">${escapeHtml(outcome)}</option>`)
-    .join("")}`;
-  outcomeFilter.value = outcomes.includes(current) ? current : "all";
+  fillFilterSelect(outcomeFilter, getOptionList("outcome"), "All fingerprint outcomes");
 }
 
 function renderMetrics() {
   const activeRecords = getActiveRecords();
   const queryDue = activeRecords.filter(isQueryDue).length;
+  const activityActive = activeRecords.filter((record) => getRecordActivityStatus(record) === "Active").length;
   document.querySelector("#totalCount").textContent = activeRecords.length;
+  document.querySelector("#activeCount").textContent = activityActive;
+  document.querySelector("#inactiveCount").textContent = activeRecords.length - activityActive;
   document.querySelector("#fullClearanceCount").textContent = activeRecords.filter((record) => {
     return record.clearanceType === "Full Clearance";
   }).length;
@@ -1474,20 +1979,24 @@ function renderLimitedRow(record, groupTone) {
 }
 
 function renderAdminTable() {
-  const visibleRecords = getSortedRecords(getFilteredRecords());
+  const visibleRecords = getAdminSortedRecords(getFilteredRecords());
   if (!visibleRecords.length) {
     adminTable.innerHTML = `<p class="empty-state">No applicant records match the current filters.</p>`;
     return;
   }
 
+  const bodyRows = adminListSort.field
+    ? visibleRecords.map((record, index) => renderAdminRow(record, index % 2)).join("")
+    : renderGroupedRows(visibleRecords, renderAdminRow, adminTableFields.length + 1);
+
   adminTable.innerHTML = `<table class="admin-records-table">
     <thead>
       <tr>
-        <th class="field-admin">Actions</th>
-        ${adminTableFields.map(renderHeaderCell).join("")}
+        <th class="field-admin" scope="col">Actions</th>
+        ${adminTableFields.map(renderAdminSortableHeaderCell).join("")}
       </tr>
     </thead>
-    <tbody>${renderGroupedRows(visibleRecords, renderAdminRow, adminTableFields.length + 1)}</tbody>
+    <tbody>${bodyRows}</tbody>
   </table>`;
 
   adminTable.querySelectorAll("[data-edit]").forEach((button) => {
@@ -1514,19 +2023,48 @@ function renderAdminRow(record, groupTone) {
   </tr>`;
 }
 
+function getFilteredArchivedRecords() {
+  const query = archivedSearchInput ? archivedSearchInput.value.trim().toLowerCase() : "";
+  return getArchivedApplicantRecords().filter((record) => {
+    if (!query) return true;
+    const haystack = [
+      record.name,
+      record.controlNumber,
+      record.driversLicense,
+      record.vendor,
+      record.department,
+      record.positionRole,
+      record.requestor,
+      record.emailAddress,
+      record.clearanceType,
+      record.archivedBy,
+    ]
+      .join(" ")
+      .toLowerCase();
+    return haystack.includes(query);
+  });
+}
+
 function renderArchivedTable() {
   if (!archivedTable) return;
-  const archivedRecords = getSortedRecords(getArchivedApplicantRecords());
+  const allArchived = getArchivedApplicantRecords();
+  const archivedRecords = getSortedRecords(getFilteredArchivedRecords());
   if (archivedCountPill) {
-    const count = archivedRecords.length;
-    archivedCountPill.textContent = `${count} archived`;
+    const query = archivedSearchInput ? archivedSearchInput.value.trim() : "";
+    archivedCountPill.textContent = query
+      ? `${archivedRecords.length} of ${allArchived.length} archived`
+      : `${allArchived.length} archived`;
   }
-  if (!isFullAdmin()) {
+  if (!canReviewArchived()) {
     archivedTable.innerHTML = `<p class="empty-state">Archived records are available to Full Admin only.</p>`;
     return;
   }
-  if (!archivedRecords.length) {
+  if (!allArchived.length) {
     archivedTable.innerHTML = `<p class="empty-state">No archived applicant records.</p>`;
+    return;
+  }
+  if (!archivedRecords.length) {
+    archivedTable.innerHTML = `<p class="empty-state">No archived records match the current search.</p>`;
     return;
   }
 
@@ -1535,7 +2073,11 @@ function renderArchivedTable() {
       <tr>
         <th class="field-admin">Actions</th>
         <th>Name</th>
+        <th>Driver Lic Num</th>
         <th>Vendor</th>
+        <th>Department</th>
+        <th>Position/Role</th>
+        <th>Requestor</th>
         <th>Archived By</th>
         <th>Archived At</th>
       </tr>
@@ -1547,11 +2089,19 @@ function renderArchivedTable() {
             <td class="field-admin">
               <div class="record-actions">
                 <button class="admin-action" type="button" data-view-archived="${record.id}">View</button>
-                <button class="admin-action" type="button" data-restore="${record.id}">Restore</button>
+                ${
+                  canRestoreArchived()
+                    ? `<button class="admin-action" type="button" data-restore="${record.id}">Restore</button>`
+                    : ""
+                }
               </div>
             </td>
             <td class="field-name">${escapeHtml(record.name)}</td>
+            <td>${escapeHtml(record.driversLicense)}</td>
             <td class="field-vendor">${escapeHtml(record.vendor)}</td>
+            <td>${escapeHtml(record.department)}</td>
+            <td>${escapeHtml(record.positionRole)}</td>
+            <td>${escapeHtml(record.requestor)}</td>
             <td>${escapeHtml(record.archivedBy)}</td>
             <td>${formatDateTime(record.archivedAt)}</td>
           </tr>`;
@@ -1566,6 +2116,336 @@ function renderArchivedTable() {
   archivedTable.querySelectorAll("[data-restore]").forEach((button) => {
     button.addEventListener("click", () => restoreApplicant(button.dataset.restore));
   });
+}
+
+function renderOptionListEditors() {
+  if (!optionListEditors) return;
+  optionListEditors.innerHTML = OPTION_LIST_DEFINITIONS.map((definition) => {
+    const options = getOptionList(definition.key);
+    const items = options.length
+      ? options
+          .map((option) => {
+            const isEditing =
+              optionListEdit && optionListEdit.key === definition.key && optionListEdit.value === option;
+            if (isEditing) {
+              return `<li class="option-list-editing">
+                <form class="option-list-edit" data-option-key="${escapeHtml(definition.key)}" data-original-option="${escapeHtml(option)}">
+                  <input type="text" maxlength="80" value="${escapeHtml(option)}" required />
+                  <div class="option-list-actions">
+                    <button class="primary-action" type="submit">Save</button>
+                    <button class="secondary-action" type="button" data-cancel-edit>Cancel</button>
+                  </div>
+                </form>
+              </li>`;
+            }
+            return `<li>
+              <span>${escapeHtml(option)}</span>
+              <div class="option-list-actions">
+                <button class="secondary-action" type="button" data-option-key="${escapeHtml(definition.key)}" data-edit-option="${escapeHtml(option)}">Edit</button>
+                <button class="secondary-action" type="button" data-option-key="${escapeHtml(definition.key)}" data-remove-option="${escapeHtml(option)}">Remove</button>
+              </div>
+            </li>`;
+          })
+          .join("")
+      : `<li class="empty-option">No values yet.</li>`;
+    return `<article class="option-list-card">
+      <h3>${escapeHtml(definition.label)}</h3>
+      <ul>${items}</ul>
+      <form class="option-list-add" data-option-key="${escapeHtml(definition.key)}">
+        <input type="text" maxlength="80" placeholder="Add ${escapeHtml(definition.label)}" required />
+        <button class="primary-action" type="submit">Add</button>
+      </form>
+    </article>`;
+  }).join("");
+  const editInput = optionListEditors.querySelector(".option-list-edit input");
+  if (editInput) {
+    editInput.focus();
+    editInput.select();
+  }
+}
+
+function handleOptionListSubmit(event) {
+  const editForm = event.target.closest("form.option-list-edit");
+  if (editForm) {
+    event.preventDefault();
+    const input = editForm.querySelector("input");
+    renameOptionListValue(editForm.dataset.optionKey, editForm.dataset.originalOption, input ? input.value : "");
+    return;
+  }
+  const form = event.target.closest("form.option-list-add[data-option-key]");
+  if (!form) return;
+  event.preventDefault();
+  const input = form.querySelector("input");
+  addOptionListValue(form.dataset.optionKey, input ? input.value : "");
+  if (input) input.value = "";
+}
+
+function handleOptionListClick(event) {
+  const cancelButton = event.target.closest("[data-cancel-edit]");
+  if (cancelButton) {
+    optionListEdit = null;
+    renderOptionListEditors();
+    return;
+  }
+  const editButton = event.target.closest("[data-edit-option]");
+  if (editButton) {
+    optionListEdit = { key: editButton.dataset.optionKey, value: editButton.dataset.editOption };
+    renderOptionListEditors();
+    return;
+  }
+  const removeButton = event.target.closest("[data-remove-option]");
+  if (!removeButton) return;
+  optionListEdit = null;
+  removeOptionListValue(removeButton.dataset.optionKey, removeButton.dataset.removeOption);
+}
+
+function addOptionListValue(key, rawValue) {
+  if (!OPTION_LIST_DEFINITIONS.some((definition) => definition.key === key)) return;
+  const value = String(rawValue || "").trim();
+  if (!value) {
+    showMessage(optionListMessage, "Enter a dropdown value to add.", true);
+    return;
+  }
+  const current = getOptionList(key);
+  if (current.some((option) => option.toUpperCase() === value.toUpperCase())) {
+    showMessage(optionListMessage, `"${value}" is already in ${labelForOptionList(key)}.`, true);
+    return;
+  }
+  optionLists[key] = uniqueOptions([...current, value]);
+  saveOptionLists();
+  showMessage(optionListMessage, `Added "${value}" to ${labelForOptionList(key)}.`);
+  renderAll();
+}
+
+function renameOptionListValue(key, oldValue, rawValue) {
+  if (!OPTION_LIST_DEFINITIONS.some((definition) => definition.key === key)) return;
+  const previous = String(oldValue || "").trim();
+  const next = String(rawValue || "").trim();
+  if (!previous) return;
+  if (!next) {
+    showMessage(optionListMessage, "Enter a dropdown value to save.", true);
+    return;
+  }
+  const current = getOptionList(key);
+  if (!current.includes(previous)) {
+    optionListEdit = null;
+    renderOptionListEditors();
+    return;
+  }
+  if (next === previous) {
+    optionListEdit = null;
+    renderOptionListEditors();
+    return;
+  }
+  if (current.some((option) => option !== previous && option.toUpperCase() === next.toUpperCase())) {
+    showMessage(optionListMessage, `"${next}" is already in ${labelForOptionList(key)}.`, true);
+    return;
+  }
+  optionLists[key] = current.map((option) => (option === previous ? next : option));
+  saveOptionLists();
+  const updatedCount = applyOptionRenameToRecords(key, previous, next);
+  optionListEdit = null;
+  const recordNote = updatedCount
+    ? ` Updated ${updatedCount} applicant record${updatedCount === 1 ? "" : "s"}.`
+    : "";
+  showMessage(optionListMessage, `Renamed "${previous}" to "${next}" in ${labelForOptionList(key)}.${recordNote}`);
+  renderAll();
+}
+
+function applyOptionRenameToRecords(key, oldValue, newValue) {
+  let updatedCount = 0;
+  records = records.map((record) => {
+    if (key === "accessType") {
+      const values = String(record.accessType || "")
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean);
+      if (!values.includes(oldValue)) return record;
+      updatedCount += 1;
+      return {
+        ...record,
+        accessType: values.map((item) => (item === oldValue ? newValue : item)).join(", "),
+      };
+    }
+    if (record[key] !== oldValue) return record;
+    updatedCount += 1;
+    return { ...record, [key]: newValue };
+  });
+  if (updatedCount) {
+    saveRecords();
+    logRecordChange(
+      "Updated dropdown value",
+      { id: "option-list", name: labelForOptionList(key) },
+      [`${oldValue} → ${newValue}`, `${updatedCount} record${updatedCount === 1 ? "" : "s"} updated`],
+    );
+  }
+  return updatedCount;
+}
+
+function removeOptionListValue(key, rawValue) {
+  if (!OPTION_LIST_DEFINITIONS.some((definition) => definition.key === key)) return;
+  const value = String(rawValue || "").trim();
+  const current = getOptionList(key);
+  if (current.length <= 1 && key !== "positionRole") {
+    showMessage(optionListMessage, `Keep at least one ${labelForOptionList(key)} value.`, true);
+    return;
+  }
+  optionLists[key] = current.filter((option) => option !== value);
+  saveOptionLists();
+  showMessage(optionListMessage, `Removed "${value}" from ${labelForOptionList(key)}.`);
+  renderAll();
+}
+
+function labelForOptionList(key) {
+  return OPTION_LIST_DEFINITIONS.find((definition) => definition.key === key)?.label || key;
+}
+
+function reservedAccessCodes() {
+  const codes = new Set([OWNER_ADMIN_CODE, ...FORBIDDEN_CODES]);
+  if (accessCodes) {
+    Object.values(accessCodes).forEach((code) => {
+      if (code) codes.add(code);
+    });
+  }
+  managedUsers.forEach((user) => {
+    if (user.accessCode) codes.add(user.accessCode);
+  });
+  return codes;
+}
+
+function addManagedUser(event) {
+  event.preventDefault();
+  if (!canAccessAdminConsole()) {
+    showMessage(managedUserMessage, "Only Admin-Full and Admin-Global can manage users.", true);
+    return;
+  }
+  const name = document.querySelector("#newManagedUserName").value.trim();
+  const userType = normalizeManagedUserType(document.querySelector("#newManagedUserType").value);
+  const accessCode = document.querySelector("#newManagedUserCode").value;
+  if (!name) {
+    showMessage(managedUserMessage, "User Name is required.", true);
+    return;
+  }
+  if (!USER_TYPE_LABELS[userType] || document.querySelector("#newManagedUserType").value !== userType) {
+    showMessage(managedUserMessage, "Choose Admin-Full, Admin-Global, Admin-Staff, or Read Only.", true);
+    return;
+  }
+  if (!accessCode || accessCode.length < 4) {
+    showMessage(managedUserMessage, "Access Code must be at least 4 characters.", true);
+    return;
+  }
+  if (FORBIDDEN_CODES.has(accessCode)) {
+    showMessage(managedUserMessage, "Choose an access code that is not a former default or trivial sequence.", true);
+    return;
+  }
+  if (managedUsers.some((user) => user.name.toLowerCase() === name.toLowerCase())) {
+    showMessage(managedUserMessage, "A user with that name already exists.", true);
+    return;
+  }
+  if (reservedAccessCodes().has(accessCode)) {
+    showMessage(managedUserMessage, "That access code is already in use.", true);
+    return;
+  }
+  managedUsers = [
+    ...managedUsers,
+    {
+      id: crypto.randomUUID(),
+      name,
+      userType,
+      accessCode,
+    },
+  ];
+  saveManagedUsers();
+  addManagedUserForm.reset();
+  document.querySelector("#newManagedUserType").value = "admin";
+  showMessage(managedUserMessage, `Added ${USER_TYPE_LABELS[userType]} user ${name}.`);
+  renderManagedUserTable();
+}
+
+function handleManagedUserTableClick(event) {
+  const removeButton = event.target.closest("[data-remove-user]");
+  if (removeButton) {
+    removeManagedUser(removeButton.dataset.removeUser);
+    return;
+  }
+  const changeButton = event.target.closest("[data-change-user-code]");
+  if (changeButton) {
+    changeManagedUserCode(changeButton.dataset.changeUserCode);
+  }
+}
+
+function removeManagedUser(id) {
+  if (!canAccessAdminConsole()) return;
+  const user = managedUsers.find((entry) => entry.id === id);
+  if (!user) return;
+  if (!confirm(`Remove ${user.name} (${USER_TYPE_LABELS[user.userType]})?`)) return;
+  managedUsers = managedUsers.filter((entry) => entry.id !== id);
+  saveManagedUsers();
+  showMessage(managedUserMessage, `Removed ${user.name}.`);
+  renderManagedUserTable();
+}
+
+function changeManagedUserCode(id) {
+  if (!canAccessAdminConsole()) return;
+  const user = managedUsers.find((entry) => entry.id === id);
+  if (!user) return;
+  const nextCode = window.prompt(`New access code for ${user.name} (at least 4 characters):`, "");
+  if (nextCode === null) return;
+  const accessCode = String(nextCode);
+  if (accessCode.length < 4) {
+    showMessage(managedUserMessage, "Access Code must be at least 4 characters.", true);
+    return;
+  }
+  if (FORBIDDEN_CODES.has(accessCode)) {
+    showMessage(managedUserMessage, "Choose an access code that is not a former default or trivial sequence.", true);
+    return;
+  }
+  const reserved = reservedAccessCodes();
+  reserved.delete(user.accessCode);
+  if (reserved.has(accessCode)) {
+    showMessage(managedUserMessage, "That access code is already in use.", true);
+    return;
+  }
+  user.accessCode = accessCode;
+  saveManagedUsers();
+  showMessage(managedUserMessage, `Updated access code for ${user.name}.`);
+  renderManagedUserTable();
+}
+
+function renderManagedUserTable() {
+  if (!managedUserTable) return;
+  if (!managedUsers.length) {
+    managedUserTable.innerHTML = `<p class="empty-state">No named users yet. Shared view access codes still work. Add an Admin-Full, Admin-Global, Admin-Staff, or Read Only user above.</p>`;
+    return;
+  }
+  managedUserTable.innerHTML = `<table class="admin-records-table managed-user-table">
+    <thead>
+      <tr>
+        <th>User Name</th>
+        <th>User Type</th>
+        <th>Signs In As</th>
+        <th class="field-admin">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${managedUsers
+        .map((user) => {
+          const signsInAs = ACCESS_LABELS[managedUserSignInLevel(user)];
+          return `<tr>
+            <td>${escapeHtml(user.name)}</td>
+            <td>${escapeHtml(USER_TYPE_LABELS[user.userType])}</td>
+            <td>${escapeHtml(signsInAs)}</td>
+            <td class="field-admin">
+              <div class="record-actions">
+                <button class="admin-action" type="button" data-change-user-code="${escapeHtml(user.id)}">Change Code</button>
+                <button class="admin-action" type="button" data-remove-user="${escapeHtml(user.id)}">Remove</button>
+              </div>
+            </td>
+          </tr>`;
+        })
+        .join("")}
+    </tbody>
+  </table>`;
 }
 
 function renderChangeLog() {
@@ -1649,6 +2529,68 @@ function renderHeaderCell(field) {
   return `<th class="field-${field}">${escapeHtml(tableLabels[field] || labels[field])}</th>`;
 }
 
+function renderAdminSortableHeaderCell(field) {
+  const label = tableLabels[field] || labels[field];
+  const isActive = adminListSort.field === field;
+  const ariaSort = !isActive ? "none" : adminListSort.direction === "desc" ? "descending" : "ascending";
+  const nextDirection = isActive && adminListSort.direction === "asc" ? "descending" : "ascending";
+  const indicator = !isActive ? "↕" : adminListSort.direction === "desc" ? "▼" : "▲";
+  return `<th class="field-${field} sortable-heading" scope="col" aria-sort="${ariaSort}">
+    <button type="button" data-sort-field="${field}" aria-label="Sort by ${escapeHtml(label)}, ${ariaSort === "none" ? "unsorted" : ariaSort}. Activate to sort ${nextDirection}.">
+      <span>${escapeHtml(label)}</span>
+      <span class="sort-indicator" aria-hidden="true">${indicator}</span>
+    </button>
+  </th>`;
+}
+
+function handleAdminTableSortClick(event) {
+  const button = event.target.closest("[data-sort-field]");
+  if (!button || !adminTable.contains(button)) return;
+  const field = button.dataset.sortField;
+  if (!adminTableFields.includes(field)) return;
+  if (adminListSort.field === field) {
+    adminListSort.direction = adminListSort.direction === "asc" ? "desc" : "asc";
+  } else {
+    adminListSort.field = field;
+    adminListSort.direction = "asc";
+  }
+  renderAdminTable();
+}
+
+function getAdminSortedRecords(recordSet) {
+  if (!adminListSort.field) return getSortedRecords(recordSet);
+  const direction = adminListSort.direction === "desc" ? -1 : 1;
+  return [...recordSet].sort((a, b) => {
+    const compared = compareRecordsByField(a, b, adminListSort.field);
+    if (compared !== 0) return compared * direction;
+    const nameCompare = String(a.name || "").localeCompare(String(b.name || ""), undefined, { sensitivity: "base" });
+    if (nameCompare !== 0) return nameCompare;
+    return getVendorGroupName(a).localeCompare(getVendorGroupName(b), undefined, { sensitivity: "base" });
+  });
+}
+
+function compareRecordsByField(a, b, field) {
+  if (field === "accessType") {
+    return getAccessTypeSortValue(a).localeCompare(getAccessTypeSortValue(b), undefined, {
+      sensitivity: "base",
+      numeric: true,
+    });
+  }
+  if (dateSortFields.has(field)) {
+    return getDateSortValue(a[field]) - getDateSortValue(b[field]);
+  }
+  return String(a[field] ?? "").localeCompare(String(b[field] ?? ""), undefined, {
+    sensitivity: "base",
+    numeric: true,
+  });
+}
+
+function getAccessTypeSortValue(record) {
+  const value = record.accessType;
+  if (Array.isArray(value)) return value.join(" ");
+  return String(value || "");
+}
+
 function renderGroupedRows(sortedRecords, rowRenderer, columnCount) {
   let currentVendor = "";
   let groupIndex = -1;
@@ -1713,6 +2655,33 @@ function isSecurityCertExpired(record) {
   return expiration < today;
 }
 
+function isCertDateCurrent(certValue) {
+  const iso = normalizeDateValue(certValue);
+  if (!iso) return false;
+  const expiration = new Date(`${iso}T00:00:00`);
+  if (Number.isNaN(expiration.getTime())) return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return expiration >= today;
+}
+
+function getApplicantActivityStatus(securityAwarenessCert, ncicCertExpiration) {
+  return isCertDateCurrent(securityAwarenessCert) && isCertDateCurrent(ncicCertExpiration)
+    ? "Active"
+    : "InActive";
+}
+
+function syncApplicantActivityStatus() {
+  const statusEl = document.querySelector("#applicantActivityStatus");
+  if (!statusEl) return;
+  const status = getApplicantActivityStatus(
+    document.querySelector("#securityAwarenessExpiration")?.value,
+    document.querySelector("#ncicCertificationExpiration")?.value,
+  );
+  statusEl.textContent = status;
+  statusEl.className = `applicant-activity-status badge ${status === "Active" ? "active" : "inactive"}`;
+}
+
 function rowClassAttributes(record, groupTone) {
   const classes = [`vendor-group-${groupTone}`];
   const expired = isSecurityCertExpired(record);
@@ -1738,6 +2707,8 @@ function isBadgeField(field) {
     "cjisSecurityAwarenessRole",
     "ncicCertification",
     "passport",
+    "tourOrientation",
+    "department",
   ].includes(field);
 }
 
@@ -1759,18 +2730,19 @@ function renderBadgeList(value) {
 function updateArchiveVisibility() {
   const id = document.querySelector("#recordId").value;
   const selected = records.find((record) => record.id === id);
-  const canReview = currentView === "admin" && isFullAdmin();
+  const canReview = isFullAdmin() && (currentView === "admin" || isAdminPageOpen());
   const archived = Boolean(selected && isArchivedRecord(selected));
   archiveRecord.classList.toggle(
     "hidden",
     !canReview || !selected || archived || currentFormMode === "view",
   );
-  restoreRecord.classList.toggle("hidden", !canReview || !selected || !archived);
+  restoreRecord.classList.toggle("hidden", !canRestoreArchived() || !canReview || !selected || !archived);
 }
 
 function updateEditorVisibility() {
   const hasSelectedRecord = Boolean(document.querySelector("#recordId").value);
-  const showForAdmin = currentView === "admin" && canAccessView("admin") && (hasSelectedRecord || drawerOpen);
+  const showForAdmin =
+    canAccessView("admin") && (currentView === "admin" || isAdminPageOpen()) && (hasSelectedRecord || drawerOpen);
   const showForRecords = currentView === "records" && hasSelectedRecord;
   const shouldShow = showForAdmin || showForRecords;
   editorPanel.classList.toggle("hidden", !shouldShow);
@@ -1801,6 +2773,7 @@ function updateFormMode() {
   saveApplicantButton.classList.toggle("hidden", isReadOnly);
   formHeading.textContent = isReadOnly ? "Applicant Details - Read Only" : "Applicant Details";
   editorEyebrow.textContent = isReadOnly ? "Read Only" : currentView === "admin" ? "Full Record" : "Records";
+  syncApplicantActivityStatus();
 }
 
 function renderQueryStatus(record) {
@@ -1925,7 +2898,7 @@ function logInquiryDueMigration(changedCount) {
 // Maps spreadsheet columns to tracker fields per docs/planning/import-crosswalk-mastersheet.md.
 // DOB and SSN columns stay excluded (DEC-012). Raw MasterSheet "State / Driver's
 // License" headers stay blocked. A Driver Lic Num header is accepted only when
-// the value matches ST + 9 digits (DEC-020). Never commit spreadsheet PII.
+// the value matches ST + up to 15 digits (DEC-020). Never commit spreadsheet PII.
 
 const IMPORT_BLOCKED_HEADER_PATTERNS = [/birth/i, /social\s*security/i, /\bssn\b/i, /licen[cs]e/i];
 const IMPORT_DRIVERS_LICENSE_HEADER = /^(driver\s*lic(\.|ense)?\s*num(ber)?|drivers?License(Number)?)$/i;
@@ -1935,11 +2908,14 @@ const IMPORT_HEADER_MAP = [
   { match: /^control[\s_-]*id$/i, field: "controlNumber" },
   { match: /^name/i, field: "name" },
   { match: /^vendor$/i, field: "vendor" },
+  { match: /^department$/i, field: "department" },
+  { match: /^position(\s*\/\s*|\s+|\/)?role$/i, field: "positionRole" },
   { match: /^requestor$/i, field: "requestor" },
   { match: /^date information provided$/i, field: "dateInformationProvided", type: "isoDate" },
   { match: /iii\s*completion/i, field: "dateOfIiiCompletion", type: "isoDate" },
   { match: /^iii\s*-?\s*status$/i, field: "iiiStatus" },
   { match: /clearance/i, field: "clearanceType" },
+  { match: /^tour(\s*\/\s*|\s+|\/)?orient/i, field: "tourOrientation" },
   { match: /^access type$/i, field: "accessType" },
   { match: /security and awareness role/i, field: "cjisSecurityAwarenessRole" },
   { match: /^fingerprints?\s/i, field: "fingerprintsNotifiedCompleted", type: "isoDate" },
@@ -2064,7 +3040,7 @@ function importCsvText(csvText, replaceAll) {
           record.driversLicense = raw.toUpperCase();
         } else {
           errors.push(
-            `Row ${rowIndex + 2}: Driver Lic Num must be a two-letter state prefix and 9 digits with no hyphens or spaces (example: NM123456789); value omitted.`,
+            `Row ${rowIndex + 2}: Driver Lic Num must be a two-letter state prefix and up to 15 digits with no hyphens or spaces (example: NM123456789012345); value omitted.`,
           );
           record.driversLicense = "";
         }
@@ -2231,6 +3207,8 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
+renderManagedDropdowns();
 updateSetupVisibility();
 updateAccessControls();
+updateFullScreenVisibility();
 setView("limited");

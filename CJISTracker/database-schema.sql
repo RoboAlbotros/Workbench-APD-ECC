@@ -27,9 +27,10 @@
   - DEC-012 / DEC-017: no Date of Birth or Social Security Number columns.
     Do not add them.
   - DEC-020 (2026-10-14): DriverLicenseNumber is in-scope (UI: Driver Lic Num).
-    Format: two-letter state prefix + 9 digits, no hyphens (example: NM123456789).
-    Persist blank as NULL. Owner directed this field in; Privacy Framework / PIA
-    revisit remains TBD for the authority (DEC-014/016).
+    Format: two-letter state prefix + 1 to 15 digits, no hyphens
+    (example: NM123456789012345). Persist blank as NULL. Owner directed this
+    field in; Privacy Framework / PIA revisit remains TBD for the authority
+    (DEC-014/016).
   - DEC-018 / DEC-020: ControlNumber remains the unique secondary key. It is
     hidden from the UI and unused for display/edit; existing values are retained.
     Persist a blank Control ID as NULL (not '') so multiple unset values are
@@ -58,12 +59,15 @@
   controlNumber                → Applicants.ControlNumber (hidden secondary key)
   driversLicense               → Applicants.DriverLicenseNumber
   source                       → Applicants.SourceName
-  vendor                       → Vendors.VendorName / Applicants.VendorId
+  vendor                       → Vendors.VendorName / Applicants.VendorId (nullable)
+  department                   → Applicants.Department (city-code list; see CK_Applicants_Department)
+  positionRole                 → Applicants.PositionRole
   requestor                    → Applicants.Requestor
   dateInformationProvided      → Applicants.DateInformationProvided
   dateOfIiiCompletion          → Applicants.DateOfIiiCompletion
   iiiStatus                    → IiiStatuses.IiiStatusName / Applicants.IiiStatusId
   clearanceType                → ClearanceTypes.ClearanceTypeName / Applicants.ClearanceTypeId
+  tourOrientation              → Applicants.TourOrientation ('Y'/'N'; nullable yes/no flag)
   accessType                   → AccessTypes / ApplicantAccessTypes
   passport                     → Applicants.Passport ('Y'/'N'; nullable yes/no flag only)
   cjisSecurityAwarenessRole    → CjisSecurityAwarenessRoles / Applicants.CjisSecurityAwarenessRoleId
@@ -206,11 +210,13 @@ BEGIN
     /* DEC-018 secondary key. Unique when present; persist blanks as NULL.
        DEC-020: hidden from the UI; unused for display/edit. */
     ControlNumber NVARCHAR(40) NULL,
-    /* DEC-020: format ST + 9 digits (example: NM123456789). Blank is NULL. */
-    DriverLicenseNumber NVARCHAR(11) NULL,
+    /* DEC-020: format ST + 1 to 15 digits (example: NM123456789012345). Blank is NULL. */
+    DriverLicenseNumber NVARCHAR(17) NULL,
     /* DEC-018 Source; read-only in the UI. */
     SourceName NVARCHAR(160) NULL,
-    VendorId INT NOT NULL,
+    VendorId INT NULL,
+    Department NVARCHAR(80) NULL,
+    PositionRole NVARCHAR(160) NULL,
     ClearanceTypeId INT NULL,
     IiiStatusId INT NULL,
     FingerprintOutcomeId INT NULL,
@@ -226,6 +232,7 @@ BEGIN
     NcicCertification CHAR(1) NULL,
     /* Yes/no flag only. Not treated as PII beyond Y/N. */
     Passport CHAR(1) NULL,
+    TourOrientation CHAR(1) NULL,
     CompletedFullProcess DATE NULL,
     DateOfSiteVisitOnly DATE NULL,
     QueryDateEveryFiveYears DATE NULL,
@@ -243,11 +250,45 @@ BEGIN
     ArchivedByDisplayName NVARCHAR(160) NULL,
     CONSTRAINT CK_Applicants_NcicCertification CHECK (NcicCertification IS NULL OR NcicCertification IN ('Y', 'N')),
     CONSTRAINT CK_Applicants_Passport CHECK (Passport IS NULL OR Passport IN ('Y', 'N')),
+    CONSTRAINT CK_Applicants_TourOrientation CHECK (TourOrientation IS NULL OR TourOrientation IN ('Y', 'N')),
     CONSTRAINT CK_Applicants_DriverLicenseNumber CHECK (
       DriverLicenseNumber IS NULL
       OR (
-        LEN(DriverLicenseNumber) = 11
-        AND DriverLicenseNumber LIKE N'[A-Z][A-Z][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'
+        LEN(DriverLicenseNumber) BETWEEN 3 AND 17
+        AND LEFT(DriverLicenseNumber, 2) LIKE N'[A-Z][A-Z]'
+        AND SUBSTRING(DriverLicenseNumber, 3, 15) NOT LIKE N'%[^0-9]%'
+      )
+    ),
+    CONSTRAINT CK_Applicants_Department CHECK (
+      Department IS NULL OR Department IN (
+        N'AV-Aviation',
+        N'AW-Animal Welfare',
+        N'CA-Chief Administrative Office',
+        N'CC-Office of the City Clerk',
+        N'CL-Council Services',
+        N'CM-Community Safety Department',
+        N'CP-Civilian Police OS Dept',
+        N'CS-Cultural Services',
+        N'ED-Economic Development',
+        N'EH-Environmental Health',
+        N'FA-Finance Admin Svc',
+        N'FC-Youth and Family Svcs Dept',
+        N'FD-Fire',
+        N'GS-General Services Department',
+        N'HH-Health,Housing,Hmlsns Dept',
+        N'HR-Human Resources',
+        N'IA-Internal Audit',
+        N'IG-Office of Inspector GenDept',
+        N'LG-Legal',
+        N'MA-Mayor''s Office Department',
+        N'MD-Municipal Development',
+        N'PD-Police',
+        N'PL-Planning Department',
+        N'PR-Parks and Recreation',
+        N'SA-Senior Affairs',
+        N'SW-Solid Waste',
+        N'TI-Technology and Innovation',
+        N'TR-Transit'
       )
     ),
     CONSTRAINT FK_Applicants_Vendors
@@ -308,9 +349,47 @@ BEGIN
 END;
 GO
 
+IF COL_LENGTH(N'dbo.Applicants', N'TourOrientation') IS NULL
+BEGIN
+  ALTER TABLE dbo.Applicants ADD TourOrientation CHAR(1) NULL;
+END;
+GO
+
 IF COL_LENGTH(N'dbo.Applicants', N'DriverLicenseNumber') IS NULL
 BEGIN
-  ALTER TABLE dbo.Applicants ADD DriverLicenseNumber NVARCHAR(11) NULL;
+  ALTER TABLE dbo.Applicants ADD DriverLicenseNumber NVARCHAR(17) NULL;
+END;
+ELSE IF COL_LENGTH(N'dbo.Applicants', N'DriverLicenseNumber') < 34
+BEGIN
+  /* Widen existing ST+9 column to ST + up to 15 digits (NVARCHAR(17)). */
+  IF EXISTS (
+    SELECT 1
+    FROM sys.check_constraints
+    WHERE name = N'CK_Applicants_DriverLicenseNumber'
+      AND parent_object_id = OBJECT_ID(N'dbo.Applicants')
+  )
+  BEGIN
+    ALTER TABLE dbo.Applicants DROP CONSTRAINT CK_Applicants_DriverLicenseNumber;
+  END;
+  ALTER TABLE dbo.Applicants ALTER COLUMN DriverLicenseNumber NVARCHAR(17) NULL;
+END;
+GO
+
+IF EXISTS (
+  SELECT 1
+  FROM sys.check_constraints
+  WHERE name = N'CK_Applicants_DriverLicenseNumber'
+    AND parent_object_id = OBJECT_ID(N'dbo.Applicants')
+)
+  AND EXISTS (
+    SELECT 1
+    FROM sys.check_constraints
+    WHERE name = N'CK_Applicants_DriverLicenseNumber'
+      AND parent_object_id = OBJECT_ID(N'dbo.Applicants')
+      AND definition LIKE N'%LEN(DriverLicenseNumber) = 11%'
+  )
+BEGIN
+  ALTER TABLE dbo.Applicants DROP CONSTRAINT CK_Applicants_DriverLicenseNumber;
 END;
 GO
 
@@ -325,8 +404,101 @@ BEGIN
     CHECK (
       DriverLicenseNumber IS NULL
       OR (
-        LEN(DriverLicenseNumber) = 11
-        AND DriverLicenseNumber LIKE N'[A-Z][A-Z][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'
+        LEN(DriverLicenseNumber) BETWEEN 3 AND 17
+        AND LEFT(DriverLicenseNumber, 2) LIKE N'[A-Z][A-Z]'
+        AND SUBSTRING(DriverLicenseNumber, 3, 15) NOT LIKE N'%[^0-9]%'
+      )
+    );
+END;
+GO
+
+IF COL_LENGTH(N'dbo.Applicants', N'Department') IS NULL
+BEGIN
+  ALTER TABLE dbo.Applicants ADD Department NVARCHAR(80) NULL;
+END;
+ELSE IF COL_LENGTH(N'dbo.Applicants', N'Department') < 160
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM sys.check_constraints
+    WHERE name = N'CK_Applicants_Department'
+      AND parent_object_id = OBJECT_ID(N'dbo.Applicants')
+  )
+  BEGIN
+    ALTER TABLE dbo.Applicants DROP CONSTRAINT CK_Applicants_Department;
+  END;
+  ALTER TABLE dbo.Applicants ALTER COLUMN Department NVARCHAR(80) NULL;
+END;
+GO
+
+IF COL_LENGTH(N'dbo.Applicants', N'PositionRole') IS NULL
+BEGIN
+  ALTER TABLE dbo.Applicants ADD PositionRole NVARCHAR(160) NULL;
+END;
+GO
+
+IF EXISTS (
+  SELECT 1
+  FROM sys.columns
+  WHERE object_id = OBJECT_ID(N'dbo.Applicants')
+    AND name = N'VendorId'
+    AND is_nullable = 0
+)
+BEGIN
+  ALTER TABLE dbo.Applicants ALTER COLUMN VendorId INT NULL;
+END;
+GO
+
+IF EXISTS (
+  SELECT 1
+  FROM sys.check_constraints
+  WHERE name = N'CK_Applicants_Department'
+    AND parent_object_id = OBJECT_ID(N'dbo.Applicants')
+    AND definition LIKE N'%N''APD''%'
+)
+BEGIN
+  ALTER TABLE dbo.Applicants DROP CONSTRAINT CK_Applicants_Department;
+END;
+GO
+
+IF NOT EXISTS (
+  SELECT 1
+  FROM sys.check_constraints
+  WHERE name = N'CK_Applicants_Department'
+    AND parent_object_id = OBJECT_ID(N'dbo.Applicants')
+)
+BEGIN
+  ALTER TABLE dbo.Applicants ADD CONSTRAINT CK_Applicants_Department
+    CHECK (
+      Department IS NULL OR Department IN (
+        N'AV-Aviation',
+        N'AW-Animal Welfare',
+        N'CA-Chief Administrative Office',
+        N'CC-Office of the City Clerk',
+        N'CL-Council Services',
+        N'CM-Community Safety Department',
+        N'CP-Civilian Police OS Dept',
+        N'CS-Cultural Services',
+        N'ED-Economic Development',
+        N'EH-Environmental Health',
+        N'FA-Finance Admin Svc',
+        N'FC-Youth and Family Svcs Dept',
+        N'FD-Fire',
+        N'GS-General Services Department',
+        N'HH-Health,Housing,Hmlsns Dept',
+        N'HR-Human Resources',
+        N'IA-Internal Audit',
+        N'IG-Office of Inspector GenDept',
+        N'LG-Legal',
+        N'MA-Mayor''s Office Department',
+        N'MD-Municipal Development',
+        N'PD-Police',
+        N'PL-Planning Department',
+        N'PR-Parks and Recreation',
+        N'SA-Senior Affairs',
+        N'SW-Solid Waste',
+        N'TI-Technology and Innovation',
+        N'TR-Transit'
       )
     );
 END;
@@ -341,6 +513,18 @@ IF NOT EXISTS (
 BEGIN
   ALTER TABLE dbo.Applicants ADD CONSTRAINT CK_Applicants_Passport
     CHECK (Passport IS NULL OR Passport IN ('Y', 'N'));
+END;
+GO
+
+IF NOT EXISTS (
+  SELECT 1
+  FROM sys.check_constraints
+  WHERE name = N'CK_Applicants_TourOrientation'
+    AND parent_object_id = OBJECT_ID(N'dbo.Applicants')
+)
+BEGIN
+  ALTER TABLE dbo.Applicants ADD CONSTRAINT CK_Applicants_TourOrientation
+    CHECK (TourOrientation IS NULL OR TourOrientation IN ('Y', 'N'));
 END;
 GO
 
@@ -527,6 +711,10 @@ IF NOT EXISTS (SELECT 1 FROM dbo.ClearanceTypes WHERE ClearanceTypeName = N'Full
   INSERT INTO dbo.ClearanceTypes (ClearanceTypeName) VALUES (N'Full Clearance');
 IF NOT EXISTS (SELECT 1 FROM dbo.ClearanceTypes WHERE ClearanceTypeName = N'One Time Visit')
   INSERT INTO dbo.ClearanceTypes (ClearanceTypeName) VALUES (N'One Time Visit');
+IF EXISTS (SELECT 1 FROM dbo.ClearanceTypes WHERE ClearanceTypeName = N'In-Progress')
+  UPDATE dbo.ClearanceTypes SET ClearanceTypeName = N'InProgress' WHERE ClearanceTypeName = N'In-Progress';
+IF NOT EXISTS (SELECT 1 FROM dbo.ClearanceTypes WHERE ClearanceTypeName = N'InProgress')
+  INSERT INTO dbo.ClearanceTypes (ClearanceTypeName) VALUES (N'InProgress');
 IF NOT EXISTS (SELECT 1 FROM dbo.ClearanceTypes WHERE ClearanceTypeName = N'No Access Given')
   INSERT INTO dbo.ClearanceTypes (ClearanceTypeName) VALUES (N'No Access Given');
 GO

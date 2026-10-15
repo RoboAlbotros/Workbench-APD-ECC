@@ -26,7 +26,7 @@ outcomes) that the tracker normalizes on save/load.
 | 7 | Social Security Number | — | **EXCLUDE — DEC-012** | Sensitive PII. Must not be imported; tracker deletes this field on load if present. |
 | 8 | State / Driver's License Number | — | **EXCLUDE raw MasterSheet header** | Raw MasterSheet column stays blocked. DEC-020 added a separate in-scope `driversLicense` (Driver Lic Num) accepted only as ST + 9 digits with no hyphens (example: NM123456789). Do not auto-ingest this spreadsheet column. Never commit spreadsheet PII. |
 | 9 | III - Status | `iiiStatus` | Import | Normalized: "clear" → Clear; "felony"/"review needed" → Felony; anything else → Misd/Clear. Verify source vocabulary before import. |
-| 10 | Type of Clearance | `clearanceType` | Import | Normalized case-insensitively to Full Clearance / One Time Visit / No Access Given; **unrecognized values become blank** — pre-validate source values. |
+| 10 | Type of Clearance | `clearanceType` | Import | Normalized case-insensitively to Full Clearance / One Time Visit / InProgress / No Access Given; **unrecognized values become blank** — pre-validate source values. |
 | 11 | Fingerprints Completed | `fingerprintsNotifiedCompleted` | Import | Convert `M/D/YYYY` → ISO `YYYY-MM-DD` (invalid dates are blanked by the tracker). |
 | 12 | Outcome | `outcome` | Import | Normalized: approved/clear → Clear; denied/unauthorized/felony → Felony; misd/clear → Misd/Clear; **anything else → Needs Follow Up**. Pre-validate to avoid accidental follow-up flags. |
 | 13 | Security and Awareness Expiration Annually | `securityAwarenessExpiration` | Import | Convert to ISO. Drives the expired-compliance row highlighting. |

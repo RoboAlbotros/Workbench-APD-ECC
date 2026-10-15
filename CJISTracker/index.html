@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>CJIS Applicant Tracker</title>
-    <link rel="stylesheet" href="styles.css?v=sprint-006-passport-beside-dl" />
+    <link rel="stylesheet" href="styles.css?v=sprint-006-admin-global" />
   </head>
   <body class="signed-out">
     <header class="app-header" aria-label="Application header">
@@ -13,9 +13,6 @@
         <button id="limitedViewButton" class="active" type="button" role="tab" aria-selected="true">
           Limited View
         </button>
-        <button id="recordsViewButton" type="button" role="tab" aria-selected="false">
-          Records View
-        </button>
         <button id="adminViewButton" type="button" role="tab" aria-selected="false">
           Full Admin
         </button>
@@ -23,9 +20,34 @@
     </header>
 
     <main class="shell">
-      <section id="accessPanel" class="panel access-panel" aria-labelledby="accessHeading">
+      <section id="accessPanel" class="panel access-panel" aria-label="Account session">
         <div class="access-bar">
-          <p id="accessHeading" class="eyebrow">Management Access</p>
+          <div id="headerMetrics" class="header-metrics hidden" aria-label="Applicant summary">
+            <div class="metric">
+              <span id="totalCount">0</span>
+              <p>Total</p>
+            </div>
+            <div class="metric">
+              <span id="activeCount">0</span>
+              <p>Active</p>
+            </div>
+            <div class="metric">
+              <span id="inactiveCount">0</span>
+              <p>InActive</p>
+            </div>
+            <div class="metric">
+              <span id="fullClearanceCount">0</span>
+              <p>Full Clearance</p>
+            </div>
+            <div class="metric">
+              <span id="siteVisitCount">0</span>
+              <p>One Time Visit</p>
+            </div>
+            <div class="metric">
+              <span id="queryDueCount">0</span>
+              <p>Query Due</p>
+            </div>
+          </div>
           <form id="accessForm" class="signin-inline">
             <label>
               User Name
@@ -34,10 +56,10 @@
             <label>
               Access Level
               <select id="managementAccessLevel" required>
-                <option value="">Select access level</option>
+                <option value="admin">Admin-Full</option>
+                <option value="adminGlobal">Admin-Global</option>
+                <option value="adminStaff">Admin-Staff</option>
                 <option value="limited">Limited View</option>
-                <option value="records">Records View</option>
-                <option value="admin">Full Admin</option>
               </select>
             </label>
             <label>
@@ -50,6 +72,7 @@
           </form>
           <div id="sessionControls" class="session-controls hidden">
             <span id="currentUserBadge" class="status-pill"></span>
+            <button id="adminConsoleButton" class="secondary-action hidden" type="button">Settings</button>
             <button id="signOutButton" class="secondary-action" type="button">Sign Out</button>
           </div>
         </div>
@@ -79,27 +102,17 @@
       </section>
 
       <section id="toolbar" class="toolbar hidden" aria-label="Applicant filters">
-        <div id="headerMetrics" class="header-metrics hidden" aria-label="Applicant summary">
-          <div class="metric">
-            <span id="totalCount">0</span>
-            <p>Total</p>
-          </div>
-          <div class="metric">
-            <span id="fullClearanceCount">0</span>
-            <p>Full Clearance</p>
-          </div>
-          <div class="metric">
-            <span id="siteVisitCount">0</span>
-            <p>One Time Visit</p>
-          </div>
-          <div class="metric">
-            <span id="queryDueCount">0</span>
-            <p>Query Due</p>
-          </div>
-        </div>
         <label class="search-field">
           Search applicants
-          <input id="searchInput" type="search" placeholder="Name, Driver Lic Num, vendor, requestor, or applicant email" />
+          <input id="searchInput" type="search" placeholder="Name, Driver Lic Num, vendor, department, position/role, requestor, or applicant email" />
+        </label>
+        <label>
+          Activity
+          <select id="activityFilter">
+            <option value="all">All statuses</option>
+            <option value="Active">Active</option>
+            <option value="InActive">InActive</option>
+          </select>
         </label>
         <label>
           Clearance Type
@@ -107,6 +120,7 @@
             <option value="all">All types</option>
             <option value="Full Clearance">Full Clearance</option>
             <option value="One Time Visit">One Time Visit</option>
+            <option value="InProgress">InProgress</option>
             <option value="No Access Given">No Access Given</option>
           </select>
         </label>
@@ -171,8 +185,8 @@
                 Columns are mapped by header name per the import crosswalk. Date of Birth
                 and Social Security Number columns are always excluded (DEC-012). Raw
                 MasterSheet State / Driver's License headers stay excluded. A Driver Lic
-                Num column is accepted only when the value is two letters plus 9 digits
-                with no hyphens (example: NM123456789).
+                Num column is accepted only when the value is two letters plus up to 15 digits
+                with no hyphens (example: NM123456789012345).
               </p>
             </form>
           </section>
@@ -184,29 +198,289 @@
               </div>
               <div class="panel-heading-actions">
                 <button id="resetForm" class="primary-action" type="button">New Applicant</button>
+                <button id="archivedRecordsButton" class="secondary-action hidden" type="button">Archived Records</button>
                 <!-- Export CSV control retained for later use (owner 2026-10-09). Hidden from the UI. -->
                 <button id="exportCsv" class="secondary-action hidden" type="button">Export CSV</button>
               </div>
             </div>
             <div id="adminTable" class="table-wrap" aria-live="polite"></div>
           </section>
-          <section class="panel archived-review-panel" aria-labelledby="archivedTableHeading">
-            <div class="panel-heading">
-              <div>
-                <p class="eyebrow">Full Admin review</p>
-                <h2 id="archivedTableHeading">Archived records</h2>
-              </div>
-              <span id="archivedCountPill" class="status-pill">0 archived</span>
+        </section>
+      </section>
+
+      <section id="archivedRecordsPage" class="admin-console hidden" aria-labelledby="archivedRecordsHeading">
+        <header class="admin-console-header">
+          <h2 id="archivedRecordsHeading">Archived Records</h2>
+          <div class="admin-console-header-actions">
+            <span id="archivedCountPill" class="status-pill">0 archived</span>
+            <button id="closeArchivedRecords" class="secondary-action" type="button">Back to Tracker</button>
+          </div>
+        </header>
+
+        <section class="panel archived-review-panel" aria-labelledby="archivedRecordsHeading">
+          <p class="field-caption archived-review-caption">
+            Archived applicants stay in local storage. Admin-Full, Admin-Global, and Admin-Staff can
+            review them. Admin-Full and Admin-Global can restore. Default lists, metrics, and search
+            exclude archived records.
+          </p>
+          <label class="search-field archived-search-field">
+            Search archived records
+            <input
+              id="archivedSearchInput"
+              type="search"
+              placeholder="Name, Driver Lic Num, vendor, department, position/role, requestor, email, archived by"
+            />
+          </label>
+          <div id="archivedTable" class="table-wrap" aria-live="polite"></div>
+        </section>
+      </section>
+
+      <section id="adminConsole" class="admin-console hidden" aria-labelledby="adminConsoleHeading">
+        <header class="admin-console-header">
+          <div>
+            <p class="eyebrow">Full Admin</p>
+            <h2 id="adminConsoleHeading">Settings Console</h2>
+          </div>
+          <button id="closeAdminConsole" class="secondary-action" type="button">Back to Tracker</button>
+        </header>
+
+        <section class="panel" aria-labelledby="systemManagementHeading">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Field Management</p>
+              <h2 id="systemManagementHeading">Dropdowns</h2>
             </div>
-            <p class="field-caption archived-review-caption">
-              Archived applicants stay in local storage. Only Full Admin can review or restore them.
-              Default lists, metrics, and search exclude archived records.
-            </p>
-            <div id="archivedTable" class="table-wrap" aria-live="polite"></div>
-          </section>
+          </div>
+          <p class="field-caption">
+            Add, edit, or remove values for each dropdown used on applicant records. Editing a value
+            also updates applicant records that use it. Existing records keep values that are no
+            longer in a list.
+          </p>
+          <div id="optionListEditors" class="option-list-editors"></div>
+          <p id="optionListMessage" class="form-message" role="status"></p>
+        </section>
+
+        <section class="panel" aria-labelledby="accessControlHeading">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Access control</p>
+              <h2 id="accessControlHeading">Users</h2>
+            </div>
+          </div>
+          <p class="field-caption">
+            Admin-Full and Admin-Global users can open this console and restore archived applicants.
+            Admin-Global sign-in requires a named Admin-Global user. Admin-Staff users sign in as
+            Admin-Staff, can use Full Admin, and can review archived records, but cannot restore
+            applicants or open this console. Read Only users sign in as Limited View. Shared Limited
+            View and Admin-Full access codes still work. Prototype codes stay in this browser only.
+          </p>
+          <form id="addManagedUserForm" class="signin-inline managed-user-form">
+            <label>
+              User Name
+              <input id="newManagedUserName" type="text" autocomplete="off" required />
+            </label>
+            <label>
+              User Type
+              <select id="newManagedUserType" required>
+                <option value="admin">Admin-Full</option>
+                <option value="adminGlobal">Admin-Global</option>
+                <option value="adminStaff">Admin-Staff</option>
+                <option value="readOnly">Read Only</option>
+              </select>
+            </label>
+            <label>
+              Access Code
+              <input id="newManagedUserCode" type="password" minlength="4" autocomplete="new-password" required />
+            </label>
+            <div class="form-actions">
+              <button class="primary-action" type="submit">Add User</button>
+            </div>
+          </form>
+          <p id="managedUserMessage" class="form-message" role="status"></p>
+          <div id="managedUserTable" class="table-wrap" aria-live="polite"></div>
+        </section>
+
+        <section class="panel future-admin-panel" aria-labelledby="futureSecurityHeading">
+          <div class="panel-heading">
+            <div>
+              <h2 id="futureSecurityHeading">Security &amp; Authentication</h2>
+            </div>
+            <span class="status-pill">Not implemented</span>
+          </div>
+          <p class="field-caption">
+            Reserved for a later authorized sprint. These controls are not active and do not change
+            login. Production authentication remains City SSO / Entra ID (DEC-015) when that work is
+            authorized. Provider names below are examples only.
+          </p>
+          <div class="future-admin-grid">
+            <article class="future-admin-card">
+              <h3>Multi-Factor Authentication (MFA)</h3>
+              <p>
+                Enforce mandatory MFA for all accounts and display live compliance percentages
+                (example: 98% of users enrolled).
+              </p>
+              <p class="future-metric">Enrollment: not available</p>
+              <button class="secondary-action" type="button" disabled>Enforce MFA</button>
+            </article>
+            <article class="future-admin-card">
+              <h3>Single Sign-On (SSO)</h3>
+              <p>
+                Configure SAML 2.5 or OIDC providers (examples: Okta, Google Workspace, Auth0).
+                Recorded production direction is City SSO / Entra ID.
+              </p>
+              <button class="secondary-action" type="button" disabled>Configure SSO</button>
+            </article>
+            <article class="future-admin-card">
+              <h3>Session Management</h3>
+              <p>Set idle timeout durations, concurrent login limits, and IP allowlists.</p>
+              <button class="secondary-action" type="button" disabled>Edit Session Rules</button>
+            </article>
+            <article class="future-admin-card">
+              <h3>API Keys &amp; Webhooks</h3>
+              <p>
+                Generate, rotate, and scope service tokens with granular read/write permissions.
+              </p>
+              <button class="secondary-action" type="button" disabled>Generate Token</button>
+            </article>
+          </div>
+        </section>
+
+        <section class="panel future-admin-panel" aria-labelledby="futureRbacHeading">
+          <div class="panel-heading">
+            <div>
+              <h2 id="futureRbacHeading">Users, Roles &amp; Permissions (RBAC)</h2>
+            </div>
+            <span class="status-pill">Not implemented</span>
+          </div>
+          <p class="field-caption">
+            Reserved for a later authorized sprint. The prototype Users section above remains the
+            only active access-control function.
+          </p>
+          <div class="future-admin-grid">
+            <article class="future-admin-card future-admin-card-wide">
+              <h3>Directory Table</h3>
+              <p>
+                Searchable list displaying Name, Email, Role, Status (Active/Suspended), Last Active,
+                and MFA State.
+              </p>
+              <div class="table-wrap">
+                <table class="admin-records-table future-placeholder-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Role</th>
+                      <th>Status</th>
+                      <th>Last Active</th>
+                      <th>MFA State</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td colspan="6">Directory is not connected. No users loaded.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </article>
+            <article class="future-admin-card">
+              <h3>Custom Roles Builder</h3>
+              <p>
+                Toggle individual permissions across resources (View Only, Edit, Delete, Admin)
+                rather than relying on rigid, pre-set tiers.
+              </p>
+              <button class="secondary-action" type="button" disabled>Open Role Builder</button>
+            </article>
+            <article class="future-admin-card">
+              <h3>Bulk Actions</h3>
+              <p>
+                Select multiple users to force password resets, change roles, or export data to CSV.
+              </p>
+              <button class="secondary-action" type="button" disabled>Run Bulk Action</button>
+            </article>
+          </div>
+        </section>
+
+        <section class="panel future-admin-panel" aria-labelledby="futurePreferencesHeading">
+          <div class="panel-heading">
+            <div>
+              <h2 id="futurePreferencesHeading">System Preferences &amp; Feature Flags</h2>
+            </div>
+            <span class="status-pill">Not implemented</span>
+          </div>
+          <p class="field-caption">
+            Reserved for a later authorized sprint. These settings do not change tracker behavior.
+          </p>
+          <div class="future-admin-grid">
+            <article class="future-admin-card">
+              <h3>Global Configuration</h3>
+              <p>
+                Set system-wide defaults (timezone, default language, currency, maintenance mode
+                banner toggles).
+              </p>
+              <button class="secondary-action" type="button" disabled>Edit Defaults</button>
+            </article>
+            <article class="future-admin-card">
+              <h3>Feature Toggles</h3>
+              <p>
+                Enable or disable experimental or tier-specific modules safely via rolling flags.
+              </p>
+              <button class="secondary-action" type="button" disabled>Manage Flags</button>
+            </article>
+            <article class="future-admin-card">
+              <h3>Rate Limiting &amp; Throttling</h3>
+              <p>Adjust API and web traffic thresholds to prevent DDoS or runaway scripts.</p>
+              <button class="secondary-action" type="button" disabled>Edit Thresholds</button>
+            </article>
+          </div>
+        </section>
+
+        <section class="panel future-admin-panel" aria-labelledby="futureAuditHeading">
+          <div class="panel-heading">
+            <div>
+              <h2 id="futureAuditHeading">Audit Logs &amp; Compliance</h2>
+            </div>
+            <span class="status-pill">Not implemented</span>
+          </div>
+          <p class="field-caption">
+            Reserved for a later authorized sprint. Applicant change log in the record drawer remains
+            the only active audit trail.
+          </p>
+          <div class="future-admin-grid">
+            <article class="future-admin-card future-admin-card-wide">
+              <h3>Activity Stream</h3>
+              <p>
+                A searchable, immutable ledger showing Timestamp, Actor (User ID/IP), Action (example:
+                role.updated), Target Resource, and Status.
+              </p>
+              <label class="search-field future-audit-search">
+                Search activity
+                <input type="search" placeholder="Actor, action, resource, or status" disabled />
+              </label>
+              <div class="table-wrap">
+                <table class="admin-records-table future-placeholder-table">
+                  <thead>
+                    <tr>
+                      <th>Timestamp</th>
+                      <th>Actor</th>
+                      <th>Action</th>
+                      <th>Target Resource</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td colspan="5">Activity stream is not connected. No events loaded.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </article>
+          </div>
         </section>
       </section>
       <datalist id="vendorOptions"></datalist>
+      <datalist id="positionRoleOptions"></datalist>
       <footer class="app-footer" aria-label="Application version">
         <p>Version 0.1.0-dev.1</p>
       </footer>
@@ -220,6 +494,7 @@
           <h2 id="formHeading">Applicant Details</h2>
         </div>
         <button id="closeDrawer" class="secondary-action" type="button" aria-label="Close applicant form">Close</button>
+        <p id="applicantActivityStatus" class="applicant-activity-status badge inactive" aria-live="polite">InActive</p>
       </div>
 
       <form id="applicantForm" class="record-form drawer-form">
@@ -241,10 +516,10 @@
               id="driversLicense"
               type="text"
               autocomplete="off"
-              placeholder="NM123456789"
-              maxlength="11"
-              pattern="[A-Za-z]{2}[0-9]{9}"
-              title="Two-letter state prefix and 9 digits, no hyphens or spaces (example: NM123456789)"
+              placeholder="NM123456789012345"
+              maxlength="17"
+              pattern="[A-Za-z]{2}[0-9]{1,15}"
+              title="Two-letter state prefix and up to 15 digits, no hyphens or spaces (example: NM123456789012345)"
             />
           </label>
           <label class="checkbox-flag field-passport">
@@ -256,8 +531,18 @@
             <div id="duplicateDriversLicenseList" class="duplicate-dl-list"></div>
           </div>
           <label>
-            Vendor*
+            Vendor
             <input id="vendor" type="text" list="vendorOptions" />
+          </label>
+          <label>
+            Department
+            <select id="department">
+              <option value="">Select department</option>
+            </select>
+          </label>
+          <label>
+            Position/Role
+            <input id="positionRole" type="text" list="positionRoleOptions" />
           </label>
           <label>
             Requestor*
@@ -298,6 +583,7 @@
               <option value="">Select type</option>
               <option>Full Clearance</option>
               <option>One Time Visit</option>
+              <option>InProgress</option>
               <option>No Access Given</option>
             </select>
           </label>
@@ -312,6 +598,10 @@
             <label><input type="checkbox" name="accessTypeValues" value="Escorted Access" /> Escorted Access</label>
             <label><input type="checkbox" name="accessTypeValues" value="System Access" /> System Access</label>
             <label><input type="checkbox" name="accessTypeValues" value="System/Building" /> System/Building</label>
+            <label class="field-tourOrientation">
+              <input id="tourOrientation" type="checkbox" />
+              Tour/Orientation
+            </label>
           </fieldset>
           <label>
             III - Status
@@ -428,8 +718,8 @@
       </section>
     </aside>
 
-    <script src="test-applicants.js?v=sprint-006-source-optional"></script>
-    <script src="app.js?v=sprint-006-source-optional"></script>
+    <script src="test-applicants.js?v=sprint-006-admin-global"></script>
+    <script src="app.js?v=sprint-006-admin-global"></script>
     <!-- tracker-list-overrides.js retired in SPRINT-005; behaviors folded into app.js and styles.css. -->
   </body>
 </html>

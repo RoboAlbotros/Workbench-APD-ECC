@@ -1,22 +1,25 @@
 Field Name,Internal Field Name,Data Type,Input Type / Allowed Values
 Name,name,String,Text; Last First Middle Initial Suffix; required
 Control ID,controlNumber,String,Text; unique secondary key retained in storage and import mapping; hidden from the UI (DEC-020)
-Driver Lic Num,driversLicense,String,Text; required on create (no recordId); maxlength 11; two-letter state prefix + 9 digits with no hyphens or spaces (example: NM123456789); extra characters stripped on input; stored uppercase; empty allowed when editing existing imported/seed records; DEC-020 in-scope; duplicate values warn applicant is already on file (including archived) and offer create-new copy of name/DL/phone/email (vendor/requestor/source left empty for the new entry)
+Driver Lic Num,driversLicense,String,Text; required on create (no recordId); maxlength 17; two-letter state prefix + up to 15 digits with no hyphens or spaces (example: NM123456789012345); extra characters stripped on input; stored uppercase; empty allowed when editing existing imported/seed records; DEC-020 in-scope; duplicate values warn applicant is already on file (including archived) and offer create-new copy of name/DL/phone/email (vendor/department/positionRole/requestor/source left empty for the new entry)
 Source,source,String,Optional; editable on create (empty allowed); read-only when editing an existing record so import-populated source is not casually overwritten (DEC-018)
-Vendor,vendor,String,Dropdown populated from entered vendor values; required on create; empty allowed when editing existing records
+Vendor,vendor,String,Dropdown populated from entered vendor values; optional (not required on create); empty allowed
+Department,department,Enum,"Dropdown; optional; AV-Aviation | AW-Animal Welfare | CA-Chief Administrative Office | CC-Office of the City Clerk | CL-Council Services | CM-Community Safety Department | CP-Civilian Police OS Dept | CS-Cultural Services | ED-Economic Development | EH-Environmental Health | FA-Finance Admin Svc | FC-Youth and Family Svcs Dept | FD-Fire | GS-General Services Department | HH-Health,Housing,Hmlsns Dept | HR-Human Resources | IA-Internal Audit | IG-Office of Inspector GenDept | LG-Legal | MA-Mayor's Office Department | MD-Municipal Development | PD-Police | PL-Planning Department | PR-Parks and Recreation | SA-Senior Affairs | SW-Solid Waste | TI-Technology and Innovation | TR-Transit"
+Position/Role,positionRole,String,Dropdown populated from entered position/role values; optional; closed option list TBD until named values are provided
 Requestor,requestor,String,Text; required on create; empty allowed when editing existing records
 Date Information Provided,dateInformationProvided,Date,Date
 Date of III Completion,dateOfIiiCompletion,Date,Date; display MM/DD/YYYY; stored ISO YYYY-MM-DD
 III - Status,iiiStatus,Enum,Clear | Misd/Clear | Felony
-Clearance Type,clearanceType,Enum,Full Clearance | One Time Visit | No Access Given
+Clearance Type,clearanceType,Enum,Full Clearance | One Time Visit | InProgress | No Access Given
+Tour/Orientation,tourOrientation,Boolean / Enum,Checkbox; Yes | No (Y/N). Optional tour/orientation completed flag.
 Access Type,accessType,"Array<String>",Checkbox group; VPN | Non VPN | Security Groups | Facility Access | Unescorted Access | Building Access | Escorted Access | System Access | System/Building
 Passport,passport,Boolean / Enum,Checkbox; Yes | No (Y/N). Yes/no flag only — not treated as PII beyond that.
 CJIS Security and Awareness Role,cjisSecurityAwarenessRole,Enum,Basic | General | Privileged | Security
 Fingerprints Completed,fingerprintsNotifiedCompleted,Date,Date
 Fingerprint Outcome,outcome,Enum,Clear | Misd/Clear | Felony | Needs Follow Up
-Security and Awareness Cert,securityAwarenessExpiration,Date,Date
+Security and Awareness Cert,securityAwarenessExpiration,Date,Date; one of two dates required for applicant screen Active (today on or before this date)
 Security Addendum,securityAddendum,Date,Date
-NCIC Date of Cert Expiration,ncicCertificationExpiration,Date,Date
+NCIC Date of Cert Expiration,ncicCertificationExpiration,Date,Date; one of two dates required for applicant screen Active (today on or before this date); InActive when this date or Security and Awareness Cert is missing or already past
 NCIC Certification,ncicCertification,Boolean / Enum,Yes | No
 Completed Full Process,completedFullProcess,Date,Date
 Date of Site Visit Only,dateOfSiteVisitOnly,Date,Date

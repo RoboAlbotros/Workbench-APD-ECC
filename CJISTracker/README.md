@@ -22,7 +22,7 @@ applicant records; Full Admin will again be `12345` on the next load.
 
 Full Admin includes a change log for created, updated, archived, and restored applicant records.
 
-Applicant records are archived, not permanently deleted. Archive sets `archived`, `archivedAt`, and `archivedBy` and leaves the record in local storage. Default lists, metrics, and search (Limited, Records, and Admin All Applicant Records) exclude archived records. Only Full Admin can archive, review archived applicants in the Admin "Archived records" panel, View an archived record, or Restore it. Limited and Records cannot archive or restore. Seed test applicants stay active. CSV import does not import records as archived or deleted.
+Applicant records are archived, not permanently deleted. Archive sets `archived`, `archivedAt`, and `archivedBy` and leaves the record in local storage. Default lists, metrics, and search (Limited, Records, and Admin All Applicant Records) exclude archived records. Named Admin-Full users (and the shared Full Admin access code) can archive, review archived applicants, and restore them, and they can open the Settings Console. Named Admin-Global users sign in as Admin-Global (named user required; no shared Global code), have the same Full Admin, restore, and Settings Console access as Admin-Full. Named Admin-Staff users can use Full Admin and review archived applicants but cannot restore and cannot open the Settings Console. Limited and Records cannot archive or restore. Seed test applicants stay active. CSV import does not import records as archived or deleted.
 
 ## Importing records from CSV
 
@@ -33,7 +33,7 @@ first; unchecked, rows are added and rows whose Control ID already exists are sk
 Date of Birth and Social Security Number columns are always excluded and never
 stored (DEC-012). Raw MasterSheet "State / Driver's License" headers stay excluded.
 A Driver Lic Num column is accepted only when the value matches two letters plus
-9 digits with no hyphens (example: NM123456789). Every import is recorded in the
+up to 15 digits with no hyphens (example: NM123456789012345). Every import is recorded in the
 change log.
 
 The import panel is currently commented out in `index.html` at owner direction (it is a
@@ -47,8 +47,8 @@ reloading restores the seed.
 Notes remain editable on applicant records but are hidden from list tables.
 Applicant list tables are grouped by Vendor (default grouping).
 The Full Admin table shows Actions plus Name, Driver Lic Num, Clearance Type,
-Access Type, III - Status, CJIS Security Role, NCIC Certification, Passport,
-Fingerprint Outcome, and Requestor. Remaining fields are edited in the slide-in
+Tour/Orientation, Access Type, III - Status, CJIS Security Role, NCIC Certification, Passport,
+Fingerprint Outcome, Department, Position/Role, and Requestor. Remaining fields are edited in the slide-in
 record drawer. Control ID is hidden from the form and all lists (retained in
 storage). Source stays off the admin list.
 Next III Inquiry Due (5 yrs) is a calculated, read-only date equal to Date of
@@ -57,7 +57,7 @@ is on or before today.
 
 These access codes are local prototype controls. For production use, replace them with server-side authentication, authorization, and audit logging (recorded direction: City SSO / Entra ID with server-side role-based access, decision DEC-015).
 
-Vendor uses suggestions from existing records. Search checks name, Driver Lic Num, vendor, and Applicant Email Address.
+Vendor uses suggestions from existing records and is optional. Department is a closed city-code list (AV-Aviation through TR-Transit). Position/Role uses suggestions from existing records. Search checks name, Driver Lic Num, vendor, department, position/role, requestor, and Applicant Email Address.
 Applicant document data remains in the data model, but the Applicant Documents field is hidden in the UI.
 Access Type supports multiple selections.
 
@@ -65,14 +65,18 @@ Access Type supports multiple selections.
 
 - Name (Last, First, MI, Suffix)
 - Control ID (unique secondary key; hidden from the UI; retained in storage)
-- Driver Lic Num (optional; two-letter state prefix + 9 digits, 11-character input limit, no hyphens or spaces; example: NM123456789; stored uppercase)
+- Driver Lic Num (required on create; two-letter state prefix + up to 15 digits, 17-character input limit, no hyphens or spaces; example: NM123456789012345; stored uppercase)
 - Source (read-only in the UI)
-- Vendor
+- Vendor (optional)
+- Department (closed city-code list: AV-Aviation, AW-Animal Welfare, CA-Chief Administrative Office, CC-Office of the City Clerk, CL-Council Services, CM-Community Safety Department, CP-Civilian Police OS Dept, CS-Cultural Services, ED-Economic Development, EH-Environmental Health, FA-Finance Admin Svc, FC-Youth and Family Svcs Dept, FD-Fire, GS-General Services Department, HH-Health,Housing,Hmlsns Dept, HR-Human Resources, IA-Internal Audit, IG-Office of Inspector GenDept, LG-Legal, MA-Mayor's Office Department, MD-Municipal Development, PD-Police, PL-Planning Department, PR-Parks and Recreation, SA-Senior Affairs, SW-Solid Waste, TI-Technology and Innovation, TR-Transit)
+- Position/Role (optional; suggestions from existing records)
 - Requestor
 - Date Information Provided
 - Date of III Completion (entered as MM/DD/YYYY; stored as ISO YYYY-MM-DD)
 - III - Status
-- Clearance Type
+- Clearance Type (Full Clearance, One Time Visit, InProgress, No Access Given)
+- Applicant screen status Active when today is on or before both Security and Awareness Cert and NCIC Date of Cert Expiration; InActive when either date is missing or already past
+- Tour/Orientation (Y/N checkbox)
 - Access Type
 - Passport (Y/N checkbox; yes/no flag only)
 - CJIS Security and Awareness Role
