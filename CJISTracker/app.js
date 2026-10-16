@@ -63,16 +63,18 @@ const ACCESS_LABELS = {
   admin: "Admin-Full",
 };
 
-const DRIVERS_LICENSE_MAX_DIGITS = 15;
+const DRIVERS_LICENSE_MAX_BODY_LENGTH = 15;
 const DRIVERS_LICENSE_MAX_LENGTH = 17;
-const DRIVERS_LICENSE_PATTERN = /^[A-Za-z]{2}\d{1,15}$/;
+const DRIVERS_LICENSE_PATTERN = /^[A-Za-z]{2}[A-Za-z0-9]{1,15}$/;
 const DRIVERS_LICENSE_INVALID_MESSAGE =
-  "Driver Lic Num must be a two-letter state prefix and up to 15 digits with no hyphens or spaces (example: NM123456789012345).";
+  "Driver Lic Num must be a two-letter state prefix and up to 15 letters or numbers, with no special characters (example: NMA23456H8X0H23H5).";
 const CREATE_REQUIRED_FIELDS = [
-  { field: "name", label: "Name (Last, First, MI, Suffix)" },
+  { field: "lastName", label: "Lastname" },
+  { field: "firstName", label: "Firstname" },
   { field: "driversLicense", label: "Driver Lic Num" },
   { field: "requestor", label: "Requestor" },
 ];
+const NAME_SUFFIX_VALUES = new Set(["JR", "SR", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "ESQ", "PHD", "MD", "DDS"]);
 const DEFAULT_DEPARTMENT_OPTIONS = [
   "AV-Aviation",
   "AW-Animal Welfare",
@@ -111,7 +113,7 @@ function sanitizeDriversLicenseInput(value) {
     if (result.length >= DRIVERS_LICENSE_MAX_LENGTH) break;
     if (result.length < 2) {
       if (/[A-Z]/.test(ch)) result += ch;
-    } else if (/\d/.test(ch) && result.length < 2 + DRIVERS_LICENSE_MAX_DIGITS) {
+    } else if (/[A-Z0-9]/.test(ch) && result.length < 2 + DRIVERS_LICENSE_MAX_BODY_LENGTH) {
       result += ch;
     }
   }
@@ -149,7 +151,10 @@ function isValidPhoneNumber(value) {
 }
 
 const UPPERCASE_APPLICANT_TEXT_FIELDS = new Set([
-  "name",
+  "lastName",
+  "firstName",
+  "middleInitial",
+  "suffix",
   "controlNumber",
   "vendor",
   "requestor",
@@ -378,7 +383,7 @@ function syncCreateRequiredAttributes() {
   CREATE_REQUIRED_FIELDS.forEach(({ field }) => {
     const control = document.querySelector(`#${field}`);
     if (!control) return;
-    if (field === "name") {
+    if (field === "lastName" || field === "firstName") {
       control.required = true;
       return;
     }
@@ -482,7 +487,7 @@ function startNewApplicantFromDuplicate(sourceId) {
   const source = records.find((record) => record.id === sourceId);
   if (!source || !canAccessView("admin")) return;
 
-  const copiedName = String(source.name || "");
+  const copiedNameParts = resolveApplicantNameParts(source);
   const copiedDl = normalizeDriversLicense(source.driversLicense);
   const copiedPhone = formatPhoneNumber(source.phoneNumber);
   const copiedEmail = String(source.emailAddress || "");
@@ -499,7 +504,10 @@ function startNewApplicantFromDuplicate(sourceId) {
   renderDocumentList();
   document.querySelector("#recordId").value = "";
   acknowledgedDuplicateDriversLicense = copiedDl;
-  setFormFieldValue("name", copiedName);
+  setFormFieldValue("lastName", copiedNameParts.lastName);
+  setFormFieldValue("firstName", copiedNameParts.firstName);
+  setFormFieldValue("middleInitial", copiedNameParts.middleInitial);
+  setFormFieldValue("suffix", copiedNameParts.suffix);
   setFormFieldValue("driversLicense", copiedDl);
   setFormFieldValue("phoneNumber", copiedPhone);
   setFormFieldValue("emailAddress", copiedEmail);
@@ -520,6 +528,10 @@ function startNewApplicantFromDuplicate(sourceId) {
 }
 
 const fields = [
+  "lastName",
+  "firstName",
+  "middleInitial",
+  "suffix",
   "name",
   "controlNumber",
   "driversLicense",
@@ -589,10 +601,14 @@ const dateSortFields = new Set([
   "dateOfSiteVisitOnly",
   "queriedEveryFiveYears",
 ]);
-const formFields = fields.filter((field) => field !== "documents");
+const formFields = fields.filter((field) => field !== "documents" && field !== "name");
 
 const labels = {
-  name: "Name (Last, First, MI, Suffix)",
+  lastName: "Lastname",
+  firstName: "Firstname",
+  middleInitial: "Middle Initial",
+  suffix: "Suffix",
+  name: "Name",
   controlNumber: "Control ID",
   driversLicense: "Driver Lic Num",
   source: "Source",
@@ -854,6 +870,14 @@ UPPERCASE_APPLICANT_TEXT_FIELDS.forEach((field) => {
   if (!control) return;
   control.addEventListener("input", persistUppercaseApplicantTextInput);
 });
+const middleInitialInput = document.querySelector("#middleInitial");
+if (middleInitialInput) {
+  middleInitialInput.addEventListener("input", () => {
+    if (middleInitialInput.readOnly || middleInitialInput.disabled) return;
+    const next = normalizeMiddleInitial(middleInitialInput.value);
+    if (middleInitialInput.value !== next) middleInitialInput.value = next;
+  });
+}
 const phoneNumberInput = document.querySelector("#phoneNumber");
 if (phoneNumberInput) {
   const persistPhoneNumberMask = () => {
@@ -985,9 +1009,14 @@ function normalizeRecords(recordSet) {
   const normalized = recordSet.map((record) => {
     const legacyDate = record.completedProcessOrSiteVisit || "";
     const storedIiiCompletion = toStoredIiiCompletionDate(record.dateOfIiiCompletion);
+    const nameParts = resolveApplicantNameParts(record);
     const nextRecord = {
       ...record,
-      name: normalizeApplicantName(record.name),
+      lastName: nameParts.lastName,
+      firstName: nameParts.firstName,
+      middleInitial: nameParts.middleInitial,
+      suffix: nameParts.suffix,
+      name: nameParts.name,
       controlNumber: normalizeApplicantText(record.controlNumber || record.controlId),
       driversLicense: normalizeDriversLicense(record.driversLicense),
       source: normalizeApplicantText(record.source),
@@ -1051,18 +1080,91 @@ function normalizeRecords(recordSet) {
 }
 
 function normalizeApplicantName(value) {
-  const text = String(value || "").trim();
-  if (!text) return "";
-  let normalized = text;
-  if (!text.includes(",")) {
-    const parts = text.split(/\s+/);
-    if (parts.length >= 2) {
-      const lastName = parts.at(-1);
-      const givenNames = parts.slice(0, -1).join(" ");
-      normalized = `${lastName}, ${givenNames}`;
-    }
+  return formatApplicantName(parseApplicantName(value));
+}
+
+function normalizeMiddleInitial(value) {
+  const match = String(value || "").trim().toUpperCase().match(/[A-Z]/);
+  return match ? match[0] : "";
+}
+
+function isNameSuffix(value) {
+  const token = String(value || "")
+    .trim()
+    .toUpperCase()
+    .replace(/\./g, "");
+  return NAME_SUFFIX_VALUES.has(token);
+}
+
+function isMiddleInitialToken(value) {
+  return /^[A-Za-z]\.?$/.test(String(value || "").trim());
+}
+
+function parseGivenNameParts(lastName, rest) {
+  const tokens = String(rest || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  let suffix = "";
+  if (tokens.length && isNameSuffix(tokens[tokens.length - 1])) {
+    suffix = normalizeApplicantText(tokens.pop().replace(/\./g, ""));
   }
-  return normalized.toUpperCase();
+  const firstParts = [];
+  let middleInitial = "";
+  tokens.forEach((token, index) => {
+    if (!middleInitial && index > 0 && isMiddleInitialToken(token)) {
+      middleInitial = normalizeMiddleInitial(token);
+      return;
+    }
+    firstParts.push(token);
+  });
+  return {
+    lastName: normalizeApplicantText(lastName),
+    firstName: normalizeApplicantText(firstParts.join(" ")),
+    middleInitial,
+    suffix,
+  };
+}
+
+function parseApplicantName(value) {
+  const text = String(value || "").trim();
+  if (!text) {
+    return { lastName: "", firstName: "", middleInitial: "", suffix: "" };
+  }
+  if (!text.includes(",")) {
+    const parts = text.split(/\s+/).filter(Boolean);
+    if (parts.length === 1) {
+      return { lastName: normalizeApplicantText(parts[0]), firstName: "", middleInitial: "", suffix: "" };
+    }
+    return parseGivenNameParts(parts.at(-1), parts.slice(0, -1).join(" "));
+  }
+  const comma = text.indexOf(",");
+  return parseGivenNameParts(text.slice(0, comma), text.slice(comma + 1));
+}
+
+function formatApplicantName(parts) {
+  const lastName = normalizeApplicantText(parts?.lastName);
+  const firstName = normalizeApplicantText(parts?.firstName);
+  const middleInitial = normalizeMiddleInitial(parts?.middleInitial);
+  const suffix = normalizeApplicantText(parts?.suffix);
+  const given = [firstName, middleInitial, suffix].filter(Boolean).join(" ");
+  if (lastName && given) return `${lastName}, ${given}`;
+  return lastName || given;
+}
+
+function resolveApplicantNameParts(record) {
+  const parsed = parseApplicantName(record?.name);
+  const lastName = normalizeApplicantText(record?.lastName) || parsed.lastName;
+  const firstName = normalizeApplicantText(record?.firstName) || parsed.firstName;
+  const middleInitial = normalizeMiddleInitial(record?.middleInitial) || parsed.middleInitial;
+  const suffix = normalizeApplicantText(record?.suffix) || parsed.suffix;
+  return {
+    lastName,
+    firstName,
+    middleInitial,
+    suffix,
+    name: formatApplicantName({ lastName, firstName, middleInitial, suffix }),
+  };
 }
 
 function normalizeOutcome(value) {
@@ -1376,6 +1478,9 @@ function getFormFieldValue(field) {
   if (field === "driversLicense") {
     return normalizeDriversLicense(raw);
   }
+  if (field === "middleInitial") {
+    return normalizeMiddleInitial(raw);
+  }
   if (UPPERCASE_APPLICANT_TEXT_FIELDS.has(field)) {
     return raw.toUpperCase();
   }
@@ -1410,6 +1515,11 @@ function setFormFieldValue(field, value) {
 
   if (field === "driversLicense") {
     document.querySelector("#driversLicense").value = sanitizeDriversLicenseInput(value);
+    return;
+  }
+
+  if (field === "middleInitial") {
+    document.querySelector("#middleInitial").value = normalizeMiddleInitial(value);
     return;
   }
 
@@ -1457,6 +1567,12 @@ function saveApplicant(event) {
   nextRecord.department = normalizeDepartment(nextRecord.department);
   nextRecord.positionRole = normalizeApplicantText(nextRecord.positionRole);
   nextRecord.phoneNumber = normalizePhoneNumber(nextRecord.phoneNumber);
+  const nameParts = resolveApplicantNameParts(nextRecord);
+  nextRecord.lastName = nameParts.lastName;
+  nextRecord.firstName = nameParts.firstName;
+  nextRecord.middleInitial = nameParts.middleInitial;
+  nextRecord.suffix = nameParts.suffix;
+  nextRecord.name = nameParts.name;
   if (!existingRecordId) {
     const missingCreateFields = getMissingCreateRequiredFields(nextRecord);
     if (missingCreateFields.length) {
@@ -1546,7 +1662,7 @@ function openNewApplicant() {
   updateEditorVisibility();
   updateFormMode();
   showMessage(formMessage, "Enter a new applicant record.");
-  document.querySelector("#name").focus();
+  document.querySelector("#lastName")?.focus();
 }
 
 function closeApplicantDrawer(options = {}) {
@@ -1776,7 +1892,7 @@ function loadApplicantForm(id, mode) {
   updateEditorVisibility();
   updateArchiveVisibility();
   showMessage(formMessage, mode === "view" ? "Viewing applicant record in read-only mode." : "Editing applicant record.");
-  const firstField = document.querySelector("#name");
+  const firstField = document.querySelector("#lastName");
   firstField?.focus();
 }
 
@@ -1923,6 +2039,10 @@ function getFilteredRecords(view = currentView) {
   return getActiveRecords().filter((record) => {
     const haystack = [
       record.name,
+      record.lastName,
+      record.firstName,
+      record.middleInitial,
+      record.suffix,
       record.controlNumber,
       record.driversLicense,
       record.vendor,
@@ -2081,6 +2201,10 @@ function getFilteredArchivedRecords() {
     if (!query) return true;
     const haystack = [
       record.name,
+      record.lastName,
+      record.firstName,
+      record.middleInitial,
+      record.suffix,
       record.controlNumber,
       record.driversLicense,
       record.vendor,
@@ -2931,7 +3055,7 @@ function logInquiryDueMigration(changedCount) {
 // Maps spreadsheet columns to tracker fields per docs/planning/import-crosswalk-mastersheet.md.
 // DOB and SSN columns stay excluded (DEC-012). Raw MasterSheet "State / Driver's
 // License" headers stay blocked. A Driver Lic Num header is accepted only when
-// the value matches ST + up to 15 digits (DEC-020). Never commit spreadsheet PII.
+// the value matches ST + up to 15 letters or numbers (DEC-020). Never commit spreadsheet PII.
 
 const IMPORT_BLOCKED_HEADER_PATTERNS = [/birth/i, /social\s*security/i, /\bssn\b/i, /licen[cs]e/i];
 const IMPORT_DRIVERS_LICENSE_HEADER = /^(driver\s*lic(\.|ense)?\s*num(ber)?|drivers?License(Number)?)$/i;
@@ -2939,6 +3063,10 @@ const IMPORT_DRIVERS_LICENSE_HEADER = /^(driver\s*lic(\.|ense)?\s*num(ber)?|driv
 const IMPORT_HEADER_MAP = [
   { match: /^source$/i, field: "source" },
   { match: /^control[\s_-]*id$/i, field: "controlNumber" },
+  { match: /^last\s*name$/i, field: "lastName" },
+  { match: /^first\s*name$/i, field: "firstName" },
+  { match: /^middle(\s*init(ial)?)?$/i, field: "middleInitial" },
+  { match: /^suffix$/i, field: "suffix" },
   { match: /^name/i, field: "name" },
   { match: /^vendor$/i, field: "vendor" },
   { match: /^department$/i, field: "department" },
@@ -3069,13 +3197,16 @@ function importCsvText(csvText, replaceAll) {
       } else if (column.type === "driversLicense") {
         if (!raw) {
           record.driversLicense = "";
-        } else if (DRIVERS_LICENSE_PATTERN.test(raw)) {
-          record.driversLicense = raw.toUpperCase();
         } else {
-          errors.push(
-            `Row ${rowIndex + 2}: Driver Lic Num must be a two-letter state prefix and up to 15 digits with no hyphens or spaces (example: NM123456789012345); value omitted.`,
-          );
-          record.driversLicense = "";
+          const normalizedLicense = normalizeDriversLicense(raw);
+          if (isValidDriversLicense(normalizedLicense) && normalizedLicense) {
+            record.driversLicense = normalizedLicense;
+          } else {
+            errors.push(
+              `Row ${rowIndex + 2}: Driver Lic Num must be a two-letter state prefix and up to 15 letters or numbers, with no special characters (example: NMA23456H8X0H23H5); value omitted.`,
+            );
+            record.driversLicense = "";
+          }
         }
       } else if (column.type === "phoneNumber") {
         if (!raw) {
@@ -3096,8 +3227,14 @@ function importCsvText(csvText, replaceAll) {
     record.archived = false;
     record.archivedAt = "";
     record.archivedBy = "";
+    const importedName = resolveApplicantNameParts(record);
+    record.lastName = importedName.lastName;
+    record.firstName = importedName.firstName;
+    record.middleInitial = importedName.middleInitial;
+    record.suffix = importedName.suffix;
+    record.name = importedName.name;
 
-    if (!String(record.name || "").trim()) {
+    if (!record.lastName && !record.firstName) {
       errors.push(`Row ${rowIndex + 2}: missing applicant name; row skipped.`);
       return;
     }

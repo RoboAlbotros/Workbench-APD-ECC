@@ -17,6 +17,10 @@ function getTestApplicantSeed() {
 const TEST_APPLICANT_RECORDS = [
   {
     id: "seed-cjis-eccid-001",
+    lastName: "Smith",
+    firstName: "John",
+    middleInitial: "",
+    suffix: "",
     name: "Smith, John",
     controlNumber: "CJIS-ECCID-001",
     vendor: "APD SWORN OFFICER",
@@ -47,6 +51,10 @@ const TEST_APPLICANT_RECORDS = [
   },
   {
     id: "seed-cjis-eccid-002",
+    lastName: "Smith",
+    firstName: "Max",
+    middleInitial: "",
+    suffix: "",
     name: "Smith, Max",
     controlNumber: "CJIS-ECCID-002",
     vendor: "Verizon",
@@ -77,6 +85,10 @@ const TEST_APPLICANT_RECORDS = [
   },
   {
     id: "seed-cjis-eccid-003",
+    lastName: "Smith",
+    firstName: "Sue",
+    middleInitial: "",
+    suffix: "",
     name: "Smith, Sue",
     controlNumber: "CJIS-ECCID-003",
     vendor: "SWORN",
@@ -107,6 +119,10 @@ const TEST_APPLICANT_RECORDS = [
   },
   {
     id: "seed-cjis-eccid-004",
+    lastName: "TBD",
+    firstName: "",
+    middleInitial: "",
+    suffix: "",
     name: "TBD",
     controlNumber: "CJIS-ECCID-004",
     vendor: "",

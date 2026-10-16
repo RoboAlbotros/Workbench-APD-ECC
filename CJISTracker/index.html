@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>CJIS Applicant Tracker</title>
-    <link rel="stylesheet" href="styles.css?v=sprint-006-limited-otv" />
+    <link rel="stylesheet" href="styles.css?v=sprint-006-dl-alnum" />
   </head>
   <body class="signed-out">
     <header class="app-header" aria-label="Application header">
@@ -185,8 +185,8 @@
                 Columns are mapped by header name per the import crosswalk. Date of Birth
                 and Social Security Number columns are always excluded (DEC-012). Raw
                 MasterSheet State / Driver's License headers stay excluded. A Driver Lic
-                Num column is accepted only when the value is two letters plus up to 15 digits
-                with no hyphens (example: NM123456789012345).
+                Num column is accepted only when the value is two letters plus up to 15
+                letters or numbers, with no special characters (example: NMA23456H8X0H23H5).
               </p>
             </form>
           </section>
@@ -503,8 +503,20 @@
         <fieldset class="form-section">
           <legend>Identity</legend>
           <label>
-            Name (Last, First, MI, Suffix)*
-            <input id="name" type="text" autocomplete="name" placeholder="Last, First M., Suffix" required />
+            Lastname*
+            <input id="lastName" type="text" autocomplete="family-name" required />
+          </label>
+          <label>
+            Firstname*
+            <input id="firstName" type="text" autocomplete="given-name" required />
+          </label>
+          <label>
+            Middle Initial
+            <input id="middleInitial" type="text" autocomplete="additional-name" maxlength="1" />
+          </label>
+          <label>
+            Suffix
+            <input id="suffix" type="text" autocomplete="honorific-suffix" maxlength="20" />
           </label>
           <label class="hidden">
             Control ID
@@ -516,10 +528,10 @@
               id="driversLicense"
               type="text"
               autocomplete="off"
-              placeholder="NM123456789012345"
+              placeholder="NMA23456H8X0H23H5"
               maxlength="17"
-              pattern="[A-Za-z]{2}[0-9]{1,15}"
-              title="Two-letter state prefix and up to 15 digits, no hyphens or spaces (example: NM123456789012345)"
+              pattern="[A-Za-z]{2}[A-Za-z0-9]{1,15}"
+              title="Two-letter state prefix and up to 15 letters or numbers, no special characters (example: NMA23456H8X0H23H5)"
             />
           </label>
           <label class="checkbox-flag field-passport">
@@ -718,8 +730,8 @@
       </section>
     </aside>
 
-    <script src="test-applicants.js?v=sprint-006-limited-otv"></script>
-    <script src="app.js?v=sprint-006-limited-otv"></script>
+    <script src="test-applicants.js?v=sprint-006-dl-alnum"></script>
+    <script src="app.js?v=sprint-006-dl-alnum"></script>
     <!-- tracker-list-overrides.js retired in SPRINT-005; behaviors folded into app.js and styles.css. -->
   </body>
 </html>

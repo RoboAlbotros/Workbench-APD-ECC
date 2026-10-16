@@ -4,7 +4,7 @@ Open `index.html` in a browser to use the CJIS Applicant Tracker.
 
 ## Views
 
-- Limited View is read-only, hides sensitive personal fields, and filters Clearance Type to One Time Visit.
+- Limited View is read-only, hides sensitive personal fields, and filters Clearance Type to One Time Visit. Applicant identity uses separate Lastname, Firstname, Middle Initial, and Suffix fields. Listings still show the composed name (Lastname, Firstname MI Suffix).
 - Records View uses the Limited View table style and allows applicant view/edit actions without archive access.
 - Full Admin View requires the admin access code and can create, view, edit, archive, restore, and filter applicant records. The Export CSV control is hidden in the UI (owner 2026-10-09); `downloadCsv` and export logic remain in `app.js` for later use.
 
@@ -33,7 +33,7 @@ first; unchecked, rows are added and rows whose Control ID already exists are sk
 Date of Birth and Social Security Number columns are always excluded and never
 stored (DEC-012). Raw MasterSheet "State / Driver's License" headers stay excluded.
 A Driver Lic Num column is accepted only when the value matches two letters plus
-up to 15 digits with no hyphens (example: NM123456789012345). Every import is recorded in the
+up to 15 letters or numbers with no special characters (example: NMA23456H8X0H23H5). Every import is recorded in the
 change log.
 
 The import panel is currently commented out in `index.html` at owner direction (it is a
@@ -60,7 +60,7 @@ is on or before today.
 
 These access codes are local prototype controls. For production use, replace them with server-side authentication, authorization, and audit logging (recorded direction: City SSO / Entra ID with server-side role-based access, decision DEC-015).
 
-Vendor uses suggestions from existing records and is optional. Department is a closed city-code list (AV-Aviation through TR-Transit). Position/Role uses suggestions from existing records. Search checks name, Driver Lic Num, vendor, department, position/role, requestor, and Applicant Email Address.
+Vendor uses suggestions from existing records and is optional. Department is a closed city-code list (AV-Aviation through TR-Transit). Position/Role uses suggestions from existing records. Search checks Lastname, Firstname, Middle Initial, Suffix, composed name, Driver Lic Num, vendor, department, position/role, requestor, and Applicant Email Address.
 Applicant document data remains in the data model, but the Applicant Documents field is hidden in the UI.
 Access Type supports multiple selections. VPN, Non VPN, Security Groups, and
 System/Building are grayed out and read-only on the applicant form in every view.
@@ -69,7 +69,7 @@ System/Building are grayed out and read-only on the applicant form in every view
 
 - Name (Last, First, MI, Suffix)
 - Control ID (unique secondary key; hidden from the UI; retained in storage)
-- Driver Lic Num (required on create; two-letter state prefix + up to 15 digits, 17-character input limit, no hyphens or spaces; example: NM123456789012345; stored uppercase)
+- Driver Lic Num (required on create; two-letter state prefix + up to 15 letters or numbers, 17-character input limit, no special characters; example: NMA23456H8X0H23H5; stored uppercase)
 - Source (read-only in the UI)
 - Vendor (optional)
 - Department (closed city-code list: AV-Aviation, AW-Animal Welfare, CA-Chief Administrative Office, CC-Office of the City Clerk, CL-Council Services, CM-Community Safety Department, CP-Civilian Police OS Dept, CS-Cultural Services, ED-Economic Development, EH-Environmental Health, FA-Finance Admin Svc, FC-Youth and Family Svcs Dept, FD-Fire, GS-General Services Department, HH-Health,Housing,Hmlsns Dept, HR-Human Resources, IA-Internal Audit, IG-Office of Inspector GenDept, LG-Legal, MA-Mayor's Office Department, MD-Municipal Development, PD-Police, PL-Planning Department, PR-Parks and Recreation, SA-Senior Affairs, SW-Solid Waste, TI-Technology and Innovation, TR-Transit)

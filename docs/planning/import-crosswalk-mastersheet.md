@@ -19,12 +19,12 @@ outcomes) that the tracker normalizes on save/load.
 | --- | --- | --- | --- | --- |
 | 1 | Source | `source` | Import | **Resolved by DEC-018 (2026-10-09):** dedicated read-only field added to the tracker; populated at import, not user-editable. SQL column `SourceName`. |
 | 2 | Control_ID | `controlNumber` | Import | **Resolved by DEC-018 (2026-10-09):** dedicated field added; manually entered per applicant, enforced unique (case-insensitive) as a secondary key. Matches existing SQL `ControlNumber` (unique). |
-| 3 | Name (Last, First, MI, Suffix) | `name` | Import | Already "Last, First" format; `normalizeApplicantName` handles any stragglers. |
+| 3 | Name (Last, First, MI, Suffix) | `lastName`, `firstName`, `middleInitial`, `suffix`, composed `name` | Import | Parsed into separate identity fields. Composed `name` stays LAST, FIRST MI SUFFIX for listings, search, and sort. Dedicated Lastname/Firstname/Middle Initial/Suffix headers are also accepted. |
 | 4 | Vendor | `vendor` | Import | Direct copy. Drives vendor grouping in list views. |
 | 5 | III Completion | `dateOfIiiCompletion` | Import | Convert `M/D/YYYY` or ISO `YYYY-MM-DD` → stored ISO `YYYY-MM-DD` (form displays MM/DD/YYYY). |
 | 6 | Date of Birth | — | **EXCLUDE — DEC-012** | Sensitive PII. Must not be imported; tracker deletes this field on load if present. |
 | 7 | Social Security Number | — | **EXCLUDE — DEC-012** | Sensitive PII. Must not be imported; tracker deletes this field on load if present. |
-| 8 | State / Driver's License Number | — | **EXCLUDE raw MasterSheet header** | Raw MasterSheet column stays blocked. DEC-020 added a separate in-scope `driversLicense` (Driver Lic Num) accepted only as ST + 9 digits with no hyphens (example: NM123456789). Do not auto-ingest this spreadsheet column. Never commit spreadsheet PII. |
+| 8 | State / Driver's License Number | — | **EXCLUDE raw MasterSheet header** | Raw MasterSheet column stays blocked. DEC-020 added a separate in-scope `driversLicense` (Driver Lic Num) accepted as ST + up to 15 letters or numbers with no special characters (example: NMA23456H8X0H23H5). Do not auto-ingest this spreadsheet column. Never commit spreadsheet PII. |
 | 9 | III - Status | `iiiStatus` | Import | Normalized: "clear" → Clear; "felony"/"review needed" → Felony; anything else → Misd/Clear. Verify source vocabulary before import. |
 | 10 | Type of Clearance | `clearanceType` | Import | Normalized case-insensitively to Full Clearance / One Time Visit / InProgress / No Access Given; **unrecognized values become blank** — pre-validate source values. |
 | 11 | Fingerprints Completed | `fingerprintsNotifiedCompleted` | Import | Convert `M/D/YYYY` → ISO `YYYY-MM-DD` (invalid dates are blanked by the tracker). |
@@ -77,7 +77,7 @@ outcomes) that the tracker normalizes on save/load.
   The tracker's `normalizeRecords` still deletes those fields as a backstop.
 - Column 8 (raw MasterSheet "State / Driver's License Number") MUST NOT be
   auto-ingested. DEC-020 allows a separate Driver Lic Num value only when it
-  already matches ST + 9 digits. Never commit spreadsheet PII.
+  already matches ST + up to 15 letters or numbers. Never commit spreadsheet PII.
 - The source spreadsheet contains PII and MUST remain outside the repository. No
   spreadsheet rows, values, or extracts may be committed.
 - Import of real applicant data is out of scope until the governance authorities

@@ -27,8 +27,8 @@
   - DEC-012 / DEC-017: no Date of Birth or Social Security Number columns.
     Do not add them.
   - DEC-020 (2026-10-14): DriverLicenseNumber is in-scope (UI: Driver Lic Num).
-    Format: two-letter state prefix + 1 to 15 digits, no hyphens
-    (example: NM123456789012345). Persist blank as NULL. Owner directed this
+    Format: two-letter state prefix + 1 to 15 letters or numbers, no special
+    characters (example: NMA23456H8X0H23H5). Persist blank as NULL. Owner directed this
     field in; Privacy Framework / PIA revisit remains TBD for the authority
     (DEC-014/016).
   - DEC-018 / DEC-020: ControlNumber remains the unique secondary key. It is
@@ -55,7 +55,11 @@
 
   APP.JS FIELD MAP (current model → column)
   ----------------------------------------
-  name                         → Applicants.ApplicantName
+  lastName                     → Applicants.LastName
+  firstName                    → Applicants.FirstName
+  middleInitial                → Applicants.MiddleInitial
+  suffix                       → Applicants.Suffix
+  name                         → Applicants.ApplicantName (composed LASTNAME, FIRSTNAME M SUFFIX)
   controlNumber                → Applicants.ControlNumber (hidden secondary key)
   driversLicense               → Applicants.DriverLicenseNumber
   source                       → Applicants.SourceName
@@ -210,7 +214,7 @@ BEGIN
     /* DEC-018 secondary key. Unique when present; persist blanks as NULL.
        DEC-020: hidden from the UI; unused for display/edit. */
     ControlNumber NVARCHAR(40) NULL,
-    /* DEC-020: format ST + 1 to 15 digits (example: NM123456789012345). Blank is NULL. */
+    /* DEC-020: format ST + 1 to 15 letters or numbers (example: NMA23456H8X0H23H5). Blank is NULL. */
     DriverLicenseNumber NVARCHAR(17) NULL,
     /* DEC-018 Source; read-only in the UI. */
     SourceName NVARCHAR(160) NULL,
@@ -221,6 +225,10 @@ BEGIN
     IiiStatusId INT NULL,
     FingerprintOutcomeId INT NULL,
     CjisSecurityAwarenessRoleId INT NULL,
+    LastName NVARCHAR(80) NOT NULL,
+    FirstName NVARCHAR(80) NULL,
+    MiddleInitial NCHAR(1) NULL,
+    Suffix NVARCHAR(20) NULL,
     ApplicantName NVARCHAR(200) NOT NULL,
     Requestor NVARCHAR(160) NULL,
     DateInformationProvided DATE NULL,
@@ -361,7 +369,7 @@ BEGIN
 END;
 ELSE IF COL_LENGTH(N'dbo.Applicants', N'DriverLicenseNumber') < 34
 BEGIN
-  /* Widen existing ST+9 column to ST + up to 15 digits (NVARCHAR(17)). */
+  /* Widen existing ST+9 column to ST + up to 15 letters or numbers (NVARCHAR(17)). */
   IF EXISTS (
     SELECT 1
     FROM sys.check_constraints
@@ -386,7 +394,13 @@ IF EXISTS (
     FROM sys.check_constraints
     WHERE name = N'CK_Applicants_DriverLicenseNumber'
       AND parent_object_id = OBJECT_ID(N'dbo.Applicants')
-      AND definition LIKE N'%LEN(DriverLicenseNumber) = 11%'
+      AND (
+        definition LIKE N'%LEN(DriverLicenseNumber) = 11%'
+        OR (
+          CHARINDEX(N'[^0-9]', definition) > 0
+          AND CHARINDEX(N'[^A-Z0-9]', definition) = 0
+        )
+      )
   )
 BEGIN
   ALTER TABLE dbo.Applicants DROP CONSTRAINT CK_Applicants_DriverLicenseNumber;
@@ -406,7 +420,7 @@ BEGIN
       OR (
         LEN(DriverLicenseNumber) BETWEEN 3 AND 17
         AND LEFT(DriverLicenseNumber, 2) LIKE N'[A-Z][A-Z]'
-        AND SUBSTRING(DriverLicenseNumber, 3, 15) NOT LIKE N'%[^0-9]%'
+        AND SUBSTRING(DriverLicenseNumber, 3, 15) NOT LIKE N'%[^A-Z0-9]%'
       )
     );
 END;
@@ -434,6 +448,30 @@ GO
 IF COL_LENGTH(N'dbo.Applicants', N'PositionRole') IS NULL
 BEGIN
   ALTER TABLE dbo.Applicants ADD PositionRole NVARCHAR(160) NULL;
+END;
+GO
+
+IF COL_LENGTH(N'dbo.Applicants', N'LastName') IS NULL
+BEGIN
+  ALTER TABLE dbo.Applicants ADD LastName NVARCHAR(80) NULL;
+END;
+GO
+
+IF COL_LENGTH(N'dbo.Applicants', N'FirstName') IS NULL
+BEGIN
+  ALTER TABLE dbo.Applicants ADD FirstName NVARCHAR(80) NULL;
+END;
+GO
+
+IF COL_LENGTH(N'dbo.Applicants', N'MiddleInitial') IS NULL
+BEGIN
+  ALTER TABLE dbo.Applicants ADD MiddleInitial NCHAR(1) NULL;
+END;
+GO
+
+IF COL_LENGTH(N'dbo.Applicants', N'Suffix') IS NULL
+BEGIN
+  ALTER TABLE dbo.Applicants ADD Suffix NVARCHAR(20) NULL;
 END;
 GO
 
