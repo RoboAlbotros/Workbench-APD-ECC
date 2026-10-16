@@ -16,7 +16,7 @@ Date of III Completion,dateOfIiiCompletion,Date,Date; display MM/DD/YYYY; stored
 III - Status,iiiStatus,Enum,Clear | Misd/Clear | Felony
 Clearance Type,clearanceType,Enum,Full Clearance | One Time Visit | InProgress | No Access Given
 Tour/Orientation,tourOrientation,Boolean / Enum,Checkbox; Yes | No (Y/N). Optional tour/orientation completed flag.
-Access Type,accessType,"Array<String>",Checkbox group; VPN | Non VPN | Security Groups | Facility Access | Unescorted Access | Building Access | Escorted Access | System Access | System/Building
+Access Type,accessType,"Array<String>",Checkbox group; Physical (readonly; formerly VPN) | Non VPN (readonly) | Facility Access | Unescorted Access | Building Access | Escorted Access | System Access. Security Groups and System/Building are hidden from the applicant form.
 Passport,passport,Boolean / Enum,Checkbox; Yes | No (Y/N). Yes/no flag only — not treated as PII beyond that.
 CJIS Security and Awareness Role,cjisSecurityAwarenessRole,Enum,Basic | General | Privileged | Security
 Fingerprints Completed,fingerprintsNotifiedCompleted,Date,Date

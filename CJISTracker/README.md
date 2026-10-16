@@ -62,8 +62,9 @@ These access codes are local prototype controls. For production use, replace the
 
 Vendor uses suggestions from existing records and is optional. Department is a closed city-code list (AV-Aviation through TR-Transit). Position/Role uses suggestions from existing records. Search checks Lastname, Firstname, Middle Initial, Suffix, composed name, Driver Lic Num, vendor, department, position/role, requestor, and Applicant Email Address.
 Applicant document data remains in the data model, but the Applicant Documents field is hidden in the UI.
-Access Type supports multiple selections. VPN, Non VPN, Security Groups, and
-System/Building are grayed out and read-only on the applicant form in every view.
+Access Type supports multiple selections. Physical and Non VPN are grayed out and
+read-only on the applicant form in every view. Security Groups and System/Building
+are hidden from the applicant form.
 
 ## Tracked fields
 

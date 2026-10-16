@@ -775,8 +775,11 @@ IF NOT EXISTS (SELECT 1 FROM dbo.FingerprintOutcomes WHERE FingerprintOutcomeNam
   INSERT INTO dbo.FingerprintOutcomes (FingerprintOutcomeName) VALUES (N'Needs Follow Up');
 GO
 
-IF NOT EXISTS (SELECT 1 FROM dbo.AccessTypes WHERE AccessTypeName = N'VPN')
-  INSERT INTO dbo.AccessTypes (AccessTypeName) VALUES (N'VPN');
+IF EXISTS (SELECT 1 FROM dbo.AccessTypes WHERE AccessTypeName = N'VPN')
+  AND NOT EXISTS (SELECT 1 FROM dbo.AccessTypes WHERE AccessTypeName = N'Physical')
+  UPDATE dbo.AccessTypes SET AccessTypeName = N'Physical' WHERE AccessTypeName = N'VPN';
+IF NOT EXISTS (SELECT 1 FROM dbo.AccessTypes WHERE AccessTypeName = N'Physical')
+  INSERT INTO dbo.AccessTypes (AccessTypeName) VALUES (N'Physical');
 IF NOT EXISTS (SELECT 1 FROM dbo.AccessTypes WHERE AccessTypeName = N'Non VPN')
   INSERT INTO dbo.AccessTypes (AccessTypeName) VALUES (N'Non VPN');
 IF NOT EXISTS (SELECT 1 FROM dbo.AccessTypes WHERE AccessTypeName = N'Security Groups')

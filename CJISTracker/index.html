@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>CJIS Applicant Tracker</title>
-    <link rel="stylesheet" href="styles.css?v=sprint-006-dl-alnum" />
+    <link rel="stylesheet" href="styles.css?v=sprint-006-access-physical" />
   </head>
   <body class="signed-out">
     <header class="app-header" aria-label="Application header">
@@ -601,15 +601,13 @@
           </label>
           <fieldset id="accessType" class="checkbox-group">
             <legend>Access Type</legend>
-            <label class="access-type-readonly"><input type="checkbox" name="accessTypeValues" value="VPN" disabled /> VPN</label>
+            <label class="access-type-readonly"><input type="checkbox" name="accessTypeValues" value="Physical" disabled /> Physical</label>
             <label class="access-type-readonly"><input type="checkbox" name="accessTypeValues" value="Non VPN" disabled /> Non VPN</label>
-            <label class="access-type-readonly"><input type="checkbox" name="accessTypeValues" value="Security Groups" disabled /> Security Groups</label>
             <label><input type="checkbox" name="accessTypeValues" value="Facility Access" /> Facility Access</label>
             <label><input type="checkbox" name="accessTypeValues" value="Unescorted Access" /> Unescorted Access</label>
             <label><input type="checkbox" name="accessTypeValues" value="Building Access" /> Building Access</label>
             <label><input type="checkbox" name="accessTypeValues" value="Escorted Access" /> Escorted Access</label>
             <label><input type="checkbox" name="accessTypeValues" value="System Access" /> System Access</label>
-            <label class="access-type-readonly"><input type="checkbox" name="accessTypeValues" value="System/Building" disabled /> System/Building</label>
             <label class="field-tourOrientation">
               <input id="tourOrientation" type="checkbox" />
               Tour/Orientation
@@ -730,8 +728,8 @@
       </section>
     </aside>
 
-    <script src="test-applicants.js?v=sprint-006-dl-alnum"></script>
-    <script src="app.js?v=sprint-006-dl-alnum"></script>
+    <script src="test-applicants.js?v=sprint-006-access-physical"></script>
+    <script src="app.js?v=sprint-006-access-physical"></script>
     <!-- tracker-list-overrides.js retired in SPRINT-005; behaviors folded into app.js and styles.css. -->
   </body>
 </html>

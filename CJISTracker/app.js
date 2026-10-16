@@ -173,7 +173,7 @@ function isValidDriversLicense(value) {
 }
 
 const DEFAULT_ACCESS_TYPE_OPTIONS = [
-  "VPN",
+  "Physical",
   "Non VPN",
   "Security Groups",
   "Facility Access",
@@ -185,8 +185,12 @@ const DEFAULT_ACCESS_TYPE_OPTIONS = [
 ];
 
 const READONLY_ACCESS_TYPE_OPTIONS = new Set([
-  "VPN",
+  "Physical",
   "Non VPN",
+  "Security Groups",
+  "System/Building",
+]);
+const HIDDEN_ACCESS_TYPE_OPTIONS = new Set([
   "Security Groups",
   "System/Building",
 ]);
@@ -194,6 +198,16 @@ const LIMITED_VIEW_CLEARANCE_TYPE = "One Time Visit";
 
 function isReadOnlyAccessTypeOption(value) {
   return READONLY_ACCESS_TYPE_OPTIONS.has(String(value || "").trim());
+}
+
+function isHiddenAccessTypeOption(value) {
+  return HIDDEN_ACCESS_TYPE_OPTIONS.has(String(value || "").trim());
+}
+
+function renameAccessTypeToken(value) {
+  const text = String(value || "").trim();
+  if (text.toUpperCase() === "VPN") return "Physical";
+  return text;
 }
 
 function applyAccessTypeOptionState(input) {
@@ -296,6 +310,7 @@ function loadOptionLists() {
         lists[key] = merged.length ? merged : uniqueOptions(DEFAULT_OPTION_LISTS[key]);
       }
     });
+    lists.accessType = uniqueOptions((lists.accessType || []).map(renameAccessTypeToken));
     return lists;
   } catch {
     return lists;
@@ -649,6 +664,7 @@ const tableLabels = {
 };
 
 let optionLists = loadOptionLists();
+saveOptionLists();
 let managedUsers = loadManagedUsers();
 let inquiryDueMigrationCount = 0;
 let iiiCompletionMigrationCount = 0;
@@ -1204,7 +1220,7 @@ function normalizeAccessType(value) {
   const values = Array.isArray(value) ? value : String(value || "").split(",");
   const allowed = new Map(getOptionList("accessType").map((option) => [option.toLowerCase(), option]));
   return values
-    .map((item) => String(item).trim())
+    .map((item) => renameAccessTypeToken(item))
     .filter(Boolean)
     .map((item) => allowed.get(item.toLowerCase()) || item)
     .filter((item, index, list) => list.indexOf(item) === index)
@@ -1459,9 +1475,16 @@ function setView(view) {
 
 function getFormFieldValue(field) {
   if (field === "accessType") {
-    return [...document.querySelectorAll('input[name="accessTypeValues"]:checked')]
-      .map((input) => input.value)
-      .join(", ");
+    const visible = [...document.querySelectorAll('input[name="accessTypeValues"]:checked')].map(
+      (input) => input.value,
+    );
+    const existingId = document.querySelector("#recordId")?.value || "";
+    const existing = existingId ? records.find((record) => record.id === existingId) : null;
+    const hiddenKept = String(existing?.accessType || "")
+      .split(",")
+      .map((item) => renameAccessTypeToken(item))
+      .filter((item) => isHiddenAccessTypeOption(item));
+    return normalizeAccessType([...visible, ...hiddenKept].join(", "));
   }
 
   if (field === "passport" || field === "tourOrientation") {
@@ -1957,6 +1980,7 @@ function renderAccessTypeCheckboxes() {
     if (!label.classList.contains("field-tourOrientation")) label.remove();
   });
   getOptionList("accessType").forEach((option) => {
+    if (isHiddenAccessTypeOption(option)) return;
     const label = document.createElement("label");
     const input = document.createElement("input");
     input.type = "checkbox";
