@@ -64,13 +64,13 @@ const ACCESS_LABELS = {
 };
 
 const DRIVERS_LICENSE_MAX_BODY_LENGTH = 15;
-const DRIVERS_LICENSE_MAX_LENGTH = 17;
-const DRIVERS_LICENSE_PATTERN = /^[A-Za-z]{2}[A-Za-z0-9]{1,15}$/;
+const DRIVERS_LICENSE_MAX_LENGTH = 18;
+const DRIVERS_LICENSE_PATTERN = /^[A-Za-z]{2}\/[A-Za-z0-9]{1,15}$/;
 const DRIVERS_LICENSE_INVALID_MESSAGE =
-  "Driver Lic Num must be a two-letter state prefix and up to 15 letters or numbers, with no special characters (example: NMA23456H8X0H23H5).";
+  "Driver Lic Num must be a two-letter state prefix, a slash, and up to 15 letters or numbers (example: NM/A23456H8X0H23H5).";
 const CREATE_REQUIRED_FIELDS = [
-  { field: "lastName", label: "Lastname" },
-  { field: "firstName", label: "Firstname" },
+  { field: "lastName", label: "Last Name" },
+  { field: "firstName", label: "First Name" },
   { field: "driversLicense", label: "Driver Lic Num" },
   { field: "requestor", label: "Requestor" },
 ];
@@ -108,16 +108,20 @@ const DEFAULT_DEPARTMENT_OPTIONS = [
 
 function sanitizeDriversLicenseInput(value) {
   const chars = String(value || "").toUpperCase();
-  let result = "";
+  let prefix = "";
+  let body = "";
   for (const ch of chars) {
-    if (result.length >= DRIVERS_LICENSE_MAX_LENGTH) break;
-    if (result.length < 2) {
-      if (/[A-Z]/.test(ch)) result += ch;
-    } else if (/[A-Z0-9]/.test(ch) && result.length < 2 + DRIVERS_LICENSE_MAX_BODY_LENGTH) {
-      result += ch;
+    if (prefix.length < 2) {
+      if (/[A-Z]/.test(ch)) prefix += ch;
+      continue;
+    }
+    if (ch === "/") continue;
+    if (/[A-Z0-9]/.test(ch) && body.length < DRIVERS_LICENSE_MAX_BODY_LENGTH) {
+      body += ch;
     }
   }
-  return result;
+  if (prefix.length < 2) return prefix;
+  return `${prefix}/${body}`;
 }
 
 function normalizeDriversLicense(value) {
@@ -619,8 +623,8 @@ const dateSortFields = new Set([
 const formFields = fields.filter((field) => field !== "documents" && field !== "name");
 
 const labels = {
-  lastName: "Lastname",
-  firstName: "Firstname",
+  lastName: "Last Name",
+  firstName: "First Name",
   middleInitial: "Middle Initial",
   suffix: "Suffix",
   name: "Name",
@@ -1527,7 +1531,7 @@ function setFormFieldValue(field, value) {
   }
 
   if (field === "dateOfIiiCompletion") {
-    document.querySelector(`#${field}`).value = toMmDdYyyy(parseIiiCompletionDate(value));
+    document.querySelector(`#${field}`).value = toIsoDate(parseIiiCompletionDate(value));
     return;
   }
 
@@ -2976,7 +2980,7 @@ function isQueryDue(record) {
   return due <= today;
 }
 
-// Date of III Completion: display MM/DD/YYYY, store ISO YYYY-MM-DD.
+// Date of III Completion: native date control (calendar), store ISO YYYY-MM-DD.
 // Legacy localStorage slash dates were DD/MM/YYYY; a one-time flag
 // (STORAGE_KEYS.iiiCompletionIsoMigrated) interprets those as DD/MM once, then
 // rewrites them to ISO so 10/02/2026 (10 Feb) becomes 2026-02-10, not 2 Oct.
@@ -3079,7 +3083,7 @@ function logInquiryDueMigration(changedCount) {
 // Maps spreadsheet columns to tracker fields per docs/planning/import-crosswalk-mastersheet.md.
 // DOB and SSN columns stay excluded (DEC-012). Raw MasterSheet "State / Driver's
 // License" headers stay blocked. A Driver Lic Num header is accepted only when
-// the value matches ST + up to 15 letters or numbers (DEC-020). Never commit spreadsheet PII.
+// the value matches ST + / + up to 15 letters or numbers (DEC-020). Never commit spreadsheet PII.
 
 const IMPORT_BLOCKED_HEADER_PATTERNS = [/birth/i, /social\s*security/i, /\bssn\b/i, /licen[cs]e/i];
 const IMPORT_DRIVERS_LICENSE_HEADER = /^(driver\s*lic(\.|ense)?\s*num(ber)?|drivers?License(Number)?)$/i;
@@ -3173,11 +3177,6 @@ function toIsoDate(parts) {
   return `${parts.year}-${String(parts.month).padStart(2, "0")}-${String(parts.day).padStart(2, "0")}`;
 }
 
-function toMmDdYyyy(parts) {
-  if (!parts) return "";
-  return `${String(parts.month).padStart(2, "0")}/${String(parts.day).padStart(2, "0")}/${parts.year}`;
-}
-
 function importCsvText(csvText, replaceAll) {
   if (!currentUser || currentUser.role !== "admin") {
     return { ok: false, message: "Full Admin access is required to import records." };
@@ -3227,7 +3226,7 @@ function importCsvText(csvText, replaceAll) {
             record.driversLicense = normalizedLicense;
           } else {
             errors.push(
-              `Row ${rowIndex + 2}: Driver Lic Num must be a two-letter state prefix and up to 15 letters or numbers, with no special characters (example: NMA23456H8X0H23H5); value omitted.`,
+              `Row ${rowIndex + 2}: Driver Lic Num must be a two-letter state prefix, a slash, and up to 15 letters or numbers (example: NM/A23456H8X0H23H5); value omitted.`,
             );
             record.driversLicense = "";
           }
@@ -3347,9 +3346,6 @@ function downloadCsv() {
 }
 
 function exportFieldValue(field, value) {
-  if (field === "dateOfIiiCompletion") {
-    return toMmDdYyyy(parseIiiCompletionDate(value));
-  }
   return value || "";
 }
 

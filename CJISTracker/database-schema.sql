@@ -27,8 +27,8 @@
   - DEC-012 / DEC-017: no Date of Birth or Social Security Number columns.
     Do not add them.
   - DEC-020 (2026-10-14): DriverLicenseNumber is in-scope (UI: Driver Lic Num).
-    Format: two-letter state prefix + 1 to 15 letters or numbers, no special
-    characters (example: NMA23456H8X0H23H5). Persist blank as NULL. Owner directed this
+    Format: two-letter state prefix, a slash, and 1 to 15 letters or numbers
+    (example: NM/A23456H8X0H23H5). Persist blank as NULL. Owner directed this
     field in; Privacy Framework / PIA revisit remains TBD for the authority
     (DEC-014/016).
   - DEC-018 / DEC-020: ControlNumber remains the unique secondary key. It is
@@ -214,8 +214,8 @@ BEGIN
     /* DEC-018 secondary key. Unique when present; persist blanks as NULL.
        DEC-020: hidden from the UI; unused for display/edit. */
     ControlNumber NVARCHAR(40) NULL,
-    /* DEC-020: format ST + 1 to 15 letters or numbers (example: NMA23456H8X0H23H5). Blank is NULL. */
-    DriverLicenseNumber NVARCHAR(17) NULL,
+    /* DEC-020: format ST + / + 1 to 15 letters or numbers (example: NM/A23456H8X0H23H5). Blank is NULL. */
+    DriverLicenseNumber NVARCHAR(18) NULL,
     /* DEC-018 Source; read-only in the UI. */
     SourceName NVARCHAR(160) NULL,
     VendorId INT NULL,
@@ -262,9 +262,10 @@ BEGIN
     CONSTRAINT CK_Applicants_DriverLicenseNumber CHECK (
       DriverLicenseNumber IS NULL
       OR (
-        LEN(DriverLicenseNumber) BETWEEN 3 AND 17
+        LEN(DriverLicenseNumber) BETWEEN 4 AND 18
         AND LEFT(DriverLicenseNumber, 2) LIKE N'[A-Z][A-Z]'
-        AND SUBSTRING(DriverLicenseNumber, 3, 15) NOT LIKE N'%[^0-9]%'
+        AND SUBSTRING(DriverLicenseNumber, 3, 1) = N'/'
+        AND SUBSTRING(DriverLicenseNumber, 4, 15) NOT LIKE N'%[^A-Z0-9]%'
       )
     ),
     CONSTRAINT CK_Applicants_Department CHECK (
@@ -365,11 +366,11 @@ GO
 
 IF COL_LENGTH(N'dbo.Applicants', N'DriverLicenseNumber') IS NULL
 BEGIN
-  ALTER TABLE dbo.Applicants ADD DriverLicenseNumber NVARCHAR(17) NULL;
+  ALTER TABLE dbo.Applicants ADD DriverLicenseNumber NVARCHAR(18) NULL;
 END;
-ELSE IF COL_LENGTH(N'dbo.Applicants', N'DriverLicenseNumber') < 34
+ELSE IF COL_LENGTH(N'dbo.Applicants', N'DriverLicenseNumber') < 36
 BEGIN
-  /* Widen existing ST+9 column to ST + up to 15 letters or numbers (NVARCHAR(17)). */
+  /* Widen existing ST+9 / ST+15 column to ST + / + up to 15 letters or numbers (NVARCHAR(18)). */
   IF EXISTS (
     SELECT 1
     FROM sys.check_constraints
@@ -379,7 +380,7 @@ BEGIN
   BEGIN
     ALTER TABLE dbo.Applicants DROP CONSTRAINT CK_Applicants_DriverLicenseNumber;
   END;
-  ALTER TABLE dbo.Applicants ALTER COLUMN DriverLicenseNumber NVARCHAR(17) NULL;
+  ALTER TABLE dbo.Applicants ALTER COLUMN DriverLicenseNumber NVARCHAR(18) NULL;
 END;
 GO
 
@@ -388,20 +389,8 @@ IF EXISTS (
   FROM sys.check_constraints
   WHERE name = N'CK_Applicants_DriverLicenseNumber'
     AND parent_object_id = OBJECT_ID(N'dbo.Applicants')
+    AND CHARINDEX(N'=N''/''', definition) = 0
 )
-  AND EXISTS (
-    SELECT 1
-    FROM sys.check_constraints
-    WHERE name = N'CK_Applicants_DriverLicenseNumber'
-      AND parent_object_id = OBJECT_ID(N'dbo.Applicants')
-      AND (
-        definition LIKE N'%LEN(DriverLicenseNumber) = 11%'
-        OR (
-          CHARINDEX(N'[^0-9]', definition) > 0
-          AND CHARINDEX(N'[^A-Z0-9]', definition) = 0
-        )
-      )
-  )
 BEGIN
   ALTER TABLE dbo.Applicants DROP CONSTRAINT CK_Applicants_DriverLicenseNumber;
 END;
@@ -418,9 +407,10 @@ BEGIN
     CHECK (
       DriverLicenseNumber IS NULL
       OR (
-        LEN(DriverLicenseNumber) BETWEEN 3 AND 17
+        LEN(DriverLicenseNumber) BETWEEN 4 AND 18
         AND LEFT(DriverLicenseNumber, 2) LIKE N'[A-Z][A-Z]'
-        AND SUBSTRING(DriverLicenseNumber, 3, 15) NOT LIKE N'%[^A-Z0-9]%'
+        AND SUBSTRING(DriverLicenseNumber, 3, 1) = N'/'
+        AND SUBSTRING(DriverLicenseNumber, 4, 15) NOT LIKE N'%[^A-Z0-9]%'
       )
     );
 END;

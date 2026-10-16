@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>CJIS Applicant Tracker</title>
-    <link rel="stylesheet" href="styles.css?v=sprint-006-access-physical" />
+    <link rel="stylesheet" href="styles.css?v=sprint-006-iii-calendar" />
   </head>
   <body class="signed-out">
     <header class="app-header" aria-label="Application header">
@@ -185,8 +185,8 @@
                 Columns are mapped by header name per the import crosswalk. Date of Birth
                 and Social Security Number columns are always excluded (DEC-012). Raw
                 MasterSheet State / Driver's License headers stay excluded. A Driver Lic
-                Num column is accepted only when the value is two letters plus up to 15
-                letters or numbers, with no special characters (example: NMA23456H8X0H23H5).
+                Num column is accepted only when the value is two letters, a slash, and
+                up to 15 letters or numbers (example: NM/A23456H8X0H23H5).
               </p>
             </form>
           </section>
@@ -503,11 +503,11 @@
         <fieldset class="form-section">
           <legend>Identity</legend>
           <label>
-            Lastname*
+            Last Name*
             <input id="lastName" type="text" autocomplete="family-name" required />
           </label>
           <label>
-            Firstname*
+            First Name*
             <input id="firstName" type="text" autocomplete="given-name" required />
           </label>
           <label>
@@ -528,10 +528,10 @@
               id="driversLicense"
               type="text"
               autocomplete="off"
-              placeholder="NMA23456H8X0H23H5"
-              maxlength="17"
-              pattern="[A-Za-z]{2}[A-Za-z0-9]{1,15}"
-              title="Two-letter state prefix and up to 15 letters or numbers, no special characters (example: NMA23456H8X0H23H5)"
+              placeholder="NM/A23456H8X0H23H5"
+              maxlength="18"
+              pattern="[A-Za-z]{2}/[A-Za-z0-9]{1,15}"
+              title="Two-letter state prefix, a slash, and up to 15 letters or numbers (example: NM/A23456H8X0H23H5)"
             />
           </label>
           <label class="checkbox-flag field-passport">
@@ -642,7 +642,7 @@
           </label>
           <label>
             Date of III Completion
-            <input id="dateOfIiiCompletion" type="text" inputmode="numeric" placeholder="MM/DD/YYYY" pattern="\d{2}/\d{2}/\d{4}" title="MM/DD/YYYY" />
+            <input id="dateOfIiiCompletion" type="date" />
           </label>
           <label>
             Next III Inquiry Due (5 yrs)
@@ -728,8 +728,8 @@
       </section>
     </aside>
 
-    <script src="test-applicants.js?v=sprint-006-access-physical"></script>
-    <script src="app.js?v=sprint-006-access-physical"></script>
+    <script src="test-applicants.js?v=sprint-006-iii-calendar"></script>
+    <script src="app.js?v=sprint-006-iii-calendar"></script>
     <!-- tracker-list-overrides.js retired in SPRINT-005; behaviors folded into app.js and styles.css. -->
   </body>
 </html>

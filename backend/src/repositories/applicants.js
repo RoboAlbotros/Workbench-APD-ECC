@@ -6,7 +6,7 @@
  * Persist blank Control ID as NULL (not '') so UX_Applicants_ControlNumber
  * allows many unset values and unique non-null Control IDs (DEC-018).
  * Control ID is hidden from the UI (DEC-020); do not drop stored values.
- * Persist DriverLicenseNumber when present (DEC-020); format ST + up to 15 letters or numbers.
+ * Persist DriverLicenseNumber when present (DEC-020); format ST + / + up to 15 letters or numbers.
  * Do not persist Date of Birth or SSN (DEC-012 / DEC-017).
  * SourceName is read-only in the UI (DEC-018).
  *
