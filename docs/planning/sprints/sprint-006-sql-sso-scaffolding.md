@@ -1,6 +1,6 @@
 # Sprint 006 — SQL backend and future Entra SSO scaffolding
 
-Status: ACTIVE — SCAFFOLDING IMPLEMENTED
+Status: COMPLETE — G-TEST accepted as relayed 2026-10-19
 Owner: Brett (technical owner and security/privacy authority)
 Version: 0.1.0
 Approval: Authorized 2026-10-13 — explicit owner-directed work. Sprint approval
@@ -12,7 +12,7 @@ Controlling work ID: SPRINT-006
 ## Work-identity preflight
 
 1. Project: Workbench APD ECC; developmentVersion `0.1.0-dev.1`.
-2. Controlling work: SPRINT-006 (`currentAuthorizedWork`).
+2. Controlling work: SPRINT-006 (was `currentAuthorizedWork`; null as of 2026-10-19 close).
 3. Change class: C3 — new backend surface and future trust-boundary scaffolding
    (SQL schema + reserved server folder + SSO outline). No live API or Entra
    login in this sprint.
@@ -112,7 +112,9 @@ No live listener, no Entra login, no production secrets, no data-scope change.
 
 - Sprint approval: Jessica Solis + Annamarie Zambrano (governance, joint) —
   relayed by project owner; ratification open.
-- G-TEST: Annamarie Zambrano (QA) — pending for SPRINT-006 scaffolding.
+- G-TEST: Annamarie Zambrano (QA) — accepted as relayed 2026-10-19 by
+  project owner Brett (owner statement: "approve gate for next sprint").
+  Ratification by Jessica Solis and Annamarie Zambrano remains open.
 - G-ARCH / G-SEC: remain pending; this sprint does not satisfy them.
 
 ## Definition of done
@@ -128,3 +130,17 @@ No live listener, no Entra login, no production secrets, no data-scope change.
   `app.js`, filtered unique `ControlNumber`, `SourceName`, Entra placeholder
   columns on `AppUsers`, `LastChangedByDisplayName`, seeded roles and lookups.
 - Added `backend/` stubs and SSO outline. No npm install. No secrets committed.
+
+## Completion record (2026-10-19)
+
+- Sprint G-TEST accepted as relayed by project owner Brett on behalf of QA
+  authority Annamarie Zambrano (owner statement: "approve gate for next sprint";
+  `project.json` history 2026-10-19T15:43:00-06:00).
+- Agent review does not satisfy the gate. Ratification by Jessica Solis and
+  Annamarie Zambrano remains open.
+- Scaffolding checks on 2026-10-19: `node backend/src/index.js` printed scaffold
+  health JSON without listening or connecting; `project.json` schema-validated
+  after this close record.
+- `currentAuthorizedWork` returned to null. Next sprint is not authorized until
+  the owner designates it. SPRINT-005 G-TEST remains pending. G-ARCH and G-SEC
+  remain pending. Browser app remains localStorage; no live Entra login.

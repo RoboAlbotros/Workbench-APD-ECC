@@ -19,8 +19,8 @@
   },
   "state": {
     "lifecycleStage": "development",
-    "frameworkPhase": "SPRINT-006",
-    "workStatus": "active",
+    "frameworkPhase": "SPRINT-006 complete",
+    "workStatus": "complete",
     "blockingState": "clear",
     "blockers": [],
     "health": {
@@ -44,10 +44,10 @@
     "summary": {
       "outcome": "TBD — owner decision required.",
       "accountableOwner": "Jessica Solis (product owner)",
-      "nextMilestone": "SPRINT-006 SQL backend and Entra SSO scaffolding implemented as stubs; browser app remains localStorage until a later sprint wires the API",
-      "nextRequiredDecision": "G-TEST for SPRINT-006 scaffolding; G-ARCH and G-SEC remain pending before any live API or Entra login. Privacy Framework / PIA revisit after DEC-020 is TBD for the security/privacy authority.",
+      "nextMilestone": "Owner to designate the next sprint. Browser app remains localStorage until a later authorized sprint wires the SQL API or Entra login.",
+      "nextRequiredDecision": "Designate next sprint (SPRINT-007 candidate, scope TBD). Ratification of relayed SPRINT-006 G-TEST by Jessica Solis and Annamarie Zambrano remains open. SPRINT-005 G-TEST remains pending. G-ARCH and G-SEC remain pending before any live API or Entra login. Privacy Framework / PIA revisit after DEC-020 is TBD for the security/privacy authority.",
       "decisionsRequired": [],
-      "lastUpdated": "2026-10-14T10:43:00-06:00"
+      "lastUpdated": "2026-10-19T15:43:00-06:00"
     }
   },
   "release": {
@@ -96,7 +96,7 @@
     "G-SCOPE": { "state": "satisfied", "owner": "Jessica Solis (product) + Jessica Solis/Annamarie Zambrano (outcome, joint)", "decisionDate": "2026-10-08", "evidence": "docs/product/product-definition.md 0.1.0 APPROVED; confirmation relayed by project owner in agent session (history run 9)", "scope": "project" },
     "G-ARCH": { "state": "pending", "owner": "Technical owner (TBD)", "decisionDate": null, "evidence": null, "scope": "project" },
     "G-SEC": { "state": "pending", "owner": "Security/privacy authority (TBD)", "decisionDate": null, "evidence": null, "scope": "project" },
-    "G-TEST": { "state": "pending", "owner": "Annamarie Zambrano (QA)", "decisionDate": null, "evidence": "SPRINT-004 accepted as relayed (docs/reviews/sprint-004-test-evidence.md plus later owner confirmations: live import, hide import/export, seed, footer, admin 12345). SPRINT-005 G-TEST still pending (docs/reviews/sprint-005-test-evidence.md). Current work SPRINT-006 (SQL/SSO scaffolding) G-TEST pending.", "scope": "per-sprint; current SPRINT-006" },
+    "G-TEST": { "state": "satisfied", "owner": "Annamarie Zambrano (QA)", "decisionDate": "2026-10-19", "evidence": "SPRINT-006 G-TEST accepted as relayed by project owner Brett on behalf of QA authority Annamarie Zambrano (owner statement 2026-10-19: 'approve gate for next sprint'). Scaffolding checks: backend/src/index.js prints scaffold health JSON without listening or connecting; project.json schema-validated. Ratification by Jessica Solis and Annamarie Zambrano remains open. SPRINT-005 G-TEST remains pending (docs/reviews/sprint-005-test-evidence.md). G-ARCH and G-SEC are not satisfied. Next sprint is not authorized until designated.", "scope": "per-sprint; SPRINT-006 complete; no current authorized sprint" },
     "G-CAND": { "state": "pending", "owner": "Release authority (TBD)", "decisionDate": null, "evidence": null, "scope": "release 0.1.0" },
     "G-REL": { "state": "pending", "owner": "Release authority (TBD)", "decisionDate": null, "evidence": null, "scope": "release 0.1.0" }
   },
@@ -149,7 +149,7 @@
     "ssoArchitecture": "docs/architecture/sso-entra-id.md",
     "sprint006": "docs/planning/sprints/sprint-006-sql-sso-scaffolding.md"
   },
-  "currentAuthorizedWork": "SPRINT-006",
+  "currentAuthorizedWork": null,
   "history": [
     { "timestamp": "2026-10-05", "actor": "Codex primary agent (run 1)", "event": "Draft governing documents created in empty directory.", "basis": "User-pasted SGK initialization request" },
     { "timestamp": "2026-10-07", "actor": "Cursor primary agent (run 2)", "event": "SGK location preflight; authoritative package not found; repo initialized and pushed to GitHub.", "basis": "User continuation request" },
@@ -188,14 +188,15 @@
     { "timestamp": "2026-10-14T10:24:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "C3 data-model follow-on under currentAuthorizedWork SPRINT-006: added applicant Passport yes/no checkbox (field key passport, stored Y/N). Full Admin All Applicant Records shows a Passport column; Limited/Records lists unchanged (they do not show similar flags). Access Type column text/badges on the admin list made smaller (CSS on .admin-records-table .field-accessType and .badge only). Included in save, normalize, change log, field dictionary, import header map, and database-schema.sql Applicants.Passport CHAR(1) nullable Y/N. Not treated as PII beyond a yes/no flag. Control ID/Source stay off the admin table. Fingerprint Outcome kept. Archive/delete behavior unchanged.", "basis": "In the full admin all applicant records make Access type font smaller, add a Passport check box to the applicant and display in records list." },
     { "timestamp": "2026-10-14T10:31:00-06:00", "actor": "Security/privacy authority and project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "DEC-020 recorded: Driver License Number is now an in-scope field (UI: Driver Lic Num; field key driversLicense) in the format two-letter state prefix + 9 digits with no hyphens or spaces (example: NM123456789); empty is allowed; stored uppercase. Control ID remains in the data model and import mapping so existing imported values are not destroyed, but is hidden from the applicant form, Limited/Records/Admin lists, and search placeholder. normalizeRecords no longer deletes driversLicense; it still deletes dateOfBirth and socialSecurityNumber. Raw MasterSheet State / Driver's License headers stay blocked; a Driver Lic Num header is accepted only when the value matches the format. Seed test applicants remain without DL values. SQL Applicants.DriverLicenseNumber NVARCHAR(11) added. Privacy Framework / PIA must be revisited per DEC-014/016; that revisit is TBD for the authority and a PIA has not been performed. Passport work retained. currentAuthorizedWork remains SPRINT-006.", "basis": "Owner statement: hide control number field replace with Driver Lic Num that accepts with no hyphens two letter state prefix and 9 digit number (example: NM123456789)" },
     { "timestamp": "2026-10-14T10:43:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "SPRINT-006 C2 behavior: entering a Driver Lic Num that already exists (uppercase compare; current record id ignored when editing; archived records included; empty DL skipped) shows \"applicant is already on file\" and lists matching records (name, DL, phone, email, vendor, clearance). Save is blocked until the user chooses Create new applicant, which opens create mode with a new empty id and copies only Name, Driver Lic Num, Applicant Phone Number, and Applicant Email from the selected match. Multiple matches can be picked from. currentAuthorizedWork remains SPRINT-006.", "basis": "Owner statement: add validation if same driver lic is entered display message applicant is already on file, show duplicate records, option to create new applicant and copy Name, Driver Lic Num, Applicant Phone Number, and Applicant Email" },
-    { "timestamp": "2026-10-14T11:31:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "SPRINT-006 C2: new applicants require Name, Driver Lic Num, Vendor, Requestor, and Source. Create-only validation in saveApplicant; HTML required toggled so incomplete seed/import records remain editable. Source editable on create and copy-new; read-only when editing existing records. Copy-new leaves vendor/requestor/source empty. DL still must be ST+9 digits when present. Field dictionary updated. currentAuthorizedWork remains SPRINT-006.", "basis": "Make the following fields required for new entries. Name (Last, First, MI, Suffix) Driver Lic Num Vendor Requestor Source" }
+    { "timestamp": "2026-10-14T11:31:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "SPRINT-006 C2: new applicants require Name, Driver Lic Num, Vendor, Requestor, and Source. Create-only validation in saveApplicant; HTML required toggled so incomplete seed/import records remain editable. Source editable on create and copy-new; read-only when editing existing records. Copy-new leaves vendor/requestor/source empty. DL still must be ST+9 digits when present. Field dictionary updated. currentAuthorizedWork remains SPRINT-006.", "basis": "Make the following fields required for new entries. Name (Last, First, MI, Suffix) Driver Lic Num Vendor Requestor Source" },
+    { "timestamp": "2026-10-19T15:43:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "SPRINT-006 COMPLETE. G-TEST accepted as relayed by project owner on behalf of QA authority Annamarie Zambrano (owner statement: 'approve gate for next sprint'). currentAuthorizedWork = null; workStatus complete; frameworkPhase SPRINT-006 complete. Agent review does not satisfy the gate; this is a recorded owner-relayed acceptance. Ratification by Jessica Solis and Annamarie Zambrano remains open. SPRINT-005 G-TEST remains pending. G-ARCH and G-SEC remain pending and are not satisfied. No live API or Entra login. Next sprint is not authorized until the owner designates scope (SPRINT-007 candidate, TBD).", "basis": "Owner statement: 'approve gate for next sprint'" }
   ],
   "validation": {
     "validator": "python-jsonschema (Draft202012Validator), Python 3.14.0",
     "validatorVersion": "4.26.0",
     "schemaVersion": "3.0.0",
     "result": "pass",
-    "timestamp": "2026-10-14T11:31:00-06:00",
+    "timestamp": "2026-10-19T15:43:00-06:00",
     "limitations": "Structural conformance only; proves canonical values and shape, not factual accuracy, evidence sufficiency, approvals, gate satisfaction, or policy compliance. Schema is the project-authored profile, not an official SGK schema."
   },
   "extensions": {
