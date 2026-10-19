@@ -1,0 +1,43 @@
+Field Name,Internal Name,Data Type,Max Characters,SQL Type,Required on Create,Seed Action,Format / Allowed Values
+Last Name,lastName,String,80,NVARCHAR(80) NOT NULL,Yes,Import,Uppercase. No HTML maxlength; SQL 80 is the persistence limit.
+First Name,firstName,String,80,NVARCHAR(80) NULL,Yes,Import,Uppercase. Required in the tracker on create; SQL currently allows NULL.
+Middle Initial,middleInitial,String,1,NCHAR(1) NULL,No,Import,One letter A-Z; uppercase.
+Suffix,suffix,String,20,NVARCHAR(20) NULL,No,Import,Uppercase. Known tokens: JR SR II III IV V VI VII VIII IX X ESQ PHD MD DDS. HTML maxlength 20.
+Name,name,String,200,NVARCHAR(200) NOT NULL,No,Derived,Do not seed. Composed as LASTNAME, FIRSTNAME M SUFFIX. Max 200 in SQL.
+Control ID,controlNumber,String,40,NVARCHAR(40) NULL,No,Import optional,Hidden in UI. Unique when present (case-insensitive). Blank stores as NULL in SQL.
+Driver Lic Num,driversLicense,String,18,NVARCHAR(18) NULL,Yes,Import,"Required on create. Format ST/ + 1 to 15 letters or numbers (example NM/A23456H8X0H23H5). Slash inserted if omitted. Uppercase. Empty allowed later on existing records. Duplicate DL warns already on file."
+Source,source,String,160,NVARCHAR(160) NULL,No,Import,Uppercase. Editable on create; read-only on later edit (DEC-018).
+Vendor,vendor,String,200,NVARCHAR(200) via Vendors.VendorName,No,Import,Uppercase. Optional. SQL vendor name 200; Settings dropdown add-option UI caps new values at 80.
+Department,department,Enum,80,NVARCHAR(80) NULL,No,Import,"Closed list only: AV-Aviation; AW-Animal Welfare; CA-Chief Administrative Office; CC-Office of the City Clerk; CL-Council Services; CM-Community Safety Department; CP-Civilian Police OS Dept; CS-Cultural Services; ED-Economic Development; EH-Environmental Health; FA-Finance Admin Svc; FC-Youth and Family Svcs Dept; FD-Fire; GS-General Services Department; HH-Health,Housing,Hmlsns Dept; HR-Human Resources; IA-Internal Audit; IG-Office of Inspector GenDept; LG-Legal; MA-Mayor's Office Department; MD-Municipal Development; PD-Police; PL-Planning Department; PR-Parks and Recreation; SA-Senior Affairs; SW-Solid Waste; TI-Technology and Innovation; TR-Transit. Longest current value is 31 characters; column is 80."
+Position/Role,positionRole,String,160,NVARCHAR(160) NULL,No,Import,Uppercase. Optional. SQL 160; Settings dropdown add-option UI caps new values at 80.
+Requestor,requestor,String,160,NVARCHAR(160) NULL,Yes,Import,Uppercase. Required on create; empty allowed when editing existing records.
+Date Information Provided,dateInformationProvided,Date,10,DATE NULL,No,Import,ISO YYYY-MM-DD (10 characters). Spreadsheet M/D/YYYY accepted by importer.
+Date of III Completion,dateOfIiiCompletion,Date,10,DATE NULL,No,Import,ISO YYYY-MM-DD. Calendar control. Spreadsheet M/D/YYYY accepted.
+III - Status,iiiStatus,Enum,80,lookup IiiStatusName NVARCHAR(80),No,Import,Clear | Misd/Clear | Felony. Importer also maps clear→Clear; felony/review needed→Felony; other→Misd/Clear.
+Clearance Type,clearanceType,Enum,80,lookup ClearanceTypeName NVARCHAR(80),No,Import,Full Clearance | One Time Visit | InProgress | No Access Given. Unrecognized values become blank.
+Tour/Orientation,tourOrientation,Y/N,1,CHAR(1) NULL,No,Import,Y or N. Blank allowed.
+Access Type,accessType,Multi-select,100 per value,ApplicantAccessTypes + AccessTypeName NVARCHAR(100),No,Import optional,"Comma-separated tokens. Allowed: Physical; Non VPN; Security Groups; Facility Access; Unescorted Access; Building Access; Escorted Access; System Access; System/Building. Physical and Non VPN are readonly on the form. Security Groups and System/Building are hidden on the form but may be stored."
+Passport,passport,Y/N,1,CHAR(1) NULL,No,Import,Y or N. Yes/no flag only (DEC-017).
+CJIS Security and Awareness Role,cjisSecurityAwarenessRole,Enum,80,lookup NVARCHAR(80),No,Import,Basic | General | Privileged | Security.
+Fingerprints Completed,fingerprintsNotifiedCompleted,Date,10,DATE NULL,No,Import,ISO YYYY-MM-DD.
+Fingerprint Outcome,outcome,Enum,80,lookup NVARCHAR(80),No,Import,Clear | Misd/Clear | Felony | Needs Follow Up. Importer maps unknown values to Needs Follow Up.
+Security and Awareness Cert,securityAwarenessExpiration,Date,10,DATE NULL,No,Import,ISO YYYY-MM-DD. Used with NCIC expiration for Active/InActive.
+Security Addendum,securityAddendum,Date,10,DATE NULL,No,Import,ISO YYYY-MM-DD.
+NCIC Date of Cert Expiration,ncicCertificationExpiration,Date,10,DATE NULL,No,Import,ISO YYYY-MM-DD. Used with Security and Awareness Cert for Active/InActive.
+NCIC Certification,ncicCertification,Y/N,1,CHAR(1) NULL,No,Import,Y or N. No MasterSheet source column today.
+Completed Full Process,completedFullProcess,Date,10,DATE NULL,No,Import,ISO YYYY-MM-DD.
+Date of Site Visit Only,dateOfSiteVisitOnly,Date,10,DATE NULL,No,Import,ISO YYYY-MM-DD.
+Next III Inquiry Due (5 yrs),queriedEveryFiveYears,Date,10,DATE NULL,No,Do not seed,Calculated as Date of III Completion + 5 years. Imported values are overwritten.
+Applicant Email Address,emailAddress,String,254,NVARCHAR(254) NULL,No,Import,Uppercase in tracker. RFC-style max 254.
+Applicant Phone Number,phoneNumber,String,12,NVARCHAR(40) NULL,No,Import,10 digits stored as XXX-XXX-XXXX (12 characters). HTML maxlength 12. SQL allows 40.
+Last Changed By,lastChangedBy,String,160,NVARCHAR(160) NULL,No,System,Set to the person performing the import. Do not take from applicant source data.
+Notes,notes,String,unlimited,NVARCHAR(MAX) NULL,No,Import optional,Multiline. No tracker maxlength; SQL MAX.
+Documents,documents,File list,n/a,ApplicantDocuments.FileName NVARCHAR(260),No,Exclude from seed CSV,Hidden in UI. Not a seed-spreadsheet column.
+Archived,archived,Boolean,n/a,BIT NOT NULL default 0,No,Do not seed,Default false. Seed records stay active.
+Archived At,archivedAt,DateTime,n/a,DATETIME2(0) NULL,No,Do not seed,System-maintained.
+Archived By,archivedBy,String,160,NVARCHAR(160) NULL,No,Do not seed,System-maintained.
+Record Id,id,UUID,36,ApplicantId UNIQUEIDENTIFIER,No,Generated,Do not seed. Tracker assigns UUID on import.
+Updated At,updatedAt,DateTime,n/a,UpdatedAtUtc DATETIME2(0),No,Generated,Do not seed.
+Date of Birth,—,Exclude,—,—,No,EXCLUDE,DEC-012 / DEC-017. Must not appear in seed files committed to the repo.
+Social Security Number,—,Exclude,—,—,No,EXCLUDE,DEC-012 / DEC-017. Must not appear in seed files committed to the repo.
+State / Driver's License Number (raw MasterSheet),—,Exclude,—,—,No,EXCLUDE,Do not ingest this header. Use Driver Lic Num in ST/ + alphanumeric format only (DEC-020).
