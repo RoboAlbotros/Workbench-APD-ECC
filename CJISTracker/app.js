@@ -1371,6 +1371,7 @@ function updateAccessControls() {
       !signedIn || !canAccessAdminConsole() || fullScreenView === "admin",
     );
   }
+  syncAdminGlobalOnlySections();
 
   limitedViewButton.disabled = !canAccessView("limited");
   if (recordsViewButton) recordsViewButton.disabled = !canAccessView("records");
@@ -1750,6 +1751,16 @@ function isFullAdmin() {
 
 function isAdminStaffUser() {
   return Boolean(currentUser && currentUser.userType === "adminStaff");
+}
+
+function isAdminGlobalUser() {
+  return Boolean(currentUser && currentUser.userType === "adminGlobal");
+}
+
+function syncAdminGlobalOnlySections() {
+  document.querySelectorAll(".admin-global-only").forEach((section) => {
+    section.classList.toggle("hidden", !isAdminGlobalUser());
+  });
 }
 
 function canAccessAdminConsole() {

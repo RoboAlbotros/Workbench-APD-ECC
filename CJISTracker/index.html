@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>CJIS Applicant Tracker</title>
-    <link rel="stylesheet" href="styles.css?v=sprint-006-iii-calendar" />
+    <link rel="stylesheet" href="styles.css?v=sprint-006-global-settings" />
   </head>
   <body class="signed-out">
     <header class="app-header" aria-label="Application header">
@@ -300,7 +300,7 @@
           <div id="managedUserTable" class="table-wrap" aria-live="polite"></div>
         </section>
 
-        <section class="panel future-admin-panel" aria-labelledby="futureSecurityHeading">
+        <section class="panel future-admin-panel admin-global-only hidden" aria-labelledby="futureSecurityHeading">
           <div class="panel-heading">
             <div>
               <h2 id="futureSecurityHeading">Security &amp; Authentication</h2>
@@ -345,7 +345,7 @@
           </div>
         </section>
 
-        <section class="panel future-admin-panel" aria-labelledby="futureRbacHeading">
+        <section class="panel future-admin-panel admin-global-only hidden" aria-labelledby="futureRbacHeading">
           <div class="panel-heading">
             <div>
               <h2 id="futureRbacHeading">Users, Roles &amp; Permissions (RBAC)</h2>
@@ -728,8 +728,8 @@
       </section>
     </aside>
 
-    <script src="test-applicants.js?v=sprint-006-iii-calendar"></script>
-    <script src="app.js?v=sprint-006-iii-calendar"></script>
+    <script src="test-applicants.js?v=sprint-006-global-settings"></script>
+    <script src="app.js?v=sprint-006-global-settings"></script>
     <!-- tracker-list-overrides.js retired in SPRINT-005; behaviors folded into app.js and styles.css. -->
   </body>
 </html>
