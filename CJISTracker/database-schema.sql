@@ -291,6 +291,7 @@ BEGIN
         N'LG-Legal',
         N'MA-Mayor''s Office Department',
         N'MD-Municipal Development',
+        N'APD',
         N'PD-Police',
         N'PL-Planning Department',
         N'PR-Parks and Recreation',
@@ -520,6 +521,7 @@ BEGIN
         N'LG-Legal',
         N'MA-Mayor''s Office Department',
         N'MD-Municipal Development',
+        N'APD',
         N'PD-Police',
         N'PL-Planning Department',
         N'PR-Parks and Recreation',
@@ -530,6 +532,53 @@ BEGIN
       )
     );
 END;
+GO
+
+IF EXISTS (
+  SELECT 1
+  FROM sys.check_constraints
+  WHERE name = N'CK_Applicants_Department'
+    AND parent_object_id = OBJECT_ID(N'dbo.Applicants')
+)
+BEGIN
+  ALTER TABLE dbo.Applicants DROP CONSTRAINT CK_Applicants_Department;
+END;
+GO
+
+ALTER TABLE dbo.Applicants ADD CONSTRAINT CK_Applicants_Department
+  CHECK (
+    Department IS NULL OR Department IN (
+      N'AV-Aviation',
+      N'AW-Animal Welfare',
+      N'CA-Chief Administrative Office',
+      N'CC-Office of the City Clerk',
+      N'CL-Council Services',
+      N'CM-Community Safety Department',
+      N'CP-Civilian Police OS Dept',
+      N'CS-Cultural Services',
+      N'ED-Economic Development',
+      N'EH-Environmental Health',
+      N'FA-Finance Admin Svc',
+      N'FC-Youth and Family Svcs Dept',
+      N'FD-Fire',
+      N'GS-General Services Department',
+      N'HH-Health,Housing,Hmlsns Dept',
+      N'HR-Human Resources',
+      N'IA-Internal Audit',
+      N'IG-Office of Inspector GenDept',
+      N'LG-Legal',
+      N'MA-Mayor''s Office Department',
+      N'MD-Municipal Development',
+      N'APD',
+      N'PD-Police',
+      N'PL-Planning Department',
+      N'PR-Parks and Recreation',
+      N'SA-Senior Affairs',
+      N'SW-Solid Waste',
+      N'TI-Technology and Innovation',
+      N'TR-Transit'
+    )
+  );
 GO
 
 IF NOT EXISTS (

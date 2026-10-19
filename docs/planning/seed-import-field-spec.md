@@ -22,8 +22,8 @@ Working list: `docs/planning/seed-import-field-spec.csv`.
 3. Driver Lic Num: two-letter state prefix, `/`, then 1–15 letters or numbers;
    max 18 characters; example `NM/A23456H8X0H23H5`.
 4. Phone: 10 digits, stored as `XXX-XXX-XXXX` (12 characters).
-5. Closed lists must match allowed values exactly (department, clearance type,
-   III status, outcome, CJIS role, access type tokens).
+5. Closed lists must match allowed values exactly (department including APD,
+   clearance type, III status, outcome, CJIS role, access type tokens).
 6. Do not seed calculated or system columns: Name, Next III Inquiry Due,
    Last Changed By, Archived*, Record Id, Updated At.
 7. Do not include Date of Birth, Social Security Number, or the raw MasterSheet

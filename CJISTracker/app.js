@@ -97,6 +97,7 @@ const DEFAULT_DEPARTMENT_OPTIONS = [
   "LG-Legal",
   "MA-Mayor's Office Department",
   "MD-Municipal Development",
+  "APD",
   "PD-Police",
   "PL-Planning Department",
   "PR-Parks and Recreation",
@@ -298,6 +299,20 @@ function uniqueOptions(values) {
   return [...seen.values()];
 }
 
+function insertOptionIfMissing(values, option, beforeOption) {
+  const next = uniqueOptions(values);
+  if (next.some((value) => value.toUpperCase() === String(option || "").toUpperCase())) return next;
+  const beforeIndex = next.findIndex(
+    (value) => value.toUpperCase() === String(beforeOption || "").toUpperCase(),
+  );
+  if (beforeIndex >= 0) {
+    next.splice(beforeIndex, 0, option);
+    return next;
+  }
+  next.push(option);
+  return next;
+}
+
 function loadOptionLists() {
   const lists = {};
   Object.entries(DEFAULT_OPTION_LISTS).forEach(([key, defaults]) => {
@@ -315,6 +330,7 @@ function loadOptionLists() {
       }
     });
     lists.accessType = uniqueOptions((lists.accessType || []).map(renameAccessTypeToken));
+    lists.department = insertOptionIfMissing(lists.department, "APD", "PD-Police");
     return lists;
   } catch {
     return lists;

@@ -60,7 +60,7 @@ is on or before today.
 
 These access codes are local prototype controls. For production use, replace them with server-side authentication, authorization, and audit logging (recorded direction: City SSO / Entra ID with server-side role-based access, decision DEC-015).
 
-Vendor uses suggestions from existing records and is optional. Department is a closed city-code list (AV-Aviation through TR-Transit). Position/Role uses suggestions from existing records. Search checks Last Name, First Name, Middle Initial, Suffix, composed name, Driver Lic Num, vendor, department, position/role, requestor, and Applicant Email Address.
+Vendor uses suggestions from existing records and is optional. Department is a closed city-code list (AV-Aviation through TR-Transit, plus APD). Position/Role uses suggestions from existing records. Search checks Last Name, First Name, Middle Initial, Suffix, composed name, Driver Lic Num, vendor, department, position/role, requestor, and Applicant Email Address.
 Applicant document data remains in the data model, but the Applicant Documents field is hidden in the UI.
 Access Type supports multiple selections. Physical and Non VPN are grayed out and
 read-only on the applicant form in every view. Security Groups and System/Building
@@ -73,7 +73,7 @@ are hidden from the applicant form.
 - Driver Lic Num (required on create; two-letter state prefix, a slash, and up to 15 letters or numbers, 18-character input limit; example: NM/A23456H8X0H23H5; stored uppercase; slash is inserted after the state prefix)
 - Source (read-only in the UI)
 - Vendor (optional)
-- Department (closed city-code list: AV-Aviation, AW-Animal Welfare, CA-Chief Administrative Office, CC-Office of the City Clerk, CL-Council Services, CM-Community Safety Department, CP-Civilian Police OS Dept, CS-Cultural Services, ED-Economic Development, EH-Environmental Health, FA-Finance Admin Svc, FC-Youth and Family Svcs Dept, FD-Fire, GS-General Services Department, HH-Health,Housing,Hmlsns Dept, HR-Human Resources, IA-Internal Audit, IG-Office of Inspector GenDept, LG-Legal, MA-Mayor's Office Department, MD-Municipal Development, PD-Police, PL-Planning Department, PR-Parks and Recreation, SA-Senior Affairs, SW-Solid Waste, TI-Technology and Innovation, TR-Transit)
+- Department (closed city-code list: AV-Aviation, AW-Animal Welfare, CA-Chief Administrative Office, CC-Office of the City Clerk, CL-Council Services, CM-Community Safety Department, CP-Civilian Police OS Dept, CS-Cultural Services, ED-Economic Development, EH-Environmental Health, FA-Finance Admin Svc, FC-Youth and Family Svcs Dept, FD-Fire, GS-General Services Department, HH-Health,Housing,Hmlsns Dept, HR-Human Resources, IA-Internal Audit, IG-Office of Inspector GenDept, LG-Legal, MA-Mayor's Office Department, MD-Municipal Development, APD, PD-Police, PL-Planning Department, PR-Parks and Recreation, SA-Senior Affairs, SW-Solid Waste, TI-Technology and Innovation, TR-Transit)
 - Position/Role (optional; suggestions from existing records)
 - Requestor
 - Date Information Provided

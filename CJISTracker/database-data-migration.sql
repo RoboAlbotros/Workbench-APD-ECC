@@ -325,7 +325,7 @@ BEGIN
         N'FD-Fire', N'GS-General Services Department', N'HH-Health,Housing,Hmlsns Dept',
         N'HR-Human Resources', N'IA-Internal Audit', N'IG-Office of Inspector GenDept',
         N'LG-Legal', N'MA-Mayor''s Office Department', N'MD-Municipal Development',
-        N'PD-Police', N'PL-Planning Department', N'PR-Parks and Recreation',
+        N'APD', N'PD-Police', N'PL-Planning Department', N'PR-Parks and Recreation',
         N'SA-Senior Affairs', N'SW-Solid Waste', N'TI-Technology and Innovation', N'TR-Transit'
       )
       SET @message = N'Department is not in the closed city-code list.';
