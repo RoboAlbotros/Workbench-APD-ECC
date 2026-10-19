@@ -44,3 +44,8 @@ Working list: `docs/planning/seed-import-field-spec.csv`.
 
 See also: `CJISTracker/CJIS Applicant Details Field Dictionary.csv` and
 `docs/planning/import-crosswalk-mastersheet.md`.
+
+SQL landing: run `CJISTracker/database-schema.sql`, then
+`CJISTracker/database-data-migration.sql`. Bulk-insert the seed CSV into
+`stg.ApplicantSeed` and execute `dbo.usp_MigrateApplicantSeed`. Do not put
+real applicant files in the repository.

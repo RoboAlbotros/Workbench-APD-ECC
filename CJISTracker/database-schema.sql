@@ -700,6 +700,31 @@ BEGIN
 END;
 GO
 
+/* Duplicate Driver Lic Num is a warning in the UI, not a unique constraint. */
+IF NOT EXISTS (
+  SELECT 1 FROM sys.indexes
+  WHERE name = N'IX_Applicants_DriverLicenseNumber'
+    AND object_id = OBJECT_ID(N'dbo.Applicants')
+)
+BEGIN
+  CREATE INDEX IX_Applicants_DriverLicenseNumber
+    ON dbo.Applicants (DriverLicenseNumber)
+    WHERE DriverLicenseNumber IS NOT NULL;
+END;
+GO
+
+IF NOT EXISTS (
+  SELECT 1 FROM sys.indexes
+  WHERE name = N'IX_Applicants_LastName_FirstName'
+    AND object_id = OBJECT_ID(N'dbo.Applicants')
+)
+BEGIN
+  CREATE INDEX IX_Applicants_LastName_FirstName
+    ON dbo.Applicants (LastName, FirstName)
+    INCLUDE (DriverLicenseNumber, Department, IsArchived);
+END;
+GO
+
 IF NOT EXISTS (
   SELECT 1 FROM sys.indexes
   WHERE name = N'IX_ApplicantChangeLog_Applicant_ChangedAt'

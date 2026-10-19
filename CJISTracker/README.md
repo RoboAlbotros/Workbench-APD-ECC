@@ -104,13 +104,17 @@ Data is stored in the browser's local storage. For production CJIS workflows, co
 
 ## SQL schema and future backend (SPRINT-006)
 
-The creatable SQL Server script is `database-schema.sql`. It does not change this
-localStorage app. Create the database with:
+The creatable SQL Server script is `database-schema.sql`. Load a seed CSV with
+`database-data-migration.sql` (staging table `stg.ApplicantSeed` and
+`usp_MigrateApplicantSeed`). Neither script changes this localStorage app.
+Create the database, then optionally run the data-migration script:
 
 ```text
 sqlcmd -S <server> -E -i "CJISTracker\database-schema.sql"
+sqlcmd -S <server> -E -d CjisApplicantTracker -i "CJISTracker\database-data-migration.sql"
 ```
 
-or Execute the file in SSMS. Reserved API/SSO stubs live in `backend/`
+or Execute the files in SSMS. Keep real applicant CSVs outside the repository.
+Reserved API/SSO stubs live in `backend/`
 (see `backend/README.md` and `docs/architecture/sso-entra-id.md`). They are
 scaffolding only; this browser app is not wired to them.

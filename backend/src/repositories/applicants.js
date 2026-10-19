@@ -35,6 +35,10 @@
  *   queriedEveryFiveYears         QueryDateEveryFiveYears
  *   emailAddress                  ApplicantEmailAddress
  *   phoneNumber                   PhoneNumber
+ *   lastName                      LastName
+ *   firstName                     FirstName
+ *   middleInitial                 MiddleInitial
+ *   suffix                        Suffix
  *   lastChangedBy                 LastChangedByDisplayName
  *   documents                     ApplicantDocuments
  *   notes                         Notes
