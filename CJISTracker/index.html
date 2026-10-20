@@ -487,6 +487,25 @@
       </footer>
     </main>
 
+    <div id="limitedPopupBackdrop" class="drawer-backdrop hidden" hidden></div>
+    <aside
+      id="limitedPopup"
+      class="limited-popup hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="limitedPopupHeading"
+      hidden
+    >
+      <div class="limited-popup-header">
+        <div>
+          <p class="eyebrow">Limited View</p>
+          <h2 id="limitedPopupHeading">Applicant</h2>
+        </div>
+        <button id="closeLimitedPopup" class="secondary-action" type="button" aria-label="Close limited view">Close</button>
+      </div>
+      <div id="limitedPopupFields" class="limited-popup-fields"></div>
+    </aside>
+
     <div id="drawerBackdrop" class="drawer-backdrop hidden" hidden></div>
     <aside id="editorPanel" class="editor-panel record-drawer hidden" role="dialog" aria-modal="true" aria-labelledby="formHeading">
       <div class="drawer-header">
@@ -729,8 +748,8 @@
       </section>
     </aside>
 
-    <script src="test-applicants.js?v=sprint-007-sql-api"></script>
-    <script src="app.js?v=sprint-007-sql-api"></script>
+    <script src="test-applicants.js?v=sprint-007-limited-popup-fields"></script>
+    <script src="app.js?v=sprint-007-limited-popup-fields"></script>
     <!-- tracker-list-overrides.js retired in SPRINT-005; behaviors folded into app.js and styles.css. -->
   </body>
 </html>

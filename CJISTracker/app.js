@@ -740,6 +740,28 @@ const sessionControls = document.querySelector("#sessionControls");
 const toolbar = document.querySelector("#toolbar");
 const drawerBackdrop = document.querySelector("#drawerBackdrop");
 const closeDrawer = document.querySelector("#closeDrawer");
+const limitedPopup = document.querySelector("#limitedPopup");
+const limitedPopupBackdrop = document.querySelector("#limitedPopupBackdrop");
+const limitedPopupFields = document.querySelector("#limitedPopupFields");
+const closeLimitedPopupButton = document.querySelector("#closeLimitedPopup");
+let limitedPopupReturnFocus = null;
+const LIMITED_POPUP_FIELDS = [
+  { field: "lastName", label: "Last Name" },
+  { field: "firstName", label: "First Name" },
+  { field: "clearanceType", label: "Clearance Type" },
+  { field: "department", label: "Department" },
+  { field: "positionRole", label: "Position/Role" },
+];
+const LIMITED_POPUP_DATE_FIELDS = [
+  { field: "dateInformationProvided", label: "Date Information Provided" },
+  { field: "dateOfIiiCompletion", label: "Date of III Completion" },
+  { field: "queriedEveryFiveYears", label: "Next III Inquiry Due (5 yrs)" },
+  { field: "fingerprintsNotifiedCompleted", label: "Fingerprints Completed" },
+  { field: "securityAwarenessExpiration", label: "Security and Awareness Cert" },
+  { field: "securityAddendum", label: "Security Addendum" },
+  { field: "ncicCertificationExpiration", label: "NCIC Date of Cert Expiration" },
+  { field: "completedFullProcess", label: "Completed Full Process" },
+];
 const limitedViewButton = document.querySelector("#limitedViewButton");
 const recordsViewButton = document.querySelector("#recordsViewButton");
 const adminViewButton = document.querySelector("#adminViewButton");
@@ -835,6 +857,8 @@ applicantForm.addEventListener("submit", saveApplicant);
 resetForm.addEventListener("click", openNewApplicant);
 closeDrawer.addEventListener("click", closeApplicantDrawer);
 drawerBackdrop.addEventListener("click", closeApplicantDrawer);
+if (closeLimitedPopupButton) closeLimitedPopupButton.addEventListener("click", () => closeLimitedPopup());
+if (limitedPopupBackdrop) limitedPopupBackdrop.addEventListener("click", () => closeLimitedPopup());
 archiveRecord.addEventListener("click", archiveApplicant);
 restoreRecord.addEventListener("click", () => restoreApplicant());
 document.querySelector("#dateOfIiiCompletion").addEventListener("input", syncInquiryDueField);
@@ -983,6 +1007,7 @@ if (phoneNumberInput) {
   });
 }
 document.addEventListener("keydown", handleDrawerKeydown);
+document.addEventListener("keydown", handleLimitedPopupKeydown);
 if (exportCsv) exportCsv.addEventListener("click", downloadCsv);
 documentUpload.addEventListener("change", handleDocumentUpload);
 [searchInput, activityFilter, clearanceFilter, outcomeFilter].forEach((control) => {
@@ -1425,6 +1450,7 @@ function signOutManagementUser() {
   currentFormMode = "edit";
   fullScreenView = null;
   closeApplicantDrawer({ restoreFocus: false });
+  closeLimitedPopup({ restoreFocus: false });
   showMessage(accessMessage, "Signed out.");
   updateAccessControls();
   setView("limited");
@@ -1548,6 +1574,7 @@ function setView(view) {
     recordsViewButton?.setAttribute("aria-selected", "false");
     adminViewButton.setAttribute("aria-selected", "false");
     if (currentUser) showMessage(accessMessage, `${ACCESS_LABELS[currentUser.role]} cannot open ${ACCESS_LABELS[view]}.`, true);
+    closeLimitedPopup({ restoreFocus: false });
     renderAll();
     return;
   }
@@ -1567,6 +1594,7 @@ function setView(view) {
   editorEyebrow.textContent = isAdmin ? "Full Record" : "Records";
   resetForm.classList.toggle("hidden", !isAdmin);
   if (!isAdmin && !isRecords) closeApplicantDrawer({ restoreFocus: false });
+  if (view !== "limited") closeLimitedPopup({ restoreFocus: false });
   updateFormMode();
   updateEditorVisibility();
   updateArchiveVisibility();
@@ -2228,11 +2256,16 @@ function renderLimitedTable() {
   limitedTable.innerHTML = `<table class="limited-records-table">
     <thead>
       <tr>
+        <th class="field-admin">Actions</th>
         ${limitedFields.map(renderHeaderCell).join("")}
       </tr>
     </thead>
     <tbody>${visibleRecords.map((record, index) => renderLimitedRow(record, index % 2)).join("")}</tbody>
   </table>`;
+
+  limitedTable.querySelectorAll("[data-limited-view]").forEach((button) => {
+    button.addEventListener("click", () => openLimitedPopup(button.dataset.limitedView, button));
+  });
 }
 
 function renderRecordsTable() {
@@ -2278,6 +2311,11 @@ function renderRecordsRow(record, stripeTone) {
 
 function renderLimitedRow(record, stripeTone) {
   return `<tr${rowClassAttributes(record, stripeTone)}>
+    <td class="field-admin">
+      <div class="record-actions">
+        <button class="admin-action" type="button" data-limited-view="${record.id}">View</button>
+      </div>
+    </td>
     ${limitedFields
       .map((field) => {
         const value = record[field];
@@ -2285,6 +2323,69 @@ function renderLimitedRow(record, stripeTone) {
       })
       .join("")}
   </tr>`;
+}
+
+function limitedPopupDisplayValue(field, record) {
+  const value = record[field];
+  if (!value) return "—";
+  if (isDateField(field)) return formatDate(value) || "—";
+  return String(value);
+}
+
+function renderLimitedPopupRows(fieldDefs, record) {
+  return fieldDefs
+    .map((item) => {
+      return `<div class="limited-popup-row">
+        <dt>${escapeHtml(item.label)}</dt>
+        <dd>${escapeHtml(limitedPopupDisplayValue(item.field, record))}</dd>
+      </div>`;
+    })
+    .join("");
+}
+
+function fillLimitedPopup(record) {
+  if (!limitedPopupFields) return;
+  limitedPopupFields.innerHTML = `
+    <dl>${renderLimitedPopupRows(LIMITED_POPUP_FIELDS, record)}</dl>
+    <h3 class="limited-popup-section">Certifications &amp; Dates</h3>
+    <dl>${renderLimitedPopupRows(LIMITED_POPUP_DATE_FIELDS, record)}</dl>
+  `;
+}
+
+function openLimitedPopup(id, invoker) {
+  const record = records.find((item) => item.id === id && !isArchivedRecord(item));
+  if (!record || !limitedPopup || !limitedPopupBackdrop) return;
+  limitedPopupReturnFocus = invoker || document.activeElement;
+  fillLimitedPopup(record);
+  limitedPopup.classList.remove("hidden");
+  limitedPopup.hidden = false;
+  limitedPopupBackdrop.classList.remove("hidden");
+  limitedPopupBackdrop.hidden = false;
+  document.body.classList.add("limited-popup-open");
+  closeLimitedPopupButton?.focus();
+}
+
+function closeLimitedPopup(options = {}) {
+  const restoreFocus = options.restoreFocus !== false;
+  if (!limitedPopup || !limitedPopupBackdrop) return;
+  limitedPopup.classList.add("hidden");
+  limitedPopup.hidden = true;
+  limitedPopupBackdrop.classList.add("hidden");
+  limitedPopupBackdrop.hidden = true;
+  document.body.classList.remove("limited-popup-open");
+  if (limitedPopupFields) limitedPopupFields.innerHTML = "";
+  if (restoreFocus && limitedPopupReturnFocus && typeof limitedPopupReturnFocus.focus === "function") {
+    limitedPopupReturnFocus.focus();
+  }
+  limitedPopupReturnFocus = null;
+}
+
+function handleLimitedPopupKeydown(event) {
+  if (!limitedPopup || limitedPopup.classList.contains("hidden")) return;
+  if (event.key === "Escape") {
+    event.preventDefault();
+    closeLimitedPopup();
+  }
 }
 
 function renderAdminTable() {

@@ -1294,6 +1294,68 @@ td {
   background: rgba(24, 33, 31, 0.35);
 }
 
+.limited-popup {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  width: min(520px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  margin: auto;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.limited-popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.limited-popup-fields {
+  margin: 0;
+  padding: 16px;
+}
+
+.limited-popup-fields dl {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+
+.limited-popup-section {
+  margin: 16px 0 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.limited-popup-row {
+  display: grid;
+  gap: 4px;
+}
+
+.limited-popup-row dt {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.limited-popup-row dd {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
 .editor-panel,
 .record-drawer {
   position: fixed;
@@ -1345,7 +1407,8 @@ td {
   color: var(--danger);
 }
 
-body.drawer-open {
+body.drawer-open,
+body.limited-popup-open {
   overflow: hidden;
 }
 
