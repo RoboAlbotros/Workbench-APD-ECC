@@ -101,7 +101,7 @@
       } else if (label === "query date (every 5 years)" || label === "queried (every 5 years)" || label === "query date") {
         replaceLabelText(element, "Next III Inquiry Due (5 yrs)");
       } else if (label === "security and awareness expiration annually" || label === "security and awareness expiration") {
-        replaceLabelText(element, "Security and Awareness Cert");
+        replaceLabelText(element, "Security and Awareness Cert Expiration");
       }
     });
 

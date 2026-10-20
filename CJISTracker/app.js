@@ -608,6 +608,16 @@ const limitedFields = [
   "driversLicense",
   "vendor",
   "department",
+  "activityStatus",
+  "clearanceType",
+  "securityAwarenessExpiration",
+  "ncicCertificationExpiration",
+];
+const recordsFields = [
+  "name",
+  "driversLicense",
+  "vendor",
+  "department",
   "positionRole",
   "activityStatus",
   "clearanceType",
@@ -667,7 +677,7 @@ const labels = {
   ncicCertificationExpiration: "NCIC Date of Cert Expiration",
   fingerprintsNotifiedCompleted: "Fingerprints Completed",
   outcome: "Fingerprint Outcome",
-  securityAwarenessExpiration: "Security and Awareness Cert",
+  securityAwarenessExpiration: "Security and Awareness Cert Expiration",
   securityAddendum: "Security Addendum",
   phoneNumber: "Applicant Phone Number",
   emailAddress: "Applicant Email Address",
@@ -683,7 +693,7 @@ const tableLabels = {
   name: "Name",
   driversLicense: "Driver Lic Num",
   cjisSecurityAwarenessRole: "CJIS Security Role",
-  securityAwarenessExpiration: "Security and Awareness Cert",
+  securityAwarenessExpiration: "Security and Awareness Cert Expiration",
   activityStatus: "Status",
 };
 
@@ -693,7 +703,16 @@ let managedUsers = loadManagedUsers();
 let inquiryDueMigrationCount = 0;
 let iiiCompletionMigrationCount = 0;
 let iiiCompletionIsoMigrated = localStorage.getItem(STORAGE_KEYS.iiiCompletionIsoMigrated) === "1";
-let records = loadRecords();
+function ensureLimitedViewSeedRecords(recordSet) {
+  const extras = typeof getLimitedViewApplicantSeed === "function" ? getLimitedViewApplicantSeed() : [];
+  if (!extras.length) return recordSet;
+  const existingIds = new Set(recordSet.map((record) => record.id));
+  const missing = extras.filter((record) => !existingIds.has(record.id));
+  if (!missing.length) return recordSet;
+  return normalizeRecords(recordSet.concat(missing));
+}
+
+let records = ensureLimitedViewSeedRecords(loadRecords());
 let changeLog = loadChangeLog();
 if (inquiryDueMigrationCount) {
   logInquiryDueMigration(inquiryDueMigrationCount);
@@ -757,7 +776,7 @@ const LIMITED_POPUP_DATE_FIELDS = [
   { field: "dateOfIiiCompletion", label: "Date of III Completion" },
   { field: "queriedEveryFiveYears", label: "Next III Inquiry Due (5 yrs)" },
   { field: "fingerprintsNotifiedCompleted", label: "Fingerprints Completed" },
-  { field: "securityAwarenessExpiration", label: "Security and Awareness Cert" },
+  { field: "securityAwarenessExpiration", label: "Security and Awareness Cert Expiration" },
   { field: "securityAddendum", label: "Security Addendum" },
   { field: "ncicCertificationExpiration", label: "NCIC Date of Cert Expiration" },
   { field: "completedFullProcess", label: "Completed Full Process" },
@@ -1105,7 +1124,7 @@ async function startSqlPersistence() {
     const body = await listResponse.json();
     const remote = Array.isArray(body.records) ? body.records : [];
     if (remote.length) {
-      records = normalizeRecords(remote);
+      records = ensureLimitedViewSeedRecords(normalizeRecords(remote));
     }
     persistenceMode = "sql";
     if (!remote.length && records.length) {
@@ -2278,7 +2297,7 @@ function renderRecordsTable() {
   recordsTable.innerHTML = `<table class="limited-records-table">
     <thead>
       <tr>
-        ${limitedFields.map(renderHeaderCell).join("")}
+        ${recordsFields.map(renderHeaderCell).join("")}
         <th class="field-admin">Actions</th>
       </tr>
     </thead>
@@ -2295,7 +2314,7 @@ function renderRecordsTable() {
 
 function renderRecordsRow(record, stripeTone) {
   return `<tr${rowClassAttributes(record, stripeTone)}>
-    ${limitedFields
+    ${recordsFields
       .map((field) => {
         return renderDataCell(field, record[field], record);
       })
@@ -2343,12 +2362,24 @@ function renderLimitedPopupRows(fieldDefs, record) {
     .join("");
 }
 
+function renderLimitedPopupDateRows(fieldDefs, record) {
+  return fieldDefs
+    .map((item) => {
+      const value = normalizeDateValue(record[item.field]);
+      return `<label class="limited-popup-date">
+        ${escapeHtml(item.label)}
+        <input type="date" value="${escapeHtml(value)}" readonly />
+      </label>`;
+    })
+    .join("");
+}
+
 function fillLimitedPopup(record) {
   if (!limitedPopupFields) return;
   limitedPopupFields.innerHTML = `
     <dl>${renderLimitedPopupRows(LIMITED_POPUP_FIELDS, record)}</dl>
     <h3 class="limited-popup-section">Certifications &amp; Dates</h3>
-    <dl>${renderLimitedPopupRows(LIMITED_POPUP_DATE_FIELDS, record)}</dl>
+    <div class="limited-popup-dates">${renderLimitedPopupDateRows(LIMITED_POPUP_DATE_FIELDS, record)}</div>
   `;
 }
 
@@ -3030,7 +3061,7 @@ function renderDataCell(field, value, record) {
   const expired = field === "securityAwarenessExpiration" && record && isSecurityCertExpired(record);
   const extraClass = expired ? " security-cert-expired" : "";
   const extraAttrs = expired
-    ? ` title="Out of compliance: Security and Awareness certification has expired" aria-label="${escapeHtml(`${String(value || "").trim() || "Security and Awareness Cert"}, expired and out of compliance`)}"`
+    ? ` title="Out of compliance: Security and Awareness certification has expired" aria-label="${escapeHtml(`${String(value || "").trim() || "Security and Awareness Cert Expiration"}, expired and out of compliance`)}"`
     : "";
   return `<td class="field-${field}${extraClass}"${extraAttrs}>${content}</td>`;
 }

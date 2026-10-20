@@ -4,7 +4,7 @@ Open `index.html` in a browser to use the CJIS Applicant Tracker.
 
 ## Views
 
-- Limited View is read-only, hides sensitive personal fields, and filters Clearance Type to One Time Visit. Applicant identity uses separate Last Name, First Name, Middle Initial, and Suffix fields. Listings still show the composed name (Last Name, First Name MI Suffix). A View action opens a read-only popup with Last Name, First Name, Clearance Type, Department, Position/Role, and Certifications & Dates fields (Fingerprint Outcome and Date of Site Visit Only stay off that popup). It does not open the full applicant drawer.
+- Limited View is read-only, hides sensitive personal fields, and filters Clearance Type to One Time Visit. Only non-archived applicants with Clearance Type `One Time Visit` appear there (search, Activity, and Fingerprint Outcome filters can hide rows further). Applicant identity uses separate Last Name, First Name, Middle Initial, and Suffix fields. Listings still show the composed name (Last Name, First Name MI Suffix). A View action opens a read-only popup with Last Name, First Name, Clearance Type, Department, Position/Role, and Certifications & Dates fields (Fingerprint Outcome and Date of Site Visit Only stay off that popup). It does not open the full applicant drawer. Two fictitious One Time Visit seed records (Guest, Pat and Visitor, Kim) are added when those IDs are not already stored.
 - Records View uses the Limited View table style and allows applicant view/edit actions without archive access.
 - Full Admin View requires the admin access code and can create, view, edit, archive, restore, and filter applicant records. The Export CSV control is hidden in the UI (owner 2026-10-09); `downloadCsv` and export logic remain in `app.js` for later use.
 
@@ -41,15 +41,16 @@ one-time pre-go-live function); re-enable it by uncommenting that section.
 
 When the browser has no stored records, the app seeds four fictitious test applicants
 copied from the sanitized MasterSheet CSV (`CJIS_MasterSheet_import.csv`, kept outside
-the repository). Source, Control ID, names, vendors, and other cell values are
-unchanged. Existing localStorage records are not replaced; clearing storage and
-reloading restores the seed.
+the repository) plus two fictitious One Time Visit records for Limited View. Source,
+Control ID, names, vendors, and other MasterSheet cell values are unchanged. Existing
+localStorage records are not replaced; the two Limited View seeds are appended when
+those IDs are missing. Clearing storage and reloading restores the seed.
 Notes remain editable on applicant records but are hidden from list tables.
 Applicant list tables are a flat name-sorted list (not grouped by vendor).
 The Full Admin table shows Actions plus Name, Driver Lic Num, Clearance Type,
 Department, Position/Role, and Requestor. Limited View shows Name, Driver Lic Num,
-Vendor, Department, Position/Role, Status (Active or InActive), Clearance Type,
-Security and Awareness Cert, and Last Changed By. Tour/Orientation,
+Vendor, Department, Status (Active or InActive), Clearance Type,
+Security and Awareness Cert Expiration, and NCIC Date of Cert Expiration. Tour/Orientation,
 Source, III - Status, CJIS Security Role, NCIC Certification, Passport, Fingerprint
 Outcome, and Access Type stay off both listings and are edited in the slide-in
 record drawer. Control ID is hidden from the form and all lists (retained in
@@ -80,14 +81,14 @@ are hidden from the applicant form.
 - Date of III Completion (calendar date control; stored as ISO YYYY-MM-DD)
 - III - Status
 - Clearance Type (Full Clearance, One Time Visit, InProgress, No Access Given)
-- Applicant screen status Active when today is on or before both Security and Awareness Cert and NCIC Date of Cert Expiration; InActive when either date is missing or already past
+- Applicant screen status Active when today is on or before both Security and Awareness Cert Expiration and NCIC Date of Cert Expiration; InActive when either date is missing or already past
 - Tour/Orientation (Y/N checkbox)
 - Access Type
 - Passport (Y/N checkbox; yes/no flag only)
 - CJIS Security and Awareness Role
 - Fingerprints Completed
 - Fingerprint Outcome
-- Security and Awareness Cert
+- Security and Awareness Cert Expiration
 - Security Addendum
 - NCIC Date of Cert Expiration
 - NCIC Certification

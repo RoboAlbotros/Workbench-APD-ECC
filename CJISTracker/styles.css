@@ -1204,7 +1204,8 @@ td {
 
 .limited-records-table .field-securityAddendum,
 .limited-records-table .field-completedFullProcess,
-.limited-records-table .field-dateOfSiteVisitOnly {
+.limited-records-table .field-dateOfSiteVisitOnly,
+.limited-records-table .field-ncicCertificationExpiration {
   width: 116px;
 }
 
@@ -1321,7 +1322,25 @@ td {
 
 .limited-popup-fields {
   margin: 0;
-  padding: 16px;
+  padding: 16px 16px 24px;
+}
+
+.limited-popup-dates {
+  display: grid;
+  gap: 12px;
+}
+
+.limited-popup-date {
+  display: grid;
+  gap: 4px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.limited-popup-date input {
+  font-size: 16px;
+  font-weight: 600;
 }
 
 .limited-popup-fields dl {
