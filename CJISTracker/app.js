@@ -60,7 +60,7 @@ function ensureOwnerAccessCodes() {
 ensureOwnerAccessCodes();
 
 const ACCESS_LABELS = {
-  limited: "Limited View",
+  limited: "Read Only",
   records: "Records View",
   adminGlobal: "Admin-Global",
   adminStaff: "Admin-Staff",
@@ -636,6 +636,7 @@ const adminTableFields = [
   "driversLicense",
   "clearanceType",
   "department",
+  "activityStatus",
   "positionRole",
   "requestor",
 ];
@@ -3011,6 +3012,11 @@ function getAdminSortedRecords(recordSet) {
 }
 
 function compareRecordsByField(a, b, field) {
+  if (field === "activityStatus") {
+    return getRecordActivityStatus(a).localeCompare(getRecordActivityStatus(b), undefined, {
+      sensitivity: "base",
+    });
+  }
   if (field === "accessType") {
     return getAccessTypeSortValue(a).localeCompare(getAccessTypeSortValue(b), undefined, {
       sensitivity: "base",

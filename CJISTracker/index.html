@@ -11,7 +11,7 @@
       <h1>CJIS Applicant Tracker</h1>
       <div id="viewSwitch" class="view-switch hidden" role="tablist" aria-label="View mode">
         <button id="limitedViewButton" class="active" type="button" role="tab" aria-selected="true">
-          Limited View
+          Read Only
         </button>
         <button id="adminViewButton" type="button" role="tab" aria-selected="false">
           Full Admin
@@ -59,7 +59,7 @@
                 <option value="admin">Admin-Full</option>
                 <option value="adminGlobal">Admin-Global</option>
                 <option value="adminStaff">Admin-Staff</option>
-                <option value="limited">Limited View</option>
+                <option value="limited">Read Only</option>
               </select>
             </label>
             <label>
@@ -83,7 +83,7 @@
             all different, and are stored only in this browser.
           </p>
           <label>
-            Limited View Code
+            Read Only Code
             <input id="setupLimitedCode" type="password" minlength="4" autocomplete="new-password" required />
           </label>
           <label>
@@ -137,7 +137,7 @@
           <div class="panel-heading">
             <div>
               <p class="eyebrow">Read Only</p>
-              <h2 id="limitedHeading">Limited Applicant View</h2>
+              <h2 id="limitedHeading">Read Only</h2>
             </div>
             <span class="status-pill">Sensitive fields hidden</span>
           </div>
@@ -271,8 +271,8 @@
             Admin-Full and Admin-Global users can open this console and restore archived applicants.
             Admin-Global sign-in requires a named Admin-Global user. Admin-Staff users sign in as
             Admin-Staff, can use Full Admin, and can review archived records, but cannot restore
-            applicants or open this console. Read Only users sign in as Limited View. Shared Limited
-            View and Admin-Full access codes still work. Prototype codes stay in this browser only.
+            applicants or open this console. Read Only users sign in as Read Only. Shared Read Only
+            and Admin-Full access codes still work. Prototype codes stay in this browser only.
           </p>
           <form id="addManagedUserForm" class="signin-inline managed-user-form">
             <label>
@@ -498,7 +498,7 @@
     >
       <div class="limited-popup-header">
         <div>
-          <p class="eyebrow">Limited View</p>
+          <p class="eyebrow">Read Only</p>
           <h2 id="limitedPopupHeading">Applicant</h2>
         </div>
         <button id="closeLimitedPopup" class="secondary-action" type="button" aria-label="Close limited view">Close</button>
@@ -748,8 +748,8 @@
       </section>
     </aside>
 
-    <script src="test-applicants.js?v=sprint-007-limited-completed-full"></script>
-    <script src="app.js?v=sprint-007-limited-completed-full"></script>
+    <script src="test-applicants.js?v=sprint-007-read-only-label"></script>
+    <script src="app.js?v=sprint-007-read-only-label"></script>
     <!-- tracker-list-overrides.js retired in SPRINT-005; behaviors folded into app.js and styles.css. -->
   </body>
 </html>

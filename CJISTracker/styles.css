@@ -1133,6 +1133,11 @@ td {
   white-space: nowrap;
 }
 
+.admin-records-table .field-activityStatus {
+  width: 96px;
+  white-space: nowrap;
+}
+
 .admin-records-table .field-clearanceType,
 .admin-records-table .field-outcome,
 .limited-records-table .field-clearanceType,
