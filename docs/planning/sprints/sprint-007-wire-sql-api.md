@@ -48,7 +48,9 @@ classification. G-ARCH and G-SEC remain pending. Production hosting remains TBD.
 ## In-scope work
 
 1. Localhost HTTP API (`127.0.0.1` only) with health and applicant
-   list/create/update (archive via `IsArchived`; no hard delete).
+   list/create/update (archive via `IsArchived`). Owner-directed delete from
+   Archived Records is allowed for Admin-Full, Admin-Global, and Admin-Staff;
+   SQL sets `IsDeleted` for rows omitted from the PUT set. No table drop.
 2. SQL Server connection from environment values (`.env` local only). Create
    or refresh the database with `CJISTracker/database-schema.sql` so columns,
    department values, and role labels match the current app.js model.

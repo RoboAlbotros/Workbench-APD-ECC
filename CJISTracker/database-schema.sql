@@ -52,11 +52,14 @@
   - SPRINT-007: the browser uses the localhost API (127.0.0.1:8741) when
     GET /health reports database.connected; otherwise it keeps localStorage.
     Documents and the change log stay in the browser this sprint.
-  - Records are archived, not permanently deleted. Applicants.IsArchived is the
-    product flag (Full Admin archive/review/restore only). Applicants.IsDeleted
-    is unused leftover and MUST NOT be used for the UI archive action.
-    SecurityRoles.CanDeleteApplicants is unused; archive/restore is Full Admin
-    only. Default lists, metrics, and search exclude IsArchived = 1.
+  - Records are archived, not permanently deleted, until an admin deletes them
+    from Archived Records. Applicants.IsArchived is the Archive action
+    (Admin-Full / Admin-Global / Admin-Staff review; restore is Admin-Full and
+    Admin-Global only). Applicants.IsDeleted is set when those admin roles
+    delete from the archive screen. GET /api/applicants excludes IsDeleted = 1.
+    IsDeleted is not used for the Archive action. SecurityRoles.CanDeleteApplicants
+    is unused this sprint; the browser enforces the three admin roles. Default
+    lists, metrics, and search exclude IsArchived = 1 and IsDeleted = 1.
   - Read Only listing (app.js role limited): non-archived rows whose
     ClearanceTypeName is exactly N'One Time Visit'. Full Clearance never appears
     there. Search / Activity / Fingerprint Outcome filters can hide more.
@@ -268,7 +271,7 @@ BEGIN
     LastChangedByDisplayName NVARCHAR(160) NULL,
     CreatedAtUtc DATETIME2(0) NOT NULL CONSTRAINT DF_Applicants_CreatedAtUtc DEFAULT (SYSUTCDATETIME()),
     UpdatedAtUtc DATETIME2(0) NOT NULL CONSTRAINT DF_Applicants_UpdatedAtUtc DEFAULT (SYSUTCDATETIME()),
-    /* Unused leftover. Product language is archive (IsArchived). Do not hard-delete from the UI. */
+    /* Set from Archived Records delete (Admin-Full, Admin-Global, Admin-Staff). Not the Archive action. */
     IsDeleted BIT NOT NULL CONSTRAINT DF_Applicants_IsDeleted DEFAULT (0),
     IsArchived BIT NOT NULL CONSTRAINT DF_Applicants_IsArchived DEFAULT (0),
     ArchivedAtUtc DATETIME2(0) NULL,
@@ -707,7 +710,7 @@ BEGIN
 END;
 GO
 
-/* Default lists exclude archived applicants. IsDeleted remains unused. */
+/* Default lists exclude archived applicants. Deleted rows stay IsDeleted = 1. */
 IF NOT EXISTS (
   SELECT 1 FROM sys.indexes
   WHERE name = N'IX_Applicants_IsArchived'

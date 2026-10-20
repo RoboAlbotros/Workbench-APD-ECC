@@ -324,6 +324,7 @@ async function upsertApplicant(sql, connection, record) {
       IsArchived = @IsArchived,
       ArchivedAtUtc = @ArchivedAtUtc,
       ArchivedByDisplayName = @ArchivedByDisplayName,
+      IsDeleted = 0,
       UpdatedAtUtc = SYSUTCDATETIME()
     WHEN NOT MATCHED THEN INSERT (
       ApplicantId, ControlNumber, DriverLicenseNumber, SourceName, VendorId, Department, PositionRole,
@@ -332,7 +333,8 @@ async function upsertApplicant(sql, connection, record) {
       DateInformationProvided, DateOfIiiCompletion, FingerprintsCompleted, SecurityAwarenessExpiration,
       SecurityAddendumDate, NcicCertificationExpiration, NcicCertification, Passport, TourOrientation,
       CompletedFullProcess, DateOfSiteVisitOnly, QueryDateEveryFiveYears, ApplicantEmailAddress,
-      PhoneNumber, Notes, LastChangedByDisplayName, IsArchived, ArchivedAtUtc, ArchivedByDisplayName
+      PhoneNumber, Notes, LastChangedByDisplayName, IsArchived, ArchivedAtUtc, ArchivedByDisplayName,
+      IsDeleted
     ) VALUES (
       @ApplicantId, @ControlNumber, @DriverLicenseNumber, @SourceName, @VendorId, @Department, @PositionRole,
       @ClearanceTypeId, @IiiStatusId, @FingerprintOutcomeId, @CjisSecurityAwarenessRoleId,
@@ -340,7 +342,8 @@ async function upsertApplicant(sql, connection, record) {
       @DateInformationProvided, @DateOfIiiCompletion, @FingerprintsCompleted, @SecurityAwarenessExpiration,
       @SecurityAddendumDate, @NcicCertificationExpiration, @NcicCertification, @Passport, @TourOrientation,
       @CompletedFullProcess, @DateOfSiteVisitOnly, @QueryDateEveryFiveYears, @ApplicantEmailAddress,
-      @PhoneNumber, @Notes, @LastChangedByDisplayName, @IsArchived, @ArchivedAtUtc, @ArchivedByDisplayName
+      @PhoneNumber, @Notes, @LastChangedByDisplayName, @IsArchived, @ArchivedAtUtc, @ArchivedByDisplayName,
+      0
     );
   `);
 
@@ -372,6 +375,29 @@ async function upsertApplicant(sql, connection, record) {
   return applicantId;
 }
 
+async function markApplicantsNotInSetDeleted(sql, connection, keptIds) {
+  if (!keptIds.length) {
+    await makeRequest(sql, connection).query(`
+      UPDATE dbo.Applicants
+      SET IsDeleted = 1, UpdatedAtUtc = SYSUTCDATETIME()
+      WHERE IsDeleted = 0
+    `);
+    return;
+  }
+  const request = makeRequest(sql, connection);
+  const names = keptIds.map((id, index) => {
+    const name = `keptId${index}`;
+    request.input(name, sql.UniqueIdentifier, id);
+    return `@${name}`;
+  });
+  await request.query(`
+    UPDATE dbo.Applicants
+    SET IsDeleted = 1, UpdatedAtUtc = SYSUTCDATETIME()
+    WHERE IsDeleted = 0
+      AND ApplicantId NOT IN (${names.join(", ")})
+  `);
+}
+
 async function replaceApplicants(pool, records) {
   const sql = loadMssql();
   if (!sql) throw new Error("mssql driver is not installed.");
@@ -382,6 +408,7 @@ async function replaceApplicants(pool, records) {
     for (const record of records) {
       ids.push(await upsertApplicant(sql, transaction, record));
     }
+    await markApplicantsNotInSetDeleted(sql, transaction, ids);
     await transaction.commit();
     return ids;
   } catch (error) {

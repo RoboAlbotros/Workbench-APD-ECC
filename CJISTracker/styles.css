@@ -362,6 +362,17 @@ h2 {
   min-width: 100%;
 }
 
+.admin-records-table.archived-records-table .field-admin {
+  width: 252px;
+  min-width: 252px;
+  max-width: none;
+  white-space: nowrap;
+}
+
+.archived-records-table .record-actions {
+  flex-wrap: nowrap;
+}
+
 body.admin-console-open .shell {
   width: calc(100% - 16px);
   max-width: none;
@@ -828,6 +839,10 @@ td.field-notes,
   background: #fff;
   color: var(--accent-strong);
   font-size: 13px;
+}
+
+.admin-action.danger {
+  color: var(--danger);
 }
 
 .record-actions {

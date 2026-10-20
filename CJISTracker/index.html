@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>CJIS Applicant Tracker</title>
-    <link rel="stylesheet" href="styles.css?v=sprint-006-apd-department" />
+    <link rel="stylesheet" href="styles.css?v=sprint-007-archive-delete-actions-3" />
   </head>
   <body class="signed-out">
     <header class="app-header" aria-label="Application header">
@@ -219,9 +219,9 @@
 
         <section class="panel archived-review-panel" aria-labelledby="archivedRecordsHeading">
           <p class="field-caption archived-review-caption">
-            Archived applicants stay in local storage. Admin-Full, Admin-Global, and Admin-Staff can
-            review them. Admin-Full and Admin-Global can restore. Default lists, metrics, and search
-            exclude archived records.
+            Archived applicants stay in storage until deleted. Admin-Full, Admin-Global, and
+            Admin-Staff can review and delete them. Admin-Full and Admin-Global can restore.
+            Default lists, metrics, and search exclude archived records.
           </p>
           <label class="search-field archived-search-field">
             Search archived records
@@ -231,6 +231,7 @@
               placeholder="Name, Driver Lic Num, vendor, department, position/role, requestor, email, archived by"
             />
           </label>
+          <p id="archivedMessage" class="form-message" role="status"></p>
           <div id="archivedTable" class="table-wrap" aria-live="polite"></div>
         </section>
       </section>
@@ -271,7 +272,8 @@
             Admin-Full and Admin-Global users can open this console and restore archived applicants.
             Admin-Global sign-in requires a named Admin-Global user. Admin-Staff users sign in as
             Admin-Staff, can use Full Admin, and can review archived records, but cannot restore
-            applicants or open this console. Read Only users sign in as Read Only. Shared Read Only
+            applicants or open this console. Admin-Full, Admin-Global, and Admin-Staff can delete
+            from Archived Records. Read Only users sign in as Read Only. Shared Read Only
             and Admin-Full access codes still work. Prototype codes stay in this browser only.
           </p>
           <form id="addManagedUserForm" class="signin-inline managed-user-form">
@@ -733,6 +735,7 @@
           <button id="saveApplicantButton" class="primary-action" type="submit">Save Applicant</button>
           <button id="archiveRecord" class="secondary-action danger hidden" type="button">Archive</button>
           <button id="restoreRecord" class="secondary-action hidden" type="button">Restore</button>
+          <button id="deleteArchivedRecord" class="secondary-action danger hidden" type="button">Delete</button>
         </div>
         <p id="formMessage" class="form-message" role="status"></p>
       </form>
@@ -748,8 +751,8 @@
       </section>
     </aside>
 
-    <script src="test-applicants.js?v=sprint-007-read-only-label"></script>
-    <script src="app.js?v=sprint-007-read-only-label"></script>
+    <script src="test-applicants.js?v=sprint-007-archive-delete"></script>
+    <script src="app.js?v=sprint-007-archive-delete"></script>
     <!-- tracker-list-overrides.js retired in SPRINT-005; behaviors folded into app.js and styles.css. -->
   </body>
 </html>

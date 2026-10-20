@@ -802,8 +802,10 @@ const saveApplicantButton = document.querySelector("#saveApplicantButton");
 const resetForm = document.querySelector("#resetForm");
 const archiveRecord = document.querySelector("#archiveRecord");
 const restoreRecord = document.querySelector("#restoreRecord");
+const deleteArchivedRecord = document.querySelector("#deleteArchivedRecord");
 const archivedTable = document.querySelector("#archivedTable");
 const archivedCountPill = document.querySelector("#archivedCountPill");
+const archivedMessage = document.querySelector("#archivedMessage");
 const exportCsv = document.querySelector("#exportCsv");
 const formMessage = document.querySelector("#formMessage");
 const duplicateDriversLicensePanel = document.querySelector("#duplicateDriversLicensePanel");
@@ -881,6 +883,7 @@ if (closeLimitedPopupButton) closeLimitedPopupButton.addEventListener("click", (
 if (limitedPopupBackdrop) limitedPopupBackdrop.addEventListener("click", () => closeLimitedPopup());
 archiveRecord.addEventListener("click", archiveApplicant);
 restoreRecord.addEventListener("click", () => restoreApplicant());
+if (deleteArchivedRecord) deleteArchivedRecord.addEventListener("click", () => deleteArchivedApplicant());
 document.querySelector("#dateOfIiiCompletion").addEventListener("input", syncInquiryDueField);
 document.querySelector("#dateOfIiiCompletion").addEventListener("change", syncInquiryDueField);
 const securityAwarenessExpirationInput = document.querySelector("#securityAwarenessExpiration");
@@ -1919,6 +1922,10 @@ function canRestoreArchived() {
   return isFullAdmin() && !isAdminStaffUser();
 }
 
+function canDeleteArchived() {
+  return isFullAdmin();
+}
+
 function isArchivedRecord(record) {
   return Boolean(record && record.archived);
 }
@@ -1983,6 +1990,43 @@ function restoreApplicant(recordId) {
   resetApplicantForm();
   renderAll();
   showMessage(formMessage, "Applicant record restored.");
+}
+
+function deleteArchivedApplicant(recordId) {
+  if (!canDeleteArchived()) {
+    showMessage(
+      archivedMessage || formMessage,
+      "Only Admin-Full, Admin-Global, and Admin-Staff can delete archived applicant records.",
+      true,
+    );
+    return;
+  }
+  const id = recordId || document.querySelector("#recordId").value;
+  if (!id) return;
+  const index = records.findIndex((record) => record.id === id);
+  if (index < 0) return;
+  if (!isArchivedRecord(records[index])) {
+    showMessage(
+      archivedMessage || formMessage,
+      "Only archived applicant records can be deleted. Archive the record first.",
+      true,
+    );
+    return;
+  }
+  if (
+    !confirm(
+      "Delete this archived applicant? It will leave the Archived Records list and cannot be restored from the tracker.",
+    )
+  ) {
+    return;
+  }
+  const deletedApplicant = records[index];
+  records.splice(index, 1);
+  logRecordChange("Deleted", deletedApplicant, ["Archived record deleted"]);
+  saveRecords();
+  resetApplicantForm();
+  renderAll();
+  showMessage(archivedMessage || formMessage, "Archived applicant record deleted.");
 }
 
 function handleDocumentUpload() {
@@ -2538,6 +2582,11 @@ function renderArchivedTable() {
                     ? `<button class="admin-action" type="button" data-restore="${record.id}">Restore</button>`
                     : ""
                 }
+                ${
+                  canDeleteArchived()
+                    ? `<button class="admin-action danger" type="button" data-delete-archived="${record.id}">Delete</button>`
+                    : ""
+                }
               </div>
             </td>
             <td class="field-name">${escapeHtml(record.name)}</td>
@@ -2559,6 +2608,9 @@ function renderArchivedTable() {
   });
   archivedTable.querySelectorAll("[data-restore]").forEach((button) => {
     button.addEventListener("click", () => restoreApplicant(button.dataset.restore));
+  });
+  archivedTable.querySelectorAll("[data-delete-archived]").forEach((button) => {
+    button.addEventListener("click", () => deleteArchivedApplicant(button.dataset.deleteArchived));
   });
 }
 
@@ -3163,6 +3215,12 @@ function updateArchiveVisibility() {
     !canReview || !selected || archived || currentFormMode === "view",
   );
   restoreRecord.classList.toggle("hidden", !canRestoreArchived() || !canReview || !selected || !archived);
+  if (deleteArchivedRecord) {
+    deleteArchivedRecord.classList.toggle(
+      "hidden",
+      !canDeleteArchived() || !canReview || !selected || !archived,
+    );
+  }
 }
 
 function updateEditorVisibility() {
@@ -3629,6 +3687,7 @@ function formatDateTime(value) {
 }
 
 function showMessage(target, message, isError = false) {
+  if (!target) return;
   target.textContent = message;
   target.classList.toggle("error", isError);
 }

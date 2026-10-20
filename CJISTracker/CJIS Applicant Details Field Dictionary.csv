@@ -32,6 +32,7 @@ Applicant Email Address,emailAddress,String,Email
 Applicant Phone Number,phoneNumber,String,Telephone; optional (not required on create); 10 digits only; extra digits rejected; displayed and stored as XXX-XXX-XXXX; empty allowed
 Last Changed By,lastChangedBy,String,System-maintained user name
 Notes,notes,String,Multiline text
-Archived,archived,Boolean,System-maintained; true when Full Admin archives the record. Records are archived not deleted. Default lists/metrics/search exclude archived records. Review and restore are Full Admin only.
+Archived,archived,Boolean,System-maintained; true when Full Admin archives the record. Default lists/metrics/search exclude archived records. Review is Admin-Full, Admin-Global, and Admin-Staff. Restore is Admin-Full and Admin-Global only.
+Deleted,deleted,Boolean,System-maintained when Admin-Full, Admin-Global, or Admin-Staff delete from Archived Records. Removed from tracker lists; SQL Applicants.IsDeleted = 1. No undelete in this sprint.
 Archived At,archivedAt,DateTime,System-maintained ISO timestamp of the last archive
 Archived By,archivedBy,String,System-maintained Full Admin display name who archived the record
