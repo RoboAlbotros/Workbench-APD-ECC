@@ -1,9 +1,8 @@
 "use strict";
 
 /**
- * SQL connection placeholder (SPRINT-006).
- * Reads well-known environment names only. Does not open a socket or load a driver.
- * Connection target, credentials, and Azure vs on-prem remain TBD.
+ * SQL connection (SPRINT-007). Reads environment names only.
+ * Does not connect until connect() is called. Password stays in process env.
  */
 
 function readSqlConfig() {
@@ -11,28 +10,80 @@ function readSqlConfig() {
     server: process.env.SQL_SERVER || "TBD",
     database: process.env.SQL_DATABASE || "CjisApplicantTracker",
     user: process.env.SQL_USER || "TBD",
-    port: process.env.SQL_PORT || "1433",
+    password: process.env.SQL_PASSWORD || "",
+    port: Number(process.env.SQL_PORT || 1433),
     encrypt: process.env.SQL_ENCRYPT !== "false",
     trustServerCertificate: process.env.SQL_TRUST_SERVER_CERTIFICATE === "true",
   };
 }
 
 function isConfigured(config) {
-  return Boolean(config.server && config.server !== "TBD");
+  return Boolean(
+    config.server &&
+      config.server !== "TBD" &&
+      config.user &&
+      config.user !== "TBD" &&
+      config.password &&
+      config.password !== "TBD",
+  );
 }
 
-function createDbPlaceholder() {
+function loadMssql() {
+  try {
+    return require("mssql");
+  } catch {
+    return null;
+  }
+}
+
+function createDb() {
   const config = readSqlConfig();
+  let pool = null;
+  let lastError = "";
+
   return {
     configured: isConfigured(config),
     server: config.server,
     database: config.database,
-    connect() {
-      throw new Error(
-        "SPRINT-006: database connection is not implemented. Create the database from CJISTracker/database-schema.sql; wire a driver in a later sprint.",
-      );
+    driverLoaded: Boolean(loadMssql()),
+    lastError() {
+      return lastError;
+    },
+    async connect() {
+      lastError = "";
+      if (!isConfigured(config)) {
+        lastError =
+          "SQL_SERVER / SQL_USER / SQL_PASSWORD are not set (copy backend/.env.example to backend/.env).";
+        return null;
+      }
+      const sql = loadMssql();
+      if (!sql) {
+        lastError = "npm package mssql is not installed. From backend/ run: npm install";
+        return null;
+      }
+      if (pool && pool.connected) return pool;
+      try {
+        pool = new sql.ConnectionPool({
+          server: config.server,
+          database: config.database,
+          user: config.user,
+          password: config.password,
+          port: config.port,
+          options: {
+            encrypt: config.encrypt,
+            trustServerCertificate: config.trustServerCertificate,
+            enableArithAbort: true,
+          },
+        });
+        await pool.connect();
+        return pool;
+      } catch (error) {
+        lastError = error.message || String(error);
+        pool = null;
+        return null;
+      }
     },
   };
 }
 
-module.exports = { createDbPlaceholder, readSqlConfig };
+module.exports = { createDb, createDbPlaceholder: createDb, readSqlConfig };

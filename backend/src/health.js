@@ -1,25 +1,26 @@
 "use strict";
 
-/**
- * Health payload stub (SPRINT-006).
- * Future HTTP surface: GET /health → handleHealth(db).
- * This module does not start a listener.
- */
-
-function handleHealth(db) {
+function handleHealth(db, extra = {}) {
+  const connected = Boolean(extra.connected);
   return {
-    status: "scaffold",
+    status: connected ? "ok" : "degraded",
     service: "cjis-tracker-backend",
-    sprint: "SPRINT-006",
+    sprint: "SPRINT-007",
+    listen: extra.listen || null,
     database: {
-      connected: false,
+      connected,
       configured: Boolean(db && db.configured),
+      driverLoaded: Boolean(db && db.driverLoaded),
       name: db && db.database ? db.database : "CjisApplicantTracker",
       schema: "CJISTracker/database-schema.sql",
-      reason: "Connection is not implemented. The browser app still uses localStorage.",
+      reason: connected
+        ? "SQL Server connected."
+        : db && db.lastError
+          ? db.lastError()
+          : "SQL is not connected. The browser app uses localStorage until the API reports connected.",
     },
     auth: {
-      mode: "not-wired",
+      mode: "localhost-unauthenticated-prototype",
       productionDirection: "City SSO / Entra ID (DEC-015)",
       roles: ["limited", "records", "admin"],
       prototypePins: "never production",

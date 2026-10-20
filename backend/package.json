@@ -1,16 +1,18 @@
 {
   "name": "cjis-tracker-backend",
-  "version": "0.0.0-scaffold",
+  "version": "0.0.0-sprint-007",
   "private": true,
-  "description": "SPRINT-006 scaffolding only. Not a production API. Do not npm install until a trusted-source decision is recorded.",
+  "description": "SPRINT-007 localhost SQL API. Bind 127.0.0.1 only. Not a production API.",
   "type": "commonjs",
   "engines": {
     "node": ">=20"
   },
   "scripts": {
     "start": "node src/index.js",
-    "health": "node src/index.js"
+    "health": "node src/index.js --health"
   },
-  "dependencies": {},
+  "dependencies": {
+    "mssql": "^11.0.1"
+  },
   "devDependencies": {}
 }

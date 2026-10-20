@@ -19,8 +19,8 @@
   },
   "state": {
     "lifecycleStage": "development",
-    "frameworkPhase": "SPRINT-006 complete",
-    "workStatus": "complete",
+    "frameworkPhase": "SPRINT-007",
+    "workStatus": "active",
     "blockingState": "clear",
     "blockers": [],
     "health": {
@@ -44,10 +44,10 @@
     "summary": {
       "outcome": "TBD — owner decision required.",
       "accountableOwner": "Jessica Solis (product owner)",
-      "nextMilestone": "Owner to designate the next sprint. Browser app remains localStorage until a later authorized sprint wires the SQL API or Entra login.",
-      "nextRequiredDecision": "Designate next sprint (SPRINT-007 candidate, scope TBD). Ratification of relayed SPRINT-006 G-TEST by Jessica Solis and Annamarie Zambrano remains open. SPRINT-005 G-TEST remains pending. G-ARCH and G-SEC remain pending before any live API or Entra login. Privacy Framework / PIA revisit after DEC-020 is TBD for the security/privacy authority.",
+      "nextMilestone": "SPRINT-007 localhost SQL API wired; browser uses SQL when the API reports connected, otherwise localStorage. Entra login remains later work.",
+      "nextRequiredDecision": "G-TEST for SPRINT-007. G-ARCH and G-SEC remain pending and are not satisfied by this localhost prototype. Ratification of relayed SPRINT-005/006 (and this sprint approval) by Jessica Solis and Annamarie Zambrano remains open. Privacy Framework / PIA revisit after DEC-020 is TBD.",
       "decisionsRequired": [],
-      "lastUpdated": "2026-10-19T15:43:00-06:00"
+      "lastUpdated": "2026-10-19T23:45:00-06:00"
     }
   },
   "release": {
@@ -96,7 +96,7 @@
     "G-SCOPE": { "state": "satisfied", "owner": "Jessica Solis (product) + Jessica Solis/Annamarie Zambrano (outcome, joint)", "decisionDate": "2026-10-08", "evidence": "docs/product/product-definition.md 0.1.0 APPROVED; confirmation relayed by project owner in agent session (history run 9)", "scope": "project" },
     "G-ARCH": { "state": "pending", "owner": "Technical owner (TBD)", "decisionDate": null, "evidence": null, "scope": "project" },
     "G-SEC": { "state": "pending", "owner": "Security/privacy authority (TBD)", "decisionDate": null, "evidence": null, "scope": "project" },
-    "G-TEST": { "state": "satisfied", "owner": "Annamarie Zambrano (QA)", "decisionDate": "2026-10-19", "evidence": "SPRINT-006 G-TEST accepted as relayed by project owner Brett on behalf of QA authority Annamarie Zambrano (owner statement 2026-10-19: 'approve gate for next sprint'). Scaffolding checks: backend/src/index.js prints scaffold health JSON without listening or connecting; project.json schema-validated. Ratification by Jessica Solis and Annamarie Zambrano remains open. SPRINT-005 G-TEST remains pending (docs/reviews/sprint-005-test-evidence.md). G-ARCH and G-SEC are not satisfied. Next sprint is not authorized until designated.", "scope": "per-sprint; SPRINT-006 complete; no current authorized sprint" },
+    "G-TEST": { "state": "pending", "owner": "Annamarie Zambrano (QA)", "decisionDate": null, "evidence": "SPRINT-005 and SPRINT-006 G-TEST accepted as relayed 2026-10-19. Current work SPRINT-007 (localhost SQL API) G-TEST pending.", "scope": "per-sprint; current SPRINT-007" },
     "G-CAND": { "state": "pending", "owner": "Release authority (TBD)", "decisionDate": null, "evidence": null, "scope": "release 0.1.0" },
     "G-REL": { "state": "pending", "owner": "Release authority (TBD)", "decisionDate": null, "evidence": null, "scope": "release 0.1.0" }
   },
@@ -106,7 +106,7 @@
     "authentication": "DEC-015 (security/privacy authority Brett, 2026-10-08): production direction is City SSO (Entra ID) with server-side role-based access mirroring the three view levels (Limited/Records/Admin), targeted at a future release. Prototype local PINs are never production controls.",
     "authorization": "TBD. Prototype has three local views (Limited, Records, Full Admin); production model undecided.",
     "secretsManagement": "No credentials, tokens, personal information, or production secrets in repository files (Rule 50).",
-    "supplyChain": "No external dependencies currently. Additions require trusted-source decisions and recorded SP 800-204D practices.",
+    "supplyChain": "SPRINT-007 prototype-only trusted-source: npm package mssql from registry.npmjs.org for the localhost SQL API. Production supply-chain policy, CI pinning, and SP 800-204D expansion remain TBD. No production host is authorized.",
     "loggingAudit": "TBD — required for production per prototype README; no decision recorded.",
     "testingExpectations": "Rule 40 categories; required/not-required decisions pending security/privacy authority.",
     "environmentSeparation": "TBD — no environments exist.",
@@ -120,7 +120,7 @@
       "ssdf-1.1": { "applicability": "applicable", "assessor": "Brett (security/privacy authority)", "assessmentDate": "2026-10-08", "notes": "DEC-016: applies to development practices (reviewed change, no secrets in repo, dependency controls per Rule 50)." },
       "privacy-framework-1.0": { "applicability": "not-applicable", "assessor": "Brett (security/privacy authority)", "assessmentDate": "2026-10-08", "notes": "DEC-016: not applicable under DEC-012 (no PII stored). MUST be revisited on any data-scope change. DEC-020 added Driver License Number as an in-scope field; Privacy Framework revisit is TBD for the security/privacy authority. No revisit has been completed." },
       "sp-800-218a": { "applicability": "not-applicable", "assessor": "Brett (security/privacy authority)", "assessmentDate": "2026-10-08", "notes": "DEC-016: no delivered AI system; AI-assisted coding alone does not trigger the profile." },
-      "sp-800-204d": { "applicability": "applicable-minimal", "assessor": "Brett (security/privacy authority)", "assessmentDate": "2026-10-08", "notes": "DEC-016: trusted-source expectations only; no CI/CD or external dependencies exist. Expand the profile when a pipeline or dependencies are introduced." }
+      "sp-800-204d": { "applicability": "applicable-minimal", "assessor": "Brett (security/privacy authority)", "assessmentDate": "2026-10-08", "notes": "DEC-016: trusted-source expectations only. SPRINT-007 recorded a prototype-only trusted-source for npm package mssql from registry.npmjs.org. Production policy, CI pinning, and profile expansion remain TBD." }
     },
     "threatModel": "Not started. Required before C4 or material C3 work (Rule 50).",
     "privacyImpactAssessment": "Not required under DEC-012 (no PII stored) — accountable decision by security/privacy authority Brett, 2026-10-08. MUST be revisited if data scope ever changes (DEC-014). DEC-020 (2026-10-14) is a data-scope change (Driver License Number now in-scope). Privacy Framework / PIA revisit is TBD for the security/privacy authority. A PIA has not been performed.",
@@ -147,9 +147,10 @@
     "prototype": "CJISTracker/README.md",
     "backend": "backend/README.md",
     "ssoArchitecture": "docs/architecture/sso-entra-id.md",
-    "sprint006": "docs/planning/sprints/sprint-006-sql-sso-scaffolding.md"
+    "sprint006": "docs/planning/sprints/sprint-006-sql-sso-scaffolding.md",
+    "sprint007": "docs/planning/sprints/sprint-007-wire-sql-api.md"
   },
-  "currentAuthorizedWork": null,
+  "currentAuthorizedWork": "SPRINT-007",
   "history": [
     { "timestamp": "2026-10-05", "actor": "Codex primary agent (run 1)", "event": "Draft governing documents created in empty directory.", "basis": "User-pasted SGK initialization request" },
     { "timestamp": "2026-10-07", "actor": "Cursor primary agent (run 2)", "event": "SGK location preflight; authoritative package not found; repo initialized and pushed to GitHub.", "basis": "User continuation request" },
@@ -189,14 +190,17 @@
     { "timestamp": "2026-10-14T10:31:00-06:00", "actor": "Security/privacy authority and project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "DEC-020 recorded: Driver License Number is now an in-scope field (UI: Driver Lic Num; field key driversLicense) in the format two-letter state prefix + 9 digits with no hyphens or spaces (example: NM123456789); empty is allowed; stored uppercase. Control ID remains in the data model and import mapping so existing imported values are not destroyed, but is hidden from the applicant form, Limited/Records/Admin lists, and search placeholder. normalizeRecords no longer deletes driversLicense; it still deletes dateOfBirth and socialSecurityNumber. Raw MasterSheet State / Driver's License headers stay blocked; a Driver Lic Num header is accepted only when the value matches the format. Seed test applicants remain without DL values. SQL Applicants.DriverLicenseNumber NVARCHAR(11) added. Privacy Framework / PIA must be revisited per DEC-014/016; that revisit is TBD for the authority and a PIA has not been performed. Passport work retained. currentAuthorizedWork remains SPRINT-006.", "basis": "Owner statement: hide control number field replace with Driver Lic Num that accepts with no hyphens two letter state prefix and 9 digit number (example: NM123456789)" },
     { "timestamp": "2026-10-14T10:43:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "SPRINT-006 C2 behavior: entering a Driver Lic Num that already exists (uppercase compare; current record id ignored when editing; archived records included; empty DL skipped) shows \"applicant is already on file\" and lists matching records (name, DL, phone, email, vendor, clearance). Save is blocked until the user chooses Create new applicant, which opens create mode with a new empty id and copies only Name, Driver Lic Num, Applicant Phone Number, and Applicant Email from the selected match. Multiple matches can be picked from. currentAuthorizedWork remains SPRINT-006.", "basis": "Owner statement: add validation if same driver lic is entered display message applicant is already on file, show duplicate records, option to create new applicant and copy Name, Driver Lic Num, Applicant Phone Number, and Applicant Email" },
     { "timestamp": "2026-10-14T11:31:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "SPRINT-006 C2: new applicants require Name, Driver Lic Num, Vendor, Requestor, and Source. Create-only validation in saveApplicant; HTML required toggled so incomplete seed/import records remain editable. Source editable on create and copy-new; read-only when editing existing records. Copy-new leaves vendor/requestor/source empty. DL still must be ST+9 digits when present. Field dictionary updated. currentAuthorizedWork remains SPRINT-006.", "basis": "Make the following fields required for new entries. Name (Last, First, MI, Suffix) Driver Lic Num Vendor Requestor Source" },
-    { "timestamp": "2026-10-19T15:43:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "SPRINT-006 COMPLETE. G-TEST accepted as relayed by project owner on behalf of QA authority Annamarie Zambrano (owner statement: 'approve gate for next sprint'). currentAuthorizedWork = null; workStatus complete; frameworkPhase SPRINT-006 complete. Agent review does not satisfy the gate; this is a recorded owner-relayed acceptance. Ratification by Jessica Solis and Annamarie Zambrano remains open. SPRINT-005 G-TEST remains pending. G-ARCH and G-SEC remain pending and are not satisfied. No live API or Entra login. Next sprint is not authorized until the owner designates scope (SPRINT-007 candidate, TBD).", "basis": "Owner statement: 'approve gate for next sprint'" }
+    { "timestamp": "2026-10-19T15:43:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "SPRINT-006 COMPLETE. G-TEST accepted as relayed by project owner on behalf of QA authority Annamarie Zambrano (owner statement: 'approve gate for next sprint'). currentAuthorizedWork = null; workStatus complete; frameworkPhase SPRINT-006 complete. Agent review does not satisfy the gate; this is a recorded owner-relayed acceptance. Ratification by Jessica Solis and Annamarie Zambrano remains open. SPRINT-005 G-TEST remains pending. G-ARCH and G-SEC remain pending and are not satisfied. No live API or Entra login. Next sprint is not authorized until the owner designates scope (SPRINT-007 candidate, TBD).", "basis": "Owner statement: 'approve gate for next sprint'" },
+    { "timestamp": "2026-10-19T23:13:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "SPRINT-005 COMPLETE. Sprint approval ratified and G-TEST accepted as relayed by project owner on behalf of Jessica Solis and Annamarie Zambrano (owner statement: 'Close SPRINT-005 approved'; evidence: docs/reviews/sprint-005-test-evidence.md). Agent review does not satisfy the gate. Ratification remains open. currentAuthorizedWork remains null. SPRINT-006 was already complete. G-ARCH and G-SEC remain pending. Next sprint is not authorized until the owner designates scope (SPRINT-007 candidate, TBD).", "basis": "Owner statement: 'Close SPRINT-005 approved'" },
+    { "timestamp": "2026-10-19T23:15:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "SPRINT-007 (Wire the SQL API) authorized as C3 localhost prototype. currentAuthorizedWork = SPRINT-007; workStatus active; frameworkPhase SPRINT-007. G-TEST pending. G-ARCH and G-SEC remain pending and are not satisfied. Bind 127.0.0.1 only; no Entra; no production host. Prototype trusted-source for npm package mssql (named in SPRINT-006 backend README) recorded for this sprint only. Browser uses SQL when the API reports connected, otherwise localStorage.", "basis": "Owner statement: 'SPRINT-007 Wire the SQL API'" },
+    { "timestamp": "2026-10-19T23:45:00-06:00", "actor": "Cursor primary agent", "event": "SPRINT-007 implementation: localhost HTTP API on 127.0.0.1:8741 (GET /health, GET/PUT /api/applicants) using mssql from registry.npmjs.org (prototype trusted-source only). CJISTracker loads SQL when health.database.connected is true and otherwise keeps localStorage. Documents and change log stay in the browser. No Entra; no public bind. G-TEST pending. G-ARCH and G-SEC remain unsatisfied.", "basis": "Authorized SPRINT-007 (history 2026-10-19T23:15:00-06:00)" }
   ],
   "validation": {
     "validator": "python-jsonschema (Draft202012Validator), Python 3.14.0",
     "validatorVersion": "4.26.0",
     "schemaVersion": "3.0.0",
     "result": "pass",
-    "timestamp": "2026-10-19T15:43:00-06:00",
+    "timestamp": "2026-10-19T23:45:00-06:00",
     "limitations": "Structural conformance only; proves canonical values and shape, not factual accuracy, evidence sufficiency, approvals, gate satisfaction, or policy compliance. Schema is the project-authored profile, not an official SGK schema."
   },
   "extensions": {

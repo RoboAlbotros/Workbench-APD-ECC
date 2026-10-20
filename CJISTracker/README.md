@@ -100,21 +100,29 @@ are hidden from the applicant form.
 - Documents
 - Notes
 
-Data is stored in the browser's local storage. For production CJIS workflows, connect this interface to server-side authentication, authorization, encryption, auditing, and a managed database.
+Data is stored in this browser until the localhost SQL API reports a connected
+database. Then load/save uses `http://127.0.0.1:8741` and a localStorage copy is
+kept as fallback. The footer shows `Storage: this browser` or `Storage: SQL (localhost)`.
+Change log and document blobs stay in this browser this sprint. For production
+CJIS workflows, connect this interface to server-side authentication (DEC-015
+City SSO / Entra ID), authorization, encryption, auditing, and a managed host.
 
-## SQL schema and future backend (SPRINT-006)
+## SQL schema and localhost API (SPRINT-007)
 
 The creatable SQL Server script is `database-schema.sql`. Load a seed CSV with
 `database-data-migration.sql` (staging table `stg.ApplicantSeed` and
-`usp_MigrateApplicantSeed`). Neither script changes this localStorage app.
-Create the database, then optionally run the data-migration script:
+`usp_MigrateApplicantSeed`). Create the database, then start the API:
 
 ```text
 sqlcmd -S <server> -E -i "CJISTracker\database-schema.sql"
 sqlcmd -S <server> -E -d CjisApplicantTracker -i "CJISTracker\database-data-migration.sql"
+cd backend
+copy .env.example .env
+npm install
+npm start
 ```
 
-or Execute the files in SSMS. Keep real applicant CSVs outside the repository.
-Reserved API/SSO stubs live in `backend/`
-(see `backend/README.md` and `docs/architecture/sso-entra-id.md`). They are
-scaffolding only; this browser app is not wired to them.
+Serve this folder at `http://127.0.0.1:8740` (for example `python -m http.server 8740`).
+If the API is down or `.env` still has TBD placeholders, the app keeps using
+localStorage. Keep real applicant CSVs outside the repository. Entra login is
+not wired (`docs/architecture/sso-entra-id.md`). G-ARCH and G-SEC remain pending.

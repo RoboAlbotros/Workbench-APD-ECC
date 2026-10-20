@@ -7,7 +7,7 @@ Environment: Cursor IDE browser (Chromium), app served from `CJISTracker/` on
 `http://127.0.0.1:8760` (separate origin from any existing 8750 preview; that
 origin's localStorage was not cleared). Seven fictitious TEST-0001..0007 records
 seeded for this run.
-Status: PASS (all checks) — G-TEST acceptance by Annamarie Zambrano (QA) pending
+Status: PASS (all checks) — G-TEST accepted as relayed 2026-10-19 by project owner Brett on behalf of QA authority Annamarie Zambrano; ratification open
 
 ## Acceptance tests
 
@@ -41,4 +41,4 @@ admin table displays it; search includes it; the drawer Identity section edits i
 - Scripted Chromium run on port 8760 with fictitious records only.
 - Focus-trap Tab wrap was implemented and Escape/return-focus were exercised;
   exhaustive Tab cycling through every control was not separately timed.
-- G-TEST acceptance by Annamarie Zambrano remains outstanding.
+- G-TEST accepted as relayed 2026-10-19 (owner statement: "Close SPRINT-005 approved"). Ratification by Jessica Solis and Annamarie Zambrano remains open.

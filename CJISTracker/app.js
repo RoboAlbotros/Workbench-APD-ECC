@@ -7,6 +7,10 @@ const STORAGE_KEYS = {
   managedUsers: "cjisApplicantTracker.managedUsers",
 };
 
+const SQL_API_BASE = "http://127.0.0.1:8741";
+let persistenceMode = "local";
+let sqlPersistError = "";
+
 // Access codes are local prototype controls. Full Admin is operator-set to 12345
 // (owner-directed, SPRINT-004). Former defaults 1111/2222/2468 stay forbidden.
 const FORBIDDEN_CODES = new Set(["1111", "2222", "2468", "0000", "1234"]);
@@ -1024,6 +1028,82 @@ function saveRecords() {
 
 function saveRecordSet(recordSet) {
   localStorage.setItem(STORAGE_KEYS.records, JSON.stringify(recordSet));
+  if (persistenceMode === "sql") {
+    void persistRecordsToSql(recordSet);
+  }
+}
+
+function recordsForSql(recordSet) {
+  return recordSet.map((record) => {
+    const next = { ...record };
+    delete next.dateOfBirth;
+    delete next.socialSecurityNumber;
+    next.documents = [];
+    return next;
+  });
+}
+
+async function persistRecordsToSql(recordSet) {
+  try {
+    const response = await fetch(`${SQL_API_BASE}/api/applicants`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ records: recordsForSql(recordSet) }),
+    });
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      sqlPersistError = body.reason || body.error || `HTTP ${response.status}`;
+      updatePersistenceStatus();
+      return;
+    }
+    sqlPersistError = "";
+    updatePersistenceStatus();
+  } catch (error) {
+    sqlPersistError = error.message || String(error);
+    updatePersistenceStatus();
+  }
+}
+
+async function startSqlPersistence() {
+  try {
+    const healthResponse = await fetch(`${SQL_API_BASE}/health`);
+    const health = await healthResponse.json().catch(() => null);
+    if (!health || !health.database || !health.database.connected) {
+      updatePersistenceStatus();
+      return;
+    }
+    const listResponse = await fetch(`${SQL_API_BASE}/api/applicants`);
+    if (!listResponse.ok) {
+      updatePersistenceStatus();
+      return;
+    }
+    const body = await listResponse.json();
+    const remote = Array.isArray(body.records) ? body.records : [];
+    if (remote.length) {
+      records = normalizeRecords(remote);
+    }
+    persistenceMode = "sql";
+    if (!remote.length && records.length) {
+      await persistRecordsToSql(records);
+    }
+    renderAll();
+    updatePersistenceStatus();
+  } catch {
+    persistenceMode = "local";
+    updatePersistenceStatus();
+  }
+}
+
+function updatePersistenceStatus() {
+  const target = document.querySelector("#persistenceStatus");
+  if (!target) return;
+  if (persistenceMode === "sql") {
+    target.textContent = sqlPersistError
+      ? `Storage: SQL error (${sqlPersistError})`
+      : "Storage: SQL (localhost)";
+    return;
+  }
+  target.textContent = "Storage: this browser";
 }
 
 function loadChangeLog() {
@@ -3429,3 +3509,5 @@ updateSetupVisibility();
 updateAccessControls();
 updateFullScreenVisibility();
 setView("limited");
+updatePersistenceStatus();
+void startSqlPersistence();
