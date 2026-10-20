@@ -19,7 +19,8 @@ City SSO / Entra ID (DEC-015) is **not** implemented here.
 ## Create the database
 
 The creatable T-SQL script is `CJISTracker/database-schema.sql` (SQL Server / Azure SQL).
-It is idempotent and seeds Limited / Records / Admin roles plus lookup values.
+It is idempotent. Re-run it to refresh constraints and labels. It seeds
+Read Only (`RoleCode` limited), Records View, and Full Admin plus lookup values.
 
 ```text
 sqlcmd -S <server> -E -i "CJISTracker\database-schema.sql"

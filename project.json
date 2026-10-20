@@ -44,10 +44,10 @@
     "summary": {
       "outcome": "TBD — owner decision required.",
       "accountableOwner": "Jessica Solis (product owner)",
-      "nextMilestone": "SPRINT-007 localhost SQL API wired; browser uses SQL when the API reports connected, otherwise localStorage. Entra login remains later work.",
+      "nextMilestone": "SPRINT-007 localhost SQL API wired; database-schema.sql refreshed to the current app.js field map. Browser uses SQL when the API reports connected, otherwise localStorage. Entra login remains later work.",
       "nextRequiredDecision": "G-TEST for SPRINT-007. G-ARCH and G-SEC remain pending and are not satisfied by this localhost prototype. Ratification of relayed SPRINT-005/006 (and this sprint approval) by Jessica Solis and Annamarie Zambrano remains open. Privacy Framework / PIA revisit after DEC-020 is TBD.",
       "decisionsRequired": [],
-      "lastUpdated": "2026-10-19T23:45:00-06:00"
+      "lastUpdated": "2026-10-20T12:20:00-06:00"
     }
   },
   "release": {
@@ -193,14 +193,15 @@
     { "timestamp": "2026-10-19T15:43:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "SPRINT-006 COMPLETE. G-TEST accepted as relayed by project owner on behalf of QA authority Annamarie Zambrano (owner statement: 'approve gate for next sprint'). currentAuthorizedWork = null; workStatus complete; frameworkPhase SPRINT-006 complete. Agent review does not satisfy the gate; this is a recorded owner-relayed acceptance. Ratification by Jessica Solis and Annamarie Zambrano remains open. SPRINT-005 G-TEST remains pending. G-ARCH and G-SEC remain pending and are not satisfied. No live API or Entra login. Next sprint is not authorized until the owner designates scope (SPRINT-007 candidate, TBD).", "basis": "Owner statement: 'approve gate for next sprint'" },
     { "timestamp": "2026-10-19T23:13:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "SPRINT-005 COMPLETE. Sprint approval ratified and G-TEST accepted as relayed by project owner on behalf of Jessica Solis and Annamarie Zambrano (owner statement: 'Close SPRINT-005 approved'; evidence: docs/reviews/sprint-005-test-evidence.md). Agent review does not satisfy the gate. Ratification remains open. currentAuthorizedWork remains null. SPRINT-006 was already complete. G-ARCH and G-SEC remain pending. Next sprint is not authorized until the owner designates scope (SPRINT-007 candidate, TBD).", "basis": "Owner statement: 'Close SPRINT-005 approved'" },
     { "timestamp": "2026-10-19T23:15:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "SPRINT-007 (Wire the SQL API) authorized as C3 localhost prototype. currentAuthorizedWork = SPRINT-007; workStatus active; frameworkPhase SPRINT-007. G-TEST pending. G-ARCH and G-SEC remain pending and are not satisfied. Bind 127.0.0.1 only; no Entra; no production host. Prototype trusted-source for npm package mssql (named in SPRINT-006 backend README) recorded for this sprint only. Browser uses SQL when the API reports connected, otherwise localStorage.", "basis": "Owner statement: 'SPRINT-007 Wire the SQL API'" },
-    { "timestamp": "2026-10-19T23:45:00-06:00", "actor": "Cursor primary agent", "event": "SPRINT-007 implementation: localhost HTTP API on 127.0.0.1:8741 (GET /health, GET/PUT /api/applicants) using mssql from registry.npmjs.org (prototype trusted-source only). CJISTracker loads SQL when health.database.connected is true and otherwise keeps localStorage. Documents and change log stay in the browser. No Entra; no public bind. G-TEST pending. G-ARCH and G-SEC remain unsatisfied.", "basis": "Authorized SPRINT-007 (history 2026-10-19T23:15:00-06:00)" }
+    { "timestamp": "2026-10-19T23:45:00-06:00", "actor": "Cursor primary agent", "event": "SPRINT-007 implementation: localhost HTTP API on 127.0.0.1:8741 (GET /health, GET/PUT /api/applicants) using mssql from registry.npmjs.org (prototype trusted-source only). CJISTracker loads SQL when health.database.connected is true and otherwise keeps localStorage. Documents and change log stay in the browser. No Entra; no public bind. G-TEST pending. G-ARCH and G-SEC remain unsatisfied.", "basis": "Authorized SPRINT-007 (history 2026-10-19T23:15:00-06:00)" },
+    { "timestamp": "2026-10-20T12:20:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "SPRINT-007 schema refresh: CJISTracker/database-schema.sql retitled and aligned to the current app.js model. Re-run is additive (no drop of applicant rows). SecurityRoles.RoleName for RoleCode limited refreshes Limited View to Read Only. Department check constraint refresh includes APD. Status/activityStatus remains derived from SecurityAwarenessExpiration and NcicCertificationExpiration (not a column). No DOB/SSN. G-ARCH and G-SEC remain pending.", "basis": "Owner statement: 'Update and refresh the db scheme for sprint-007'" }
   ],
   "validation": {
     "validator": "python-jsonschema (Draft202012Validator), Python 3.14.0",
     "validatorVersion": "4.26.0",
     "schemaVersion": "3.0.0",
     "result": "pass",
-    "timestamp": "2026-10-19T23:45:00-06:00",
+    "timestamp": "2026-10-20T12:20:00-06:00",
     "limitations": "Structural conformance only; proves canonical values and shape, not factual accuracy, evidence sufficiency, approvals, gate satisfaction, or policy compliance. Schema is the project-authored profile, not an official SGK schema."
   },
   "extensions": {

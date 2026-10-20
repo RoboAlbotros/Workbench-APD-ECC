@@ -3,7 +3,8 @@
 Status: DRAFT — planning list for preparing seed records
 Owner: Brett (technical owner)
 Date: 2026-10-19
-Controlling work: SPRINT-006 (recorded). Actual seed import of real applicant
+Controlling work: SPRINT-006 (recorded); schema sizes refreshed under
+SPRINT-007. Actual seed import of real applicant
 data stays out of scope until governance authorities approve an import sprint.
 This file does not authorize import of production PII.
 

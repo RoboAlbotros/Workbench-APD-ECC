@@ -1,13 +1,13 @@
 /*
   CJIS Applicant Tracker — SQL data migration (staging + load)
   Target: Microsoft SQL Server / Azure SQL
-  Controlling work: SPRINT-006. Class C3 scaffolding. No live API.
+  Controlling work: SPRINT-007 (schema refresh). Class C3 localhost prototype.
 
   PURPOSE
   -------
   Land a seed/import spreadsheet into SQL Server using the current tracker
-  field model (docs/planning/seed-import-field-spec.csv). This does not wire
-  the browser app; CJISTracker/ remains localStorage until a later sprint.
+  field model (docs/planning/seed-import-field-spec.csv). The browser uses the
+  localhost API when SQL is connected; otherwise it keeps localStorage.
 
   PREREQUISITE
   ------------

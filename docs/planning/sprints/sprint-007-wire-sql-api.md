@@ -17,8 +17,10 @@ Controlling work ID: SPRINT-007
    schema. Bind to `127.0.0.1` only. A deployed or non-localhost listener would
    be C4 and is excluded. Does not satisfy G-ARCH or G-SEC.
 4. Allowed files: `backend/**`, `CJISTracker/app.js`, `CJISTracker/index.html`,
-   `CJISTracker/README.md`, this sprint document, `project.json`.
-   Schema changes only if required to persist current app.js fields.
+   `CJISTracker/README.md`, `CJISTracker/database-schema.sql`,
+   `CJISTracker/database-data-migration.sql`, this sprint document,
+   `project.json`. Schema refresh is required to persist current app.js fields
+   and labels (including Read Only RoleName and the APD department list).
 5. Acting function: technical owner Brett directed the work. Agent review does
    not satisfy G-ARCH, G-SEC, G-TEST, or release gates.
 
@@ -48,7 +50,8 @@ classification. G-ARCH and G-SEC remain pending. Production hosting remains TBD.
 1. Localhost HTTP API (`127.0.0.1` only) with health and applicant
    list/create/update (archive via `IsArchived`; no hard delete).
 2. SQL Server connection from environment values (`.env` local only). Create
-   the database with `CJISTracker/database-schema.sql` as before.
+   or refresh the database with `CJISTracker/database-schema.sql` so columns,
+   department values, and role labels match the current app.js model.
 3. Map current `app.js` applicant fields to schema columns. Do not persist
    DOB or SSN (DEC-012 / DEC-017).
 4. Wire `CJISTracker` load/save to the API when health reports SQL connected;
@@ -88,6 +91,7 @@ classification. G-ARCH and G-SEC remain pending. Production hosting remains TBD.
 - `docs/planning/sprints/sprint-007-wire-sql-api.md`
 - `backend/src/*` HTTP + SQL wiring
 - `CJISTracker/app.js` API adapter
+- `CJISTracker/database-schema.sql` (idempotent create/refresh)
 - Updated `backend/README.md`, `CJISTracker/README.md`, `project.json`
 
 ## Required tests

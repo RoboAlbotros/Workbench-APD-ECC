@@ -16,11 +16,11 @@ names remain **TBD**. Do not invent them.
 Production authentication is City SSO / Microsoft Entra ID, with **server-side**
 role-based access that mirrors the three prototype views:
 
-| App role | SecurityRoles.RoleCode | Intended capability (already seeded) |
-| --- | --- | --- |
-| Limited View | `limited` | Read limited fields only |
-| Records View | `records` | View and edit applicants; no delete |
-| Full Admin | `admin` | Create, edit, delete, change log |
+| App role | SecurityRoles.RoleCode | SecurityRoles.RoleName | Intended capability (already seeded) |
+| --- | --- | --- | --- |
+| Read Only | `limited` | Read Only | Read limited fields only |
+| Records View | `records` | Records View | View and edit applicants; no delete |
+| Full Admin | `admin` | Full Admin | Create, edit, delete, change log |
 
 Prototype local PINs (`CJISTracker/` access codes, including operator-set Full
 Admin `12345`) are **never** production controls. They MUST NOT be accepted by a

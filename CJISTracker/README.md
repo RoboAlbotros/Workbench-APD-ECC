@@ -4,8 +4,8 @@ Open `index.html` in a browser to use the CJIS Applicant Tracker.
 
 ## Views
 
-- Limited View is read-only, hides sensitive personal fields, and filters Clearance Type to One Time Visit. Only non-archived applicants with Clearance Type `One Time Visit` appear there (search, Activity, and Fingerprint Outcome filters can hide rows further). Applicant identity uses separate Last Name, First Name, Middle Initial, and Suffix fields. Listings still show the composed name (Last Name, First Name MI Suffix). A View action opens a read-only popup with Last Name, First Name, Clearance Type, Department, Position/Role, and Certifications & Dates fields (Fingerprint Outcome and Date of Site Visit Only stay off that popup). It does not open the full applicant drawer. Two fictitious One Time Visit seed records (Guest, Pat and Visitor, Kim) are added when those IDs are not already stored.
-- Records View uses the Limited View table style and allows applicant view/edit actions without archive access.
+- Read Only (formerly Limited View) hides sensitive personal fields and filters Clearance Type to One Time Visit. Only non-archived applicants with Clearance Type `One Time Visit` appear there (search, Activity, and Fingerprint Outcome filters can hide rows further). Applicant identity uses separate Last Name, First Name, Middle Initial, and Suffix fields. Listings still show the composed name (Last Name, First Name MI Suffix). A View action opens a read-only popup with Last Name, First Name, Clearance Type, Department, Position/Role, and Certifications & Dates fields (Fingerprint Outcome and Date of Site Visit Only stay off that popup). It does not open the full applicant drawer. Two fictitious One Time Visit seed records (Guest, Pat and Visitor, Kim) are added when those IDs are not already stored.
+- Records View uses the Read Only table style and allows applicant view/edit actions without archive access.
 - Full Admin View requires the admin access code and can create, view, edit, archive, restore, and filter applicant records. The Export CSV control is hidden in the UI (owner 2026-10-09); `downloadCsv` and export logic remain in `app.js` for later use.
 
 The Full Admin access code is operator-set to `12345` (local prototype only; not a
@@ -14,15 +14,15 @@ local storage, overwriting any leftover admin value so a known Full Admin sign-i
 always works. Former defaults (`1111`, `2222`, `2468`) and trivial sequences
 (`0000`, `1234`) remain rejected and are not restored.
 
-If Limited or Records codes are missing, the app stores the documented prototype
-values `lim-7431` (Limited) and `rec-8562` (Records) so those roles are never empty
-strings. Existing distinct Limited/Records codes are kept. Codes live only in this
+If Read Only or Records codes are missing, the app stores the documented prototype
+values `lim-7431` (Read Only) and `rec-8562` (Records) so those roles are never empty
+strings. Existing distinct Read Only/Records codes are kept. Codes live only in this
 browser's local storage. Clearing local storage for this page resets codes and
 applicant records; Full Admin will again be `12345` on the next load.
 
 Full Admin includes a change log for created, updated, archived, and restored applicant records.
 
-Applicant records are archived, not permanently deleted. Archive sets `archived`, `archivedAt`, and `archivedBy` and leaves the record in local storage. Default lists, metrics, and search (Limited, Records, and Admin All Applicant Records) exclude archived records. Named Admin-Full users (and the shared Full Admin access code) can archive, review archived applicants, and restore them, and they can open the Settings Console. Named Admin-Global users sign in as Admin-Global (named user required; no shared Global code), have the same Full Admin, restore, and Settings Console access as Admin-Full. Settings Console sections Security & Authentication and Users, Roles & Permissions (RBAC) are visible only to Admin-Global. Named Admin-Staff users can use Full Admin and review archived applicants but cannot restore and cannot open the Settings Console. Limited and Records cannot archive or restore. Seed test applicants stay active. CSV import does not import records as archived or deleted.
+Applicant records are archived, not permanently deleted. Archive sets `archived`, `archivedAt`, and `archivedBy` and leaves the record in local storage. Default lists, metrics, and search (Read Only, Records, and Admin All Applicant Records) exclude archived records. Named Admin-Full users (and the shared Full Admin access code) can archive, review archived applicants, and restore them, and they can open the Settings Console. Named Admin-Global users sign in as Admin-Global (named user required; no shared Global code), have the same Full Admin, restore, and Settings Console access as Admin-Full. Settings Console sections Security & Authentication and Users, Roles & Permissions (RBAC) are visible only to Admin-Global. Named Admin-Staff users can use Full Admin and review archived applicants but cannot restore and cannot open the Settings Console. Read Only and Records cannot archive or restore. Seed test applicants stay active. CSV import does not import records as archived or deleted.
 
 ## Importing records from CSV
 
@@ -41,14 +41,14 @@ one-time pre-go-live function); re-enable it by uncommenting that section.
 
 When the browser has no stored records, the app seeds four fictitious test applicants
 copied from the sanitized MasterSheet CSV (`CJIS_MasterSheet_import.csv`, kept outside
-the repository) plus two fictitious One Time Visit records for Limited View. Source,
+the repository) plus two fictitious One Time Visit records for Read Only. Source,
 Control ID, names, vendors, and other MasterSheet cell values are unchanged. Existing
-localStorage records are not replaced; the two Limited View seeds are appended when
+localStorage records are not replaced; the two Read Only seeds are appended when
 those IDs are missing. Clearing storage and reloading restores the seed.
 Notes remain editable on applicant records but are hidden from list tables.
 Applicant list tables are a flat name-sorted list (not grouped by vendor).
 The Full Admin table shows Actions plus Name, Driver Lic Num, Clearance Type,
-Department, Position/Role, and Requestor. Limited View shows Name, Driver Lic Num,
+Department, Status (Active or InActive), Position/Role, and Requestor. Read Only shows Name, Driver Lic Num,
 Vendor, Department, Status (Active or InActive), Clearance Type,
 Security and Awareness Cert Expiration, and NCIC Date of Cert Expiration. Tour/Orientation,
 Source, III - Status, CJIS Security Role, NCIC Certification, Passport, Fingerprint
@@ -110,7 +110,9 @@ City SSO / Entra ID), authorization, encryption, auditing, and a managed host.
 
 ## SQL schema and localhost API (SPRINT-007)
 
-The creatable SQL Server script is `database-schema.sql`. Load a seed CSV with
+The creatable SQL Server script is `database-schema.sql`. Re-run it to refresh
+constraints and labels (Read Only role name, APD department, current field map).
+Load a seed CSV with
 `database-data-migration.sql` (staging table `stg.ApplicantSeed` and
 `usp_MigrateApplicantSeed`). Create the database, then start the API:
 

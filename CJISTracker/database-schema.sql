@@ -1,13 +1,15 @@
 /*
   CJIS Applicant Tracker database schema
   Target database: Microsoft SQL Server / Azure SQL
-  Controlling work: SPRINT-006 (scaffolding). Class C3.
+  Controlling work: SPRINT-007 (refresh). Class C3 localhost prototype.
 
-  HOW TO CREATE THE DATABASE
-  --------------------------
+  HOW TO CREATE OR REFRESH THE DATABASE
+  -------------------------------------
   This script is idempotent: it may be re-run. It creates the database when
   missing, creates tables/indexes when missing, adds new columns when missing,
+  refreshes check constraints and lookup labels to the current app.js model,
   and seeds lookup rows only when those codes/names are not already present.
+  Re-run does not drop the database or applicant rows.
 
   sqlcmd (Windows Authentication):
     sqlcmd -S <server> -E -i "CJISTracker\database-schema.sql"
@@ -38,20 +40,29 @@
     case-insensitive, matching app.js.
   - DEC-018: SourceName is the spreadsheet "Source" value. Read-only in the UI.
   - DEC-015: production auth is City SSO / Entra ID with server-side RBAC
-    mirroring Limited / Records / Admin. AppUsers Entra columns are placeholders
-    only; tenant/client IDs remain TBD. Prototype PINs are never production.
+    mirroring Read Only / Records / Admin. RoleCode stays limited | records |
+    admin. RoleName for limited is Read Only. AppUsers Entra columns are
+    placeholders only; tenant/client IDs remain TBD. Prototype PINs are never
+    production.
   - DEC-019: QueryDateEveryFiveYears is denormalized (DateOfIiiCompletion + 5
     years). The current UI calculates it; the column supports future queries.
   - Access Type supports multiple selections through ApplicantAccessTypes.
   - Documents are modeled for future use even though the current UI hides the
     Applicant Documents field.
-  - The browser app (CJISTracker/) still uses localStorage until a later sprint
-    wires an API. This schema does not change that.
+  - SPRINT-007: the browser uses the localhost API (127.0.0.1:8741) when
+    GET /health reports database.connected; otherwise it keeps localStorage.
+    Documents and the change log stay in the browser this sprint.
   - Records are archived, not permanently deleted. Applicants.IsArchived is the
     product flag (Full Admin archive/review/restore only). Applicants.IsDeleted
     is unused leftover and MUST NOT be used for the UI archive action.
     SecurityRoles.CanDeleteApplicants is unused; archive/restore is Full Admin
     only. Default lists, metrics, and search exclude IsArchived = 1.
+  - Read Only listing (app.js role limited): non-archived rows whose
+    ClearanceTypeName is exactly N'One Time Visit'. Full Clearance never appears
+    there. Search / Activity / Fingerprint Outcome filters can hide more.
+  - activityStatus (UI: Status, Active / InActive) is not a column. It is
+    derived: Active only when both SecurityAwarenessExpiration and
+    NcicCertificationExpiration are on or after today; otherwise InActive.
 
   APP.JS FIELD MAP (current model → column)
   ----------------------------------------
@@ -64,7 +75,7 @@
   driversLicense               → Applicants.DriverLicenseNumber
   source                       → Applicants.SourceName
   vendor                       → Vendors.VendorName / Applicants.VendorId (nullable)
-  department                   → Applicants.Department (city-code list; see CK_Applicants_Department)
+  department                   → Applicants.Department (city-code list including APD)
   positionRole                 → Applicants.PositionRole
   requestor                    → Applicants.Requestor
   dateInformationProvided      → Applicants.DateInformationProvided
@@ -78,8 +89,10 @@
   fingerprintsNotifiedCompleted→ Applicants.FingerprintsCompleted
   outcome                      → FingerprintOutcomes / Applicants.FingerprintOutcomeId
   securityAwarenessExpiration  → Applicants.SecurityAwarenessExpiration
+                                 (UI: Security and Awareness Cert Expiration)
   securityAddendum             → Applicants.SecurityAddendumDate
   ncicCertificationExpiration  → Applicants.NcicCertificationExpiration
+                                 (UI: NCIC Date of Cert Expiration)
   ncicCertification            → Applicants.NcicCertification ('Y'/'N')
   completedFullProcess         → Applicants.CompletedFullProcess
   dateOfSiteVisitOnly          → Applicants.DateOfSiteVisitOnly
@@ -93,7 +106,9 @@
   archived                     → Applicants.IsArchived
   archivedAt                   → Applicants.ArchivedAtUtc
   archivedBy                   → Applicants.ArchivedByDisplayName
-  roles                        → SecurityRoles RoleCode: limited | records | admin
+  activityStatus               → not persisted (derived from the two cert dates)
+  roles                        → SecurityRoles RoleCode limited | records | admin
+                                 RoleName Read Only | Records View | Full Admin
 */
 
 IF DB_ID(N'CjisApplicantTracker') IS NULL
@@ -234,8 +249,10 @@ BEGIN
     DateInformationProvided DATE NULL,
     DateOfIiiCompletion DATE NULL,
     FingerprintsCompleted DATE NULL,
+    /* UI: Security and Awareness Cert Expiration. Used with NCIC date for Status. */
     SecurityAwarenessExpiration DATE NULL,
     SecurityAddendumDate DATE NULL,
+    /* UI: NCIC Date of Cert Expiration. Used with SAC date for Status. */
     NcicCertificationExpiration DATE NULL,
     NcicCertification CHAR(1) NULL,
     /* Yes/no flag only. Not treated as PII beyond Y/N. */
@@ -478,24 +495,25 @@ BEGIN
 END;
 GO
 
+/* Refresh department allowed values to the current app.js list (includes APD). */
 IF EXISTS (
   SELECT 1
   FROM sys.check_constraints
   WHERE name = N'CK_Applicants_Department'
     AND parent_object_id = OBJECT_ID(N'dbo.Applicants')
-    AND definition LIKE N'%N''APD''%'
 )
 BEGIN
   ALTER TABLE dbo.Applicants DROP CONSTRAINT CK_Applicants_Department;
 END;
 GO
 
-IF NOT EXISTS (
-  SELECT 1
-  FROM sys.check_constraints
-  WHERE name = N'CK_Applicants_Department'
-    AND parent_object_id = OBJECT_ID(N'dbo.Applicants')
-)
+IF OBJECT_ID(N'dbo.Applicants', N'U') IS NOT NULL
+  AND NOT EXISTS (
+    SELECT 1
+    FROM sys.check_constraints
+    WHERE name = N'CK_Applicants_Department'
+      AND parent_object_id = OBJECT_ID(N'dbo.Applicants')
+  )
 BEGIN
   ALTER TABLE dbo.Applicants ADD CONSTRAINT CK_Applicants_Department
     CHECK (
@@ -532,53 +550,6 @@ BEGIN
       )
     );
 END;
-GO
-
-IF EXISTS (
-  SELECT 1
-  FROM sys.check_constraints
-  WHERE name = N'CK_Applicants_Department'
-    AND parent_object_id = OBJECT_ID(N'dbo.Applicants')
-)
-BEGIN
-  ALTER TABLE dbo.Applicants DROP CONSTRAINT CK_Applicants_Department;
-END;
-GO
-
-ALTER TABLE dbo.Applicants ADD CONSTRAINT CK_Applicants_Department
-  CHECK (
-    Department IS NULL OR Department IN (
-      N'AV-Aviation',
-      N'AW-Animal Welfare',
-      N'CA-Chief Administrative Office',
-      N'CC-Office of the City Clerk',
-      N'CL-Council Services',
-      N'CM-Community Safety Department',
-      N'CP-Civilian Police OS Dept',
-      N'CS-Cultural Services',
-      N'ED-Economic Development',
-      N'EH-Environmental Health',
-      N'FA-Finance Admin Svc',
-      N'FC-Youth and Family Svcs Dept',
-      N'FD-Fire',
-      N'GS-General Services Department',
-      N'HH-Health,Housing,Hmlsns Dept',
-      N'HR-Human Resources',
-      N'IA-Internal Audit',
-      N'IG-Office of Inspector GenDept',
-      N'LG-Legal',
-      N'MA-Mayor''s Office Department',
-      N'MD-Municipal Development',
-      N'APD',
-      N'PD-Police',
-      N'PL-Planning Department',
-      N'PR-Parks and Recreation',
-      N'SA-Senior Affairs',
-      N'SW-Solid Waste',
-      N'TI-Technology and Innovation',
-      N'TR-Transit'
-    )
-  );
 GO
 
 IF NOT EXISTS (
@@ -789,8 +760,15 @@ IF NOT EXISTS (SELECT 1 FROM dbo.SecurityRoles WHERE RoleCode = N'limited')
 BEGIN
   INSERT INTO dbo.SecurityRoles
     (RoleCode, RoleName, CanViewLimited, CanViewRecords, CanViewAdmin, CanEditApplicants, CanDeleteApplicants)
-  VALUES (N'limited', N'Limited View', 1, 0, 0, 0, 0);
+  VALUES (N'limited', N'Read Only', 1, 0, 0, 0, 0);
 END;
+GO
+
+/* Existing databases seeded as Limited View keep RoleCode limited. */
+UPDATE dbo.SecurityRoles
+SET RoleName = N'Read Only'
+WHERE RoleCode = N'limited'
+  AND RoleName <> N'Read Only';
 GO
 
 IF NOT EXISTS (SELECT 1 FROM dbo.SecurityRoles WHERE RoleCode = N'records')
