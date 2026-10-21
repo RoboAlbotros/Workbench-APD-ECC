@@ -21,10 +21,10 @@ Passport,passport,Boolean / Enum,Checkbox; Yes | No (Y/N). Yes/no flag only — 
 CJIS Security and Awareness Role,cjisSecurityAwarenessRole,Enum,Basic | General | Privileged | Security
 Fingerprints Completed,fingerprintsNotifiedCompleted,Date,Date
 Fingerprint Outcome,outcome,Enum,Clear | Misd/Clear | Felony | Needs Follow Up
-Security and Awareness Cert Expiration,securityAwarenessExpiration,Date,Date; one of two dates required for applicant screen Active (today on or before this date)
+Security and Awareness Cert Expiration,securityAwarenessExpiration,Date,Date; always required for Active (today on or before this date). Blank or past is InActive.
 Security Addendum,securityAddendum,Date,Date
-NCIC Date of Cert Expiration,ncicCertificationExpiration,Date,Date; one of two dates required for applicant screen Active (today on or before this date); InActive when this date or Security and Awareness Cert Expiration is missing or already past
-NCIC Certification,ncicCertification,Boolean / Enum,Yes | No
+NCIC Date of Cert Expiration,ncicCertificationExpiration,Date,Date; required for Active only when NCIC Certification is Yes or blank (today on or before this date). Ignored when NCIC Certification is No.
+NCIC Certification,ncicCertification,Boolean / Enum,Y | N. When Y or blank: Active requires both cert dates current. When N: Active requires only Security and Awareness Cert Expiration current.
 Completed Full Process,completedFullProcess,Date,Date
 Date of Site Visit Only,dateOfSiteVisitOnly,Date,Date
 Next III Inquiry Due (5 yrs),queriedEveryFiveYears,Date,Calculated read-only; Date of III Completion + 5 years

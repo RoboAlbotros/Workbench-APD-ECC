@@ -64,8 +64,11 @@
     ClearanceTypeName is exactly N'One Time Visit'. Full Clearance never appears
     there. Search / Activity / Fingerprint Outcome filters can hide more.
   - activityStatus (UI: Status, Active / InActive) is not a column. It is
-    derived: Active only when both SecurityAwarenessExpiration and
-    NcicCertificationExpiration are on or after today; otherwise InActive.
+    derived. When NcicCertification is N, Active requires only
+    SecurityAwarenessExpiration on or after today. When NcicCertification is Y
+    or blank, Active requires both SecurityAwarenessExpiration and
+    NcicCertificationExpiration on or after today. A required date that is
+    missing, invalid, or already past is InActive.
 
   APP.JS FIELD MAP (current model → column)
   ----------------------------------------
@@ -109,7 +112,7 @@
   archived                     → Applicants.IsArchived
   archivedAt                   → Applicants.ArchivedAtUtc
   archivedBy                   → Applicants.ArchivedByDisplayName
-  activityStatus               → not persisted (derived from the two cert dates)
+  activityStatus               → not persisted (derived from NCIC Y/N + cert dates)
   roles                        → SecurityRoles RoleCode limited | records | admin
                                  RoleName Read Only | Records View | Full Admin
 */

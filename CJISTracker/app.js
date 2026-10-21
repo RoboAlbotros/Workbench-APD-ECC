@@ -5,6 +5,7 @@ const STORAGE_KEYS = {
   iiiCompletionIsoMigrated: "cjisApplicantTracker.iiiCompletionIsoMigrated",
   optionLists: "cjisApplicantTracker.optionLists",
   managedUsers: "cjisApplicantTracker.managedUsers",
+  seedBatch: "cjisApplicantTracker.seedBatch",
 };
 
 const SQL_API_BASE = "http://127.0.0.1:8741";
@@ -713,8 +714,58 @@ function ensureLimitedViewSeedRecords(recordSet) {
   return normalizeRecords(recordSet.concat(missing));
 }
 
+let seedBatchReplaced = false;
+
+function currentSeedBatch() {
+  return typeof TEST_APPLICANT_SEED_BATCH === "string" ? TEST_APPLICANT_SEED_BATCH : "";
+}
+
+function loadRecords() {
+  const expectedBatch = currentSeedBatch();
+  const storedBatch = localStorage.getItem(STORAGE_KEYS.seedBatch) || "";
+  if (expectedBatch && storedBatch !== expectedBatch) {
+    const seed = typeof getTestApplicantSeed === "function" ? getTestApplicantSeed() : [];
+    if (seed.length) {
+      seedBatchReplaced = true;
+      localStorage.setItem(STORAGE_KEYS.seedBatch, expectedBatch);
+      return normalizeRecords(seed);
+    }
+  }
+
+  const raw = localStorage.getItem(STORAGE_KEYS.records);
+  if (!raw) {
+    const seed = typeof getTestApplicantSeed === "function" ? getTestApplicantSeed() : [];
+    if (seed.length) {
+      if (expectedBatch) localStorage.setItem(STORAGE_KEYS.seedBatch, expectedBatch);
+      return normalizeRecords(seed);
+    }
+    markIiiCompletionMigrated();
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(raw);
+    const previousDueDates = parsed.map((record) => record.queriedEveryFiveYears || "");
+    const normalized = normalizeRecords(parsed);
+    inquiryDueMigrationCount = normalized.filter((record, index) => {
+      return (record.queriedEveryFiveYears || "") !== previousDueDates[index];
+    }).length;
+    return normalized;
+  } catch {
+    return [];
+  }
+}
+
 let records = ensureLimitedViewSeedRecords(loadRecords());
-let changeLog = loadChangeLog();
+let changeLog = seedBatchReplaced ? [] : loadChangeLog();
+if (seedBatchReplaced) {
+  logRecordChange(
+    "Imported (replaced all)",
+    { id: "import", name: `${records.length} records from Anna workbook` },
+    [`${records.length} records imported`, "Existing test records replaced", "Excluded raw Driver's License column"],
+  );
+  saveRecordSet(records);
+}
 if (inquiryDueMigrationCount) {
   logInquiryDueMigration(inquiryDueMigrationCount);
 }
@@ -896,6 +947,11 @@ if (ncicCertificationExpirationInput) {
   ncicCertificationExpirationInput.addEventListener("input", syncApplicantActivityStatus);
   ncicCertificationExpirationInput.addEventListener("change", syncApplicantActivityStatus);
 }
+const ncicCertificationInput = document.querySelector("#ncicCertification");
+if (ncicCertificationInput) {
+  ncicCertificationInput.addEventListener("input", syncApplicantActivityStatus);
+  ncicCertificationInput.addEventListener("change", syncApplicantActivityStatus);
+}
 const driversLicenseInput = document.querySelector("#driversLicense");
 if (driversLicenseInput) {
   const applyDriversLicenseInputLimit = () => {
@@ -1046,30 +1102,6 @@ if (adminTable) {
   adminTable.addEventListener("click", handleAdminTableSortClick);
 }
 
-function loadRecords() {
-  const raw = localStorage.getItem(STORAGE_KEYS.records);
-  if (!raw) {
-    const seed = typeof getTestApplicantSeed === "function" ? getTestApplicantSeed() : [];
-    if (seed.length) {
-      return normalizeRecords(seed);
-    }
-    markIiiCompletionMigrated();
-    return [];
-  }
-
-  try {
-    const parsed = JSON.parse(raw);
-    const previousDueDates = parsed.map((record) => record.queriedEveryFiveYears || "");
-    const normalized = normalizeRecords(parsed);
-    inquiryDueMigrationCount = normalized.filter((record, index) => {
-      return (record.queriedEveryFiveYears || "") !== previousDueDates[index];
-    }).length;
-    return normalized;
-  } catch {
-    return [];
-  }
-}
-
 function saveRecords() {
   saveRecordSet(records);
 }
@@ -1127,11 +1159,12 @@ async function startSqlPersistence() {
     }
     const body = await listResponse.json();
     const remote = Array.isArray(body.records) ? body.records : [];
-    if (remote.length) {
-      records = ensureLimitedViewSeedRecords(normalizeRecords(remote));
-    }
     persistenceMode = "sql";
-    if (!remote.length && records.length) {
+    if (seedBatchReplaced && records.length) {
+      await persistRecordsToSql(records);
+    } else if (remote.length) {
+      records = ensureLimitedViewSeedRecords(normalizeRecords(remote));
+    } else if (records.length) {
       await persistRecordsToSql(records);
     }
     renderAll();
@@ -1356,9 +1389,12 @@ function normalizeIiiStatus(value) {
 function normalizeClearanceType(value) {
   return matchClosedOption(value, getOptionList("clearanceType"), {
     "full clearance": "Full Clearance",
+    "full clearnace": "Full Clearance",
+    full: "Full Clearance",
     "one time visit": "One Time Visit",
     "in-progress": "InProgress",
     "in progress": "InProgress",
+    "in process": "InProgress",
     inprogress: "InProgress",
     "no access given": "No Access Given",
   });
@@ -2234,7 +2270,11 @@ function renderVendorOptions() {
 }
 
 function getRecordActivityStatus(record) {
-  return getApplicantActivityStatus(record.securityAwarenessExpiration, record.ncicCertificationExpiration);
+  return getApplicantActivityStatus(
+    record.securityAwarenessExpiration,
+    record.ncicCertificationExpiration,
+    record.ncicCertification,
+  );
 }
 
 function syncLimitedClearanceFilter() {
@@ -3143,10 +3183,11 @@ function isCertDateCurrent(certValue) {
   return expiration >= today;
 }
 
-function getApplicantActivityStatus(securityAwarenessCert, ncicCertExpiration) {
-  return isCertDateCurrent(securityAwarenessCert) && isCertDateCurrent(ncicCertExpiration)
-    ? "Active"
-    : "InActive";
+function getApplicantActivityStatus(securityAwarenessCert, ncicCertExpiration, ncicCertification) {
+  /* Status is calculated, not stored. NCIC N uses only the awareness date. Y or blank uses both dates. */
+  if (!isCertDateCurrent(securityAwarenessCert)) return "InActive";
+  if (normalizeYesNo(ncicCertification) === "N") return "Active";
+  return isCertDateCurrent(ncicCertExpiration) ? "Active" : "InActive";
 }
 
 function syncApplicantActivityStatus() {
@@ -3155,6 +3196,7 @@ function syncApplicantActivityStatus() {
   const status = getApplicantActivityStatus(
     document.querySelector("#securityAwarenessExpiration")?.value,
     document.querySelector("#ncicCertificationExpiration")?.value,
+    document.querySelector("#ncicCertification")?.value,
   );
   statusEl.textContent = status;
   statusEl.className = `applicant-activity-status badge ${status === "Active" ? "active" : "inactive"}`;
