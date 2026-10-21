@@ -206,6 +206,10 @@ const HIDDEN_ACCESS_TYPE_OPTIONS = new Set([
 ]);
 const LIMITED_VIEW_CLEARANCE_TYPE = "One Time Visit";
 
+function isOneTimeVisitClearance(value) {
+  return String(value || "").trim().toLowerCase() === "one time visit";
+}
+
 function isReadOnlyAccessTypeOption(value) {
   return READONLY_ACCESS_TYPE_OPTIONS.has(String(value || "").trim());
 }
@@ -926,6 +930,8 @@ limitedViewButton.addEventListener("click", () => setView("limited"));
 if (recordsViewButton) recordsViewButton.addEventListener("click", () => setView("records"));
 adminViewButton.addEventListener("click", () => setView("admin"));
 applicantForm.addEventListener("submit", saveApplicant);
+applicantForm.addEventListener("change", handleApplicantActivityStatusInputs);
+applicantForm.addEventListener("input", handleApplicantActivityStatusInputs);
 resetForm.addEventListener("click", openNewApplicant);
 closeDrawer.addEventListener("click", closeApplicantDrawer);
 drawerBackdrop.addEventListener("click", closeApplicantDrawer);
@@ -950,6 +956,11 @@ const ncicCertificationInput = document.querySelector("#ncicCertification");
 if (ncicCertificationInput) {
   ncicCertificationInput.addEventListener("input", syncApplicantActivityStatus);
   ncicCertificationInput.addEventListener("change", syncApplicantActivityStatus);
+}
+const clearanceTypeInput = document.querySelector("#clearanceType");
+if (clearanceTypeInput) {
+  clearanceTypeInput.addEventListener("input", syncApplicantActivityStatus);
+  clearanceTypeInput.addEventListener("change", syncApplicantActivityStatus);
 }
 const driversLicenseInput = document.querySelector("#driversLicense");
 if (driversLicenseInput) {
@@ -2272,6 +2283,7 @@ function getRecordActivityStatus(record) {
     record.securityAwarenessExpiration,
     record.ncicCertificationExpiration,
     record.ncicCertification,
+    record.clearanceType,
   );
 }
 
@@ -3163,6 +3175,7 @@ function renderDataCell(field, value, record) {
 }
 
 function isSecurityCertExpired(record) {
+  if (isOneTimeVisitClearance(record.clearanceType)) return false;
   if (!record.securityAwarenessExpiration) return false;
   const expiration = new Date(`${record.securityAwarenessExpiration}T00:00:00`);
   if (Number.isNaN(expiration.getTime())) return false;
@@ -3181,11 +3194,24 @@ function isCertDateCurrent(certValue) {
   return expiration >= today;
 }
 
-function getApplicantActivityStatus(securityAwarenessCert, ncicCertExpiration, ncicCertification) {
-  /* Status is calculated, not stored. NCIC N uses only the awareness date. Y or blank uses both dates. */
+function getApplicantActivityStatus(securityAwarenessCert, ncicCertExpiration, ncicCertification, clearanceType) {
+  /* Status is calculated, not stored. One Time Visit is Active without cert dates. Otherwise NCIC N uses only the awareness date. Y or blank uses both dates. */
+  if (isOneTimeVisitClearance(clearanceType)) return "Active";
   if (!isCertDateCurrent(securityAwarenessCert)) return "InActive";
   if (normalizeYesNo(ncicCertification) === "N") return "Active";
   return isCertDateCurrent(ncicCertExpiration) ? "Active" : "InActive";
+}
+
+function handleApplicantActivityStatusInputs(event) {
+  const id = event.target && event.target.id;
+  if (
+    id === "securityAwarenessExpiration" ||
+    id === "ncicCertificationExpiration" ||
+    id === "ncicCertification" ||
+    id === "clearanceType"
+  ) {
+    syncApplicantActivityStatus();
+  }
 }
 
 function syncApplicantActivityStatus() {
@@ -3195,6 +3221,7 @@ function syncApplicantActivityStatus() {
     document.querySelector("#securityAwarenessExpiration")?.value,
     document.querySelector("#ncicCertificationExpiration")?.value,
     document.querySelector("#ncicCertification")?.value,
+    document.querySelector("#clearanceType")?.value,
   );
   statusEl.textContent = status;
   statusEl.className = `applicant-activity-status badge ${status === "Active" ? "active" : "inactive"}`;

@@ -64,11 +64,13 @@
     ClearanceTypeName is exactly N'One Time Visit'. Full Clearance never appears
     there. Search / Activity / Fingerprint Outcome filters can hide more.
   - activityStatus (UI: Status, Active / InActive) is not a column. It is
-    derived. When NcicCertification is N, Active requires only
-    SecurityAwarenessExpiration on or after today. When NcicCertification is Y
-    or blank, Active requires both SecurityAwarenessExpiration and
-    NcicCertificationExpiration on or after today. A required date that is
-    missing, invalid, or already past is InActive.
+    derived. Clearance Type One Time Visit is Active without Security and
+    Awareness or NCIC certification. Otherwise, when NcicCertification is N,
+    Active requires only SecurityAwarenessExpiration on or after today. When
+    NcicCertification is Y or blank, Active requires both
+    SecurityAwarenessExpiration and NcicCertificationExpiration on or after
+    today. A required date that is missing, invalid, or already past is
+    InActive.
 
   APP.JS FIELD MAP (current model → column)
   ----------------------------------------
@@ -112,7 +114,8 @@
   archived                     → Applicants.IsArchived
   archivedAt                   → Applicants.ArchivedAtUtc
   archivedBy                   → Applicants.ArchivedByDisplayName
-  activityStatus               → not persisted (derived from NCIC Y/N + cert dates)
+  activityStatus               → not persisted (derived: One Time Visit is Active;
+                                 otherwise NCIC Y/N + cert dates)
   roles                        → SecurityRoles RoleCode limited | records | admin
                                  RoleName Read Only | Records View | Full Admin
 */
@@ -255,10 +258,10 @@ BEGIN
     DateInformationProvided DATE NULL,
     DateOfIiiCompletion DATE NULL,
     FingerprintsCompleted DATE NULL,
-    /* UI: Security and Awareness Cert Expiration. Used with NCIC date for Status. */
+    /* UI: Security and Awareness Cert Expiration. Used for Status except One Time Visit. */
     SecurityAwarenessExpiration DATE NULL,
     SecurityAddendumDate DATE NULL,
-    /* UI: NCIC Date of Cert Expiration. Used with SAC date for Status. */
+    /* UI: NCIC Date of Cert Expiration. Used for Status except One Time Visit / NCIC N. */
     NcicCertificationExpiration DATE NULL,
     NcicCertification CHAR(1) NULL,
     /* Yes/no flag only. Not treated as PII beyond Y/N. */

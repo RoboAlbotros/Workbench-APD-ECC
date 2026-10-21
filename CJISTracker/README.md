@@ -80,7 +80,7 @@ are hidden from the applicant form.
 - Date of III Completion (calendar date control; stored as ISO YYYY-MM-DD)
 - III - Status
 - Clearance Type (Full Clearance, One Time Visit, InProgress, No Access Given)
-- Applicant screen status Active when today is on or before both Security and Awareness Cert Expiration and NCIC Date of Cert Expiration; InActive when either date is missing or already past
+- Applicant screen status: One Time Visit is Active without Security and Awareness or NCIC certification. Otherwise Active when today is on or before Security and Awareness Cert Expiration, and — unless NCIC Certification is N — NCIC Date of Cert Expiration; InActive when a required date is missing or already past
 - Tour/Orientation (Y/N checkbox)
 - Access Type
 - Passport (Y/N checkbox; yes/no flag only)
