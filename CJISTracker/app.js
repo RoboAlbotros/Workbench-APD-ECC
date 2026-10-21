@@ -204,7 +204,7 @@ const HIDDEN_ACCESS_TYPE_OPTIONS = new Set([
   "Security Groups",
   "System/Building",
 ]);
-const LIMITED_VIEW_CLEARANCE_TYPE = "One Time Visit";
+const LIMITED_VIEW_EXCLUDED_CLEARANCE_TYPE = "One Time Visit";
 
 function isOneTimeVisitClearance(value) {
   return String(value || "").trim().toLowerCase() === "one time visit";
@@ -788,6 +788,7 @@ let acknowledgedDuplicateDriversLicense = "";
 let optionListEdit = null;
 let adminListSort = { field: "", direction: "asc" };
 let adminClearanceFilterValue = "all";
+let limitedClearanceFilterValue = "all";
 
 const accessPanel = document.querySelector("#accessPanel");
 const accessForm = document.querySelector("#accessForm");
@@ -1101,8 +1102,12 @@ documentUpload.addEventListener("change", handleDocumentUpload);
 [searchInput, activityFilter, clearanceFilter, outcomeFilter].forEach((control) => {
   if (!control) return;
   control.addEventListener("input", () => {
-    if (control === clearanceFilter && currentView !== "limited") {
-      adminClearanceFilterValue = clearanceFilter.value || "all";
+    if (control === clearanceFilter) {
+      if (currentView === "limited") {
+        limitedClearanceFilterValue = clearanceFilter.value || "all";
+      } else {
+        adminClearanceFilterValue = clearanceFilter.value || "all";
+      }
     }
     renderAll();
   });
@@ -2287,30 +2292,54 @@ function getRecordActivityStatus(record) {
   );
 }
 
+function getClearanceFilterOptions(view = currentView) {
+  return getOptionList("clearanceType").filter((option) => {
+    return view !== "limited" || !isOneTimeVisitClearance(option);
+  });
+}
+
+function recordMatchesClearanceFilter(record, view, clearance) {
+  if (view === "limited") {
+    if (isOneTimeVisitClearance(record.clearanceType)) return false;
+    if (!clearance || clearance === "all" || isOneTimeVisitClearance(clearance)) return true;
+    return record.clearanceType === clearance;
+  }
+  return clearance === "all" || record.clearanceType === clearance;
+}
+
 function syncLimitedClearanceFilter() {
   if (!clearanceFilter) return;
   const wrap = clearanceFilter.closest("label");
   const limited = currentView === "limited";
+  const options = getClearanceFilterOptions(limited ? "limited" : currentView);
   if (limited) {
-    if (!clearanceFilter.disabled) {
+    if (!wrap?.classList.contains("filter-limited-exclude")) {
       adminClearanceFilterValue = clearanceFilter.value || "all";
     }
-    clearanceFilter.value = LIMITED_VIEW_CLEARANCE_TYPE;
-    clearanceFilter.disabled = true;
-    wrap?.classList.add("filter-locked");
+    wrap?.classList.add("filter-limited-exclude");
+    wrap?.classList.remove("filter-locked");
+    clearanceFilter.disabled = false;
+    fillFilterSelect(clearanceFilter, options, "All types");
+    const current = limitedClearanceFilterValue || "all";
+    clearanceFilter.value = options.includes(current) || current === "all" ? current : "all";
+    limitedClearanceFilterValue = clearanceFilter.value;
     return;
   }
-  clearanceFilter.disabled = false;
+  wrap?.classList.remove("filter-limited-exclude");
   wrap?.classList.remove("filter-locked");
-  const options = [...clearanceFilter.options].map((option) => option.value);
-  clearanceFilter.value = options.includes(adminClearanceFilterValue) ? adminClearanceFilterValue : "all";
+  clearanceFilter.disabled = false;
+  fillFilterSelect(clearanceFilter, options, "All types");
+  const restore = adminClearanceFilterValue || "all";
+  clearanceFilter.value = restore === "all" || options.includes(restore) ? restore : "all";
 }
 
 function getFilteredRecords(view = currentView) {
   const query = searchInput.value.trim().toLowerCase();
   const activity = activityFilter ? activityFilter.value : "all";
   const clearance =
-    view === "limited" ? LIMITED_VIEW_CLEARANCE_TYPE : adminClearanceFilterValue || clearanceFilter.value;
+    view === "limited"
+      ? limitedClearanceFilterValue
+      : adminClearanceFilterValue || clearanceFilter.value;
   const outcome = outcomeFilter.value;
 
   return getActiveRecords().filter((record) => {
@@ -2334,7 +2363,7 @@ function getFilteredRecords(view = currentView) {
     return (
       (!query || haystack.includes(query)) &&
       (activity === "all" || getRecordActivityStatus(record) === activity) &&
-      (clearance === "all" || record.clearanceType === clearance) &&
+      recordMatchesClearanceFilter(record, view, clearance) &&
       (outcome === "all" || record.outcome === outcome)
     );
   });

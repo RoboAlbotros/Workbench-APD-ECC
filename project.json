@@ -47,7 +47,7 @@
       "nextMilestone": "SPRINT-007 localhost SQL API wired; database-schema.sql refreshed to the current app.js field map. Browser uses SQL when the API reports connected, otherwise localStorage. Entra login remains later work.",
       "nextRequiredDecision": "G-TEST for SPRINT-007. G-ARCH and G-SEC remain pending and are not satisfied by this localhost prototype. Ratification of relayed SPRINT-005/006 (and this sprint approval) by Jessica Solis and Annamarie Zambrano remains open. Privacy Framework / PIA revisit after DEC-020 is TBD.",
       "decisionsRequired": [],
-      "lastUpdated": "2026-10-21T14:55:00-06:00"
+      "lastUpdated": "2026-10-21T15:10:00-06:00"
     }
   },
   "release": {
@@ -199,14 +199,15 @@
     { "timestamp": "2026-10-20T14:30:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "SPRINT-007: existing test records replaced with the Anna workbook import (Anna_CJIS-Tracker_noPII-BJ.xlsx, LAN Import folder, 770 named rows). Workbook stays outside the repository. Raw State / Driver's License Number excluded (DEC-020). No DOB/SSN columns in the source. Seed batch anna-cjis-2026-10-20 replaces localStorage once. G-ARCH and G-SEC remain pending.", "basis": "Owner statement: 'Delete exsisting test records, import this file based\\\\coa.cabq.lcl\\dfsroot\\PD USERS\\E41646\\My Workbench (LAN)\\ECC-911\\Development\\CJISTracker\\Import\\Anna_CJIS-Tracker_noPII-BJ.xlsx'" },
     { "timestamp": "2026-10-21T09:10:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "SPRINT-007 C2: Active/InActive now depends on NCIC Certification. When NCIC is N, Active requires only Security and Awareness Cert Expiration current. When NCIC is Y or blank, Active still requires both cert dates current. Status remains calculated, not stored. G-ARCH and G-SEC remain pending.", "basis": "Owner statement updating Active/InActive: NCIC yes requires both cert dates; NCIC no requires only Security and Awareness cert date." },
     { "timestamp": "2026-10-21T10:51:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "SPRINT-007 C1/C2: Export CSV removed from the tracker UI and app.js (downloadCsv / exportFieldValue). The localhost API had no export route. Driver Lic Num empty-field placeholder is NM/XXXXXXXX; the input title still explains the ST/ + 1–15 alphanumeric format. G-ARCH and G-SEC remain pending.", "basis": "Owner statement: remove export function from application and API; replace Driver Lic Num example NM/A23456H8X0H23H5 with NM/XXXXXXXX before the user enters values; keep popup help text explaining the format." },
-    { "timestamp": "2026-10-21T14:55:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "SPRINT-007 C2: Active/InActive treats Clearance Type One Time Visit as Active without Security and Awareness or NCIC certification. Other clearance types keep the NCIC Y/N plus cert-date rule. Status remains calculated, not stored. G-ARCH and G-SEC remain pending.", "basis": "Owner statement: when One Time Visit is selected do not require security and awareness or NCIC certification; status will be Active." }
+    { "timestamp": "2026-10-21T14:55:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "SPRINT-007 C2: Active/InActive treats Clearance Type One Time Visit as Active without Security and Awareness or NCIC certification. Other clearance types keep the NCIC Y/N plus cert-date rule. Status remains calculated, not stored. G-ARCH and G-SEC remain pending.", "basis": "Owner statement: when One Time Visit is selected do not require security and awareness or NCIC certification; status will be Active." },
+    { "timestamp": "2026-10-21T15:10:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "SPRINT-007 C2: Read Only listing excludes Clearance Type One Time Visit and shows the other non-archived clearance types. The Read Only clearance filter omits One Time Visit and is no longer locked. Records and Admin listings are unchanged. G-ARCH and G-SEC remain pending.", "basis": "Owner statement: in the read only view filter out One Time Visit and only show other clearance types." }
   ],
   "validation": {
     "validator": "python-jsonschema (Draft202012Validator), Python 3.14.0",
     "validatorVersion": "4.26.0",
     "schemaVersion": "3.0.0",
     "result": "pass",
-    "timestamp": "2026-10-21T14:55:00-06:00",
+    "timestamp": "2026-10-21T15:10:00-06:00",
     "limitations": "Structural conformance only; proves canonical values and shape, not factual accuracy, evidence sufficiency, approvals, gate satisfaction, or policy compliance. Schema is the project-authored profile, not an official SGK schema."
   },
   "extensions": {

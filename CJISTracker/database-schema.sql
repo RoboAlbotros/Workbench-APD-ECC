@@ -61,8 +61,9 @@
     is unused this sprint; the browser enforces the three admin roles. Default
     lists, metrics, and search exclude IsArchived = 1 and IsDeleted = 1.
   - Read Only listing (app.js role limited): non-archived rows whose
-    ClearanceTypeName is exactly N'One Time Visit'. Full Clearance never appears
-    there. Search / Activity / Fingerprint Outcome filters can hide more.
+    ClearanceTypeName is not N'One Time Visit'. Search / Activity / Clearance
+    Type / Fingerprint Outcome filters can hide more. One Time Visit is omitted
+    from the Read Only clearance filter.
   - activityStatus (UI: Status, Active / InActive) is not a column. It is
     derived. Clearance Type One Time Visit is Active without Security and
     Awareness or NCIC certification. Otherwise, when NcicCertification is N,
