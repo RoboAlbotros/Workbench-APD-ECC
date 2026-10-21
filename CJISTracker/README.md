@@ -39,12 +39,11 @@ change log.
 The import panel is currently commented out in `index.html` at owner direction (it is a
 one-time pre-go-live function); re-enable it by uncommenting that section.
 
-When the browser has no stored records, the app seeds four fictitious test applicants
-copied from the sanitized MasterSheet CSV (`CJIS_MasterSheet_import.csv`, kept outside
-the repository) plus two fictitious One Time Visit records for Read Only. Source,
-Control ID, names, vendors, and other MasterSheet cell values are unchanged. Existing
-localStorage records are not replaced; the two Read Only seeds are appended when
-those IDs are missing. Clearing storage and reloading restores the seed.
+When the browser has no stored records, or when the seed batch id changes, the app
+loads the Anna workbook import (`Anna_CJIS-Tracker_noPII-BJ.xlsx`, kept outside the
+repository). The current batch replaces existing localStorage test records once.
+The raw State / Driver's License Number column is excluded (DEC-020). Clearing
+storage and reloading restores that seed.
 Notes remain editable on applicant records but are hidden from list tables.
 Applicant list tables are a flat name-sorted list (not grouped by vendor).
 The Full Admin table shows Actions plus Name, Driver Lic Num, Clearance Type,
