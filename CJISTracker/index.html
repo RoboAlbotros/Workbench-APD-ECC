@@ -199,8 +199,6 @@
               <div class="panel-heading-actions">
                 <button id="resetForm" class="primary-action" type="button">New Applicant</button>
                 <button id="archivedRecordsButton" class="secondary-action hidden" type="button">Archived Records</button>
-                <!-- Export CSV control retained for later use (owner 2026-10-09). Hidden from the UI. -->
-                <button id="exportCsv" class="secondary-action hidden" type="button">Export CSV</button>
               </div>
             </div>
             <div id="adminTable" class="table-wrap" aria-live="polite"></div>
@@ -550,7 +548,7 @@
               id="driversLicense"
               type="text"
               autocomplete="off"
-              placeholder="NM/A23456H8X0H23H5"
+              placeholder="NM/XXXXXXXX"
               maxlength="18"
               pattern="[A-Za-z]{2}/[A-Za-z0-9]{1,15}"
               title="Two-letter state prefix, a slash, and up to 15 letters or numbers (example: NM/A23456H8X0H23H5)"
@@ -752,7 +750,7 @@
     </aside>
 
     <script src="test-applicants.js?v=sprint-007-anna-import"></script>
-    <script src="app.js?v=sprint-007-ncic-status-rule"></script>
+    <script src="app.js?v=sprint-007-remove-export"></script>
     <!-- tracker-list-overrides.js retired in SPRINT-005; behaviors folded into app.js and styles.css. -->
   </body>
 </html>

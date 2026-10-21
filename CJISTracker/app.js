@@ -857,7 +857,6 @@ const deleteArchivedRecord = document.querySelector("#deleteArchivedRecord");
 const archivedTable = document.querySelector("#archivedTable");
 const archivedCountPill = document.querySelector("#archivedCountPill");
 const archivedMessage = document.querySelector("#archivedMessage");
-const exportCsv = document.querySelector("#exportCsv");
 const formMessage = document.querySelector("#formMessage");
 const duplicateDriversLicensePanel = document.querySelector("#duplicateDriversLicensePanel");
 const duplicateDriversLicenseList = document.querySelector("#duplicateDriversLicenseList");
@@ -1087,7 +1086,6 @@ if (phoneNumberInput) {
 }
 document.addEventListener("keydown", handleDrawerKeydown);
 document.addEventListener("keydown", handleLimitedPopupKeydown);
-if (exportCsv) exportCsv.addEventListener("click", downloadCsv);
 documentUpload.addEventListener("change", handleDocumentUpload);
 [searchInput, activityFilter, clearanceFilter, outcomeFilter].forEach((control) => {
   if (!control) return;
@@ -3673,25 +3671,6 @@ function handleCsvImport(event) {
     showMessage(importMessage, "Unable to read the selected file.", true);
   });
   reader.readAsText(file);
-}
-
-function downloadCsv() {
-  const header = adminFields.map((field) => labels[field]);
-  const rows = getActiveRecords().map((record) => adminFields.map((field) => exportFieldValue(field, record[field])));
-  const csv = [header, ...rows]
-    .map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(","))
-    .join("\n");
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "cjis-applicant-tracker.csv";
-  link.click();
-  URL.revokeObjectURL(url);
-}
-
-function exportFieldValue(field, value) {
-  return value || "";
 }
 
 function isDateField(field) {

@@ -6,7 +6,7 @@ Open `index.html` in a browser to use the CJIS Applicant Tracker.
 
 - Read Only (formerly Limited View) hides sensitive personal fields and filters Clearance Type to One Time Visit. Only non-archived applicants with Clearance Type `One Time Visit` appear there (search, Activity, and Fingerprint Outcome filters can hide rows further). Applicant identity uses separate Last Name, First Name, Middle Initial, and Suffix fields. Listings still show the composed name (Last Name, First Name MI Suffix). A View action opens a read-only popup with Last Name, First Name, Clearance Type, Department, Position/Role, and Certifications & Dates fields (Fingerprint Outcome and Date of Site Visit Only stay off that popup). It does not open the full applicant drawer. Two fictitious One Time Visit seed records (Guest, Pat and Visitor, Kim) are added when those IDs are not already stored.
 - Records View uses the Read Only table style and allows applicant view/edit actions without archive access.
-- Full Admin View requires the admin access code and can create, view, edit, archive, restore, delete from Archived Records, and filter applicant records. The Export CSV control is hidden in the UI (owner 2026-10-09); `downloadCsv` and export logic remain in `app.js` for later use.
+- Full Admin View requires the admin access code and can create, view, edit, archive, restore, delete from Archived Records, and filter applicant records. Export CSV has been removed from the UI and `app.js` (owner 2026-10-21). The localhost API has no export route.
 
 The Full Admin access code is operator-set to `12345` (local prototype only; not a
 production control). On load the app writes that admin code into this browser's
