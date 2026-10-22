@@ -2,6 +2,11 @@
 
 Open `index.html` in a browser to use the CJIS Applicant Tracker.
 
+On INTDEV/INTPRD (SPRINT-009), IIS serves these files at `clearancetracker.cabq.gov`
+and reverse-proxies `/api` and `/health` to the Node API on `127.0.0.1:8741`. The
+browser uses that same origin when not on localhost. See
+`docs/operations/iis-hosting.md`.
+
 ## Views
 
 - Read Only (formerly Limited View) hides sensitive personal fields and excludes Clearance Type One Time Visit. Only non-archived applicants with other clearance types appear there (search, Activity, Clearance Type, and Fingerprint Outcome filters can hide rows further; One Time Visit is not a filter choice in this view). Applicant identity uses separate Last Name, First Name, Middle Initial, and Suffix fields. Listings still show the composed name (Last Name, First Name MI Suffix). A View action opens a read-only popup with Last Name, First Name, Clearance Type, Department, Position/Role, and Certifications & Dates fields (Fingerprint Outcome and Date of Site Visit Only stay off that popup). It does not open the full applicant drawer. Two fictitious One Time Visit seed records (Guest, Pat and Visitor, Kim) are added when those IDs are not already stored.

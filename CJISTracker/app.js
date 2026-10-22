@@ -8,7 +8,16 @@ const STORAGE_KEYS = {
   seedBatch: "cjisApplicantTracker.seedBatch",
 };
 
-const SQL_API_BASE = "http://127.0.0.1:8741";
+function resolveSqlApiBase() {
+  const host = String(window.location.hostname || "").toLowerCase();
+  if (!host || host === "127.0.0.1" || host === "localhost") {
+    return "http://127.0.0.1:8741";
+  }
+  // IIS ARR proxies /api and /health on the same origin (SPRINT-009).
+  return "";
+}
+
+const SQL_API_BASE = resolveSqlApiBase();
 let persistenceMode = "local";
 let sqlPersistError = "";
 

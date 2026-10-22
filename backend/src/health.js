@@ -5,7 +5,7 @@ function handleHealth(db, extra = {}) {
   return {
     status: connected ? "ok" : "degraded",
     service: "cjis-tracker-backend",
-    sprint: "SPRINT-007",
+    sprint: "SPRINT-009",
     listen: extra.listen || null,
     database: {
       connected,

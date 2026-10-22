@@ -10,12 +10,24 @@ loadDotEnv();
 
 const db = createDb();
 
+function allowedCorsOrigins() {
+  const fromEnv = String(process.env.CORS_ALLOWED_ORIGINS || "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+  return new Set([
+    "http://127.0.0.1:8740",
+    "http://localhost:8740",
+    "https://clearancetracker.cabq.gov",
+    "http://clearancetracker.cabq.gov",
+    ...fromEnv,
+  ]);
+}
+
 function corsHeaders(request) {
   const origin = request.headers.origin || "";
-  const allowed =
-    origin === "http://127.0.0.1:8740" || origin === "http://localhost:8740"
-      ? origin
-      : "http://127.0.0.1:8740";
+  const allowedSet = allowedCorsOrigins();
+  const allowed = allowedSet.has(origin) ? origin : "http://127.0.0.1:8740";
   return {
     "Access-Control-Allow-Origin": allowed,
     "Access-Control-Allow-Methods": "GET, PUT, OPTIONS",
@@ -128,7 +140,7 @@ async function main() {
   const host = process.env.API_LISTEN_HOST || "127.0.0.1";
   const port = Number(process.env.API_LISTEN_PORT || 8741);
   if (host !== "127.0.0.1" && host !== "localhost") {
-    throw new Error("SPRINT-007 binds 127.0.0.1 only. Do not set API_LISTEN_HOST to a public address.");
+    throw new Error("API binds 127.0.0.1 only (IIS is the public edge). Do not set API_LISTEN_HOST to a public address.");
   }
 
   const server = http.createServer((request, response) => {

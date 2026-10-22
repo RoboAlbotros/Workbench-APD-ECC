@@ -1,0 +1,50 @@
+# Deploy Clearance Tracker to DTIAPPSINTDEV on push to develop (SPRINT-009).
+# Requires a self-hosted runner on DTIAPPSINTDEV labeled [self-hosted, Windows, intdev].
+# Site path and service name come from vars; secrets stay on the server in backend\.env.
+
+name: Deploy INTDEV
+
+on:
+  push:
+    branches:
+      - develop
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-intdev
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Publish to DTIAPPSINTDEV
+    runs-on: [self-hosted, Windows, intdev]
+    environment: intdev
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Publish site and restart API
+        shell: pwsh
+        env:
+          SITE_ROOT: ${{ vars.INTDEV_SITE_ROOT }}
+        run: |
+          $siteRoot = $env:SITE_ROOT
+          if ([string]::IsNullOrWhiteSpace($siteRoot)) {
+            $siteRoot = "D:\inetpub\clearancetracker"
+          }
+          & "$env:GITHUB_WORKSPACE\deploy\Publish-ClearanceTracker.ps1" `
+            -RepoRoot $env:GITHUB_WORKSPACE `
+            -SiteRoot $siteRoot `
+            -ServiceName "ClearanceTrackerApi"
+
+      - name: Smoke health (localhost API)
+        shell: pwsh
+        run: |
+          $health = Invoke-RestMethod -Uri "http://127.0.0.1:8741/health" -TimeoutSec 15
+          Write-Host ($health | ConvertTo-Json -Depth 6 -Compress)
+          if ($null -eq $health.database) {
+            throw "Unexpected health payload (missing database)"
+          }
