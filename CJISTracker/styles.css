@@ -546,6 +546,41 @@ body.admin-console-open .shell {
   opacity: 0.65;
 }
 
+.security-auth-panel .future-admin-card {
+  border-style: solid;
+}
+
+.security-auth-panel .future-admin-card label {
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.security-auth-panel .future-admin-card input,
+.security-auth-panel .future-admin-card select,
+.security-auth-panel .future-admin-card textarea {
+  font: inherit;
+  font-weight: 500;
+}
+
+.security-check {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+}
+
+.mfa-enrollment-list {
+  display: grid;
+  gap: 6px;
+  max-height: 160px;
+  overflow: auto;
+}
+
+.mfa-enrollment-list label,
+.token-row {
+  font-weight: 500;
+}
+
 .future-placeholder-table {
   width: 100%;
 }

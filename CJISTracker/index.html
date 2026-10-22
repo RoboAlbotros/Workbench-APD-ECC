@@ -323,47 +323,79 @@
           <div id="dataProtectionResults" class="table-wrap"></div>
         </section>
 
-        <section class="panel future-admin-panel admin-global-only hidden" aria-labelledby="futureSecurityHeading">
+        <section id="securityAuthPanel" class="panel security-auth-panel admin-global-only hidden" aria-labelledby="futureSecurityHeading">
           <div class="panel-heading">
             <div>
+              <p class="eyebrow">Admin-Global</p>
               <h2 id="futureSecurityHeading">Security &amp; Authentication</h2>
             </div>
-            <span class="status-pill">Not implemented</span>
+            <span id="securityAuthStatus" class="status-pill">Active</span>
           </div>
           <p class="field-caption">
-            Reserved for a later authorized sprint. These controls are not active and do not change
-            login. Production authentication remains City SSO / Entra ID (DEC-015) when that work is
-            authorized. Provider names below are examples only.
+            Active for named Admin-Global users only. Settings are stored in this browser.
+            Idle timeout and MFA enrollment change sign-in here. City SSO / Entra ID (DEC-015)
+            is not connected, and these controls do not satisfy G-SEC.
           </p>
+          <p id="securityAuthMessage" class="form-message" role="status"></p>
           <div class="future-admin-grid">
             <article class="future-admin-card">
               <h3>Multi-Factor Authentication (MFA)</h3>
               <p>
-                Enforce mandatory MFA for all accounts and display live compliance percentages
-                (example: 98% of users enrolled).
+                When required, only enrolled named users can sign in. Enroll an Admin-Global
+                account before turning this on.
               </p>
-              <p class="future-metric">Enrollment: not available</p>
-              <button class="secondary-action" type="button" disabled>Enforce MFA</button>
+              <p id="mfaEnrollmentMetric" class="future-metric">Enrollment: 0%</p>
+              <label class="security-check">
+                <input id="mfaRequired" type="checkbox" />
+                Require MFA for sign-in
+              </label>
+              <div id="mfaEnrollmentList" class="mfa-enrollment-list"></div>
+              <button id="saveMfaSettings" class="secondary-action" type="button">Save MFA</button>
             </article>
             <article class="future-admin-card">
               <h3>Single Sign-On (SSO)</h3>
               <p>
-                Configure SAML 2.5 or OIDC providers (examples: Okta, Google Workspace, Auth0).
-                Recorded production direction is City SSO / Entra ID.
+                Production direction is City SSO / Entra ID. Tenant and client identifiers are
+                not set, so sign-in stays on prototype access codes.
               </p>
-              <button class="secondary-action" type="button" disabled>Configure SSO</button>
+              <label>
+                Sign-in path
+                <select id="ssoMode">
+                  <option value="prototype">Prototype access code (active)</option>
+                  <option value="entra">City SSO / Entra ID (not configured)</option>
+                </select>
+              </label>
+              <button id="saveSsoSettings" class="secondary-action" type="button">Save SSO</button>
             </article>
             <article class="future-admin-card">
               <h3>Session Management</h3>
-              <p>Set idle timeout durations, concurrent login limits, and IP allowlists.</p>
-              <button class="secondary-action" type="button" disabled>Edit Session Rules</button>
+              <p>Idle timeout signs out this open session. Use 0 to leave the session open.</p>
+              <label>
+                Idle timeout (minutes)
+                <input id="idleTimeoutMinutes" type="number" min="0" max="480" step="1" value="0" />
+              </label>
+              <label>
+                Concurrent login limit
+                <input id="concurrentLoginLimit" type="number" min="1" max="10" step="1" value="1" />
+              </label>
+              <p class="field-caption">Recorded for this browser. A limit of 1 signs out an older tab when a new sign-in starts.</p>
+              <label>
+                IP allowlist
+                <textarea id="ipAllowlist" rows="2" placeholder="Not enforced in the browser"></textarea>
+              </label>
+              <button id="saveSessionSettings" class="secondary-action" type="button">Save Session Rules</button>
             </article>
             <article class="future-admin-card">
               <h3>API Keys &amp; Webhooks</h3>
               <p>
-                Generate, rotate, and scope service tokens with granular read/write permissions.
+                Tokens are stored in this browser and shown once. The API does not accept them.
               </p>
-              <button class="secondary-action" type="button" disabled>Generate Token</button>
+              <label>
+                Token label
+                <input id="apiTokenLabel" type="text" maxlength="40" autocomplete="off" />
+              </label>
+              <button id="generateApiToken" class="secondary-action" type="button">Generate Token</button>
+              <div id="apiTokenList" class="mfa-enrollment-list"></div>
             </article>
           </div>
         </section>
@@ -773,7 +805,7 @@
     </aside>
 
     <script src="test-applicants.js?v=sprint-007-anna-import"></script>
-    <script src="app.js?v=sprint-007-data-protection-check"></script>
+    <script src="app.js?v=security-auth-admin-global"></script>
     <!-- tracker-list-overrides.js retired in SPRINT-005; behaviors folded into app.js and styles.css. -->
   </body>
 </html>

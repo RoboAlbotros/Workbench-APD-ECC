@@ -6,6 +6,7 @@ const STORAGE_KEYS = {
   optionLists: "cjisApplicantTracker.optionLists",
   managedUsers: "cjisApplicantTracker.managedUsers",
   seedBatch: "cjisApplicantTracker.seedBatch",
+  securitySettings: "cjisApplicantTracker.securitySettings",
 };
 
 function resolveSqlApiBase() {
@@ -391,6 +392,7 @@ function loadManagedUsers() {
         name: String(user.name || "").trim(),
         userType: normalizeManagedUserType(user.userType),
         accessCode: String(user.accessCode || ""),
+        mfaEnrolled: Boolean(user.mfaEnrolled),
       }))
       .filter((user) => user.name && user.accessCode.length >= 4);
   } catch {
@@ -818,6 +820,21 @@ const optionListMessage = document.querySelector("#optionListMessage");
 const addManagedUserForm = document.querySelector("#addManagedUserForm");
 const managedUserMessage = document.querySelector("#managedUserMessage");
 const managedUserTable = document.querySelector("#managedUserTable");
+const securityAuthPanel = document.querySelector("#securityAuthPanel");
+const securityAuthMessage = document.querySelector("#securityAuthMessage");
+const mfaEnrollmentMetric = document.querySelector("#mfaEnrollmentMetric");
+const mfaRequired = document.querySelector("#mfaRequired");
+const mfaEnrollmentList = document.querySelector("#mfaEnrollmentList");
+const saveMfaSettings = document.querySelector("#saveMfaSettings");
+const ssoMode = document.querySelector("#ssoMode");
+const saveSsoSettings = document.querySelector("#saveSsoSettings");
+const idleTimeoutMinutes = document.querySelector("#idleTimeoutMinutes");
+const concurrentLoginLimit = document.querySelector("#concurrentLoginLimit");
+const ipAllowlist = document.querySelector("#ipAllowlist");
+const saveSessionSettings = document.querySelector("#saveSessionSettings");
+const apiTokenLabel = document.querySelector("#apiTokenLabel");
+const generateApiToken = document.querySelector("#generateApiToken");
+const apiTokenList = document.querySelector("#apiTokenList");
 const accessMessage = document.querySelector("#accessMessage");
 const headerMetrics = document.querySelector("#headerMetrics");
 const viewSwitch = document.querySelector("#viewSwitch");
@@ -941,6 +958,16 @@ if (optionListEditors) {
   optionListEditors.addEventListener("click", handleOptionListClick);
 }
 if (addManagedUserForm) addManagedUserForm.addEventListener("submit", addManagedUser);
+if (saveMfaSettings) saveMfaSettings.addEventListener("click", saveMfaFromPanel);
+if (saveSsoSettings) saveSsoSettings.addEventListener("click", saveSsoFromPanel);
+if (saveSessionSettings) saveSessionSettings.addEventListener("click", saveSessionFromPanel);
+if (generateApiToken) generateApiToken.addEventListener("click", generateApiTokenFromPanel);
+if (apiTokenList) {
+  apiTokenList.addEventListener("click", (event) => {
+    const revokeButton = event.target.closest("[data-revoke-token]");
+    if (revokeButton) revokeApiToken(revokeButton.dataset.revokeToken);
+  });
+}
 if (managedUserTable) managedUserTable.addEventListener("click", handleManagedUserTableClick);
 limitedViewButton.addEventListener("click", () => setView("limited"));
 if (recordsViewButton) recordsViewButton.addEventListener("click", () => setView("records"));
@@ -1623,9 +1650,18 @@ function signInManagementUser(event) {
       );
       return;
     }
+    if (!canSignInWithMfa(managed)) {
+      showMessage(
+        accessMessage,
+        "MFA is required and this account is not enrolled. An Admin-Global user must enroll it under Settings, Security & Authentication.",
+        true,
+      );
+      return;
+    }
     currentUser = { name: managed.name, role: mappedRole, userType: managed.userType };
     managementAccessCode.value = "";
     showMessage(accessMessage, "");
+    noteSignInSession();
     updateAccessControls();
     setView(mappedRole);
     return;
@@ -1646,20 +1682,27 @@ function signInManagementUser(event) {
     return;
   }
 
+  if (loadSecuritySettings().mfaRequired) {
+    showMessage(accessMessage, "MFA is required. Sign in with an enrolled named user.", true);
+    return;
+  }
+
   currentUser = { name, role };
   managementAccessCode.value = "";
   showMessage(accessMessage, "");
+  noteSignInSession();
   updateAccessControls();
   setView(role);
 }
 
-function signOutManagementUser() {
+function signOutManagementUser(reason) {
   currentUser = null;
   currentFormMode = "edit";
   fullScreenView = null;
   closeApplicantDrawer({ restoreFocus: false });
   closeLimitedPopup({ restoreFocus: false });
-  showMessage(accessMessage, "Signed out.");
+  const message = typeof reason === "string" && reason ? reason : "Signed out.";
+  showMessage(accessMessage, message);
   updateAccessControls();
   setView("limited");
 }
@@ -1750,6 +1793,7 @@ function openFullScreenView(page) {
 
 function openAdminConsole() {
   openFullScreenView("admin");
+  renderSecurityAuthPanel();
 }
 
 function openArchivedRecordsPage() {
@@ -2093,6 +2137,214 @@ function syncAdminGlobalOnlySections() {
   document.querySelectorAll(".admin-global-only").forEach((section) => {
     section.classList.toggle("hidden", !isAdminGlobalUser());
   });
+}
+
+const SESSION_GENERATION_KEY = "cjisApplicantTracker.sessionGeneration";
+let lastActivityAt = Date.now();
+
+function clampSecurityInt(value, min, max, fallback) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return fallback;
+  return Math.min(max, Math.max(min, Math.trunc(number)));
+}
+
+function defaultSecuritySettings() {
+  return {
+    mfaRequired: false,
+    ssoMode: "prototype",
+    idleTimeoutMinutes: 0,
+    concurrentLoginLimit: 1,
+    ipAllowlist: "",
+    sessionGeneration: 0,
+    tokens: [],
+  };
+}
+
+function loadSecuritySettings() {
+  const defaults = defaultSecuritySettings();
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.securitySettings);
+    const parsed = raw ? JSON.parse(raw) : {};
+    if (!parsed || typeof parsed !== "object") return defaults;
+    return {
+      ...defaults,
+      mfaRequired: Boolean(parsed.mfaRequired),
+      ssoMode: parsed.ssoMode === "entra" ? "entra" : "prototype",
+      idleTimeoutMinutes: clampSecurityInt(parsed.idleTimeoutMinutes, 0, 480, 0),
+      concurrentLoginLimit: clampSecurityInt(parsed.concurrentLoginLimit, 1, 10, 1),
+      ipAllowlist: String(parsed.ipAllowlist || ""),
+      sessionGeneration: Number(parsed.sessionGeneration) || 0,
+      tokens: Array.isArray(parsed.tokens)
+        ? parsed.tokens
+            .filter((token) => token && token.id && token.last4)
+            .map((token) => ({
+              id: String(token.id),
+              label: String(token.label || "Token"),
+              last4: String(token.last4),
+              createdAt: String(token.createdAt || ""),
+            }))
+        : [],
+    };
+  } catch {
+    return defaults;
+  }
+}
+
+function saveSecuritySettings(settings) {
+  localStorage.setItem(STORAGE_KEYS.securitySettings, JSON.stringify(settings));
+}
+
+function canSignInWithMfa(managedUser) {
+  if (!loadSecuritySettings().mfaRequired) return true;
+  return Boolean(managedUser && managedUser.mfaEnrolled);
+}
+
+function noteSignInSession() {
+  const settings = loadSecuritySettings();
+  lastActivityAt = Date.now();
+  if (settings.concurrentLoginLimit !== 1) {
+    sessionStorage.removeItem(SESSION_GENERATION_KEY);
+    return;
+  }
+  settings.sessionGeneration += 1;
+  saveSecuritySettings(settings);
+  sessionStorage.setItem(SESSION_GENERATION_KEY, String(settings.sessionGeneration));
+}
+
+function enforceSessionGeneration() {
+  const settings = loadSecuritySettings();
+  if (!currentUser || settings.concurrentLoginLimit !== 1) return;
+  const mine = sessionStorage.getItem(SESSION_GENERATION_KEY);
+  if (mine && String(settings.sessionGeneration) !== mine) {
+    signOutManagementUser("Signed out because a newer sign-in started.");
+  }
+}
+
+function renderSecurityAuthPanel() {
+  if (!securityAuthPanel || !isAdminGlobalUser()) return;
+  const settings = loadSecuritySettings();
+  const enrolled = managedUsers.filter((user) => user.mfaEnrolled).length;
+  const total = managedUsers.length;
+  const percent = total ? Math.round((enrolled / total) * 100) : 0;
+  if (mfaEnrollmentMetric) {
+    mfaEnrollmentMetric.textContent = `Enrollment: ${percent}% (${enrolled} of ${total})`;
+  }
+  if (mfaRequired) mfaRequired.checked = settings.mfaRequired;
+  if (ssoMode) ssoMode.value = settings.ssoMode;
+  if (idleTimeoutMinutes) idleTimeoutMinutes.value = String(settings.idleTimeoutMinutes);
+  if (concurrentLoginLimit) concurrentLoginLimit.value = String(settings.concurrentLoginLimit);
+  if (ipAllowlist) ipAllowlist.value = settings.ipAllowlist;
+  if (mfaEnrollmentList) {
+    mfaEnrollmentList.innerHTML = managedUsers.length
+      ? managedUsers
+          .map(
+            (user) => `<label class="security-check">
+              <input type="checkbox" data-mfa-user="${escapeHtml(user.id)}" ${user.mfaEnrolled ? "checked" : ""} />
+              ${escapeHtml(user.name)} (${escapeHtml(USER_TYPE_LABELS[user.userType] || user.userType)})
+            </label>`,
+          )
+          .join("")
+      : `<p class="empty-state">No named users yet.</p>`;
+  }
+  if (apiTokenList) {
+    apiTokenList.innerHTML = settings.tokens.length
+      ? settings.tokens
+          .map(
+            (token) => `<div class="token-row">
+              <span>${escapeHtml(token.label)} ····${escapeHtml(token.last4)}</span>
+              <button class="secondary-action" type="button" data-revoke-token="${escapeHtml(token.id)}">Revoke</button>
+            </div>`,
+          )
+          .join("")
+      : `<p class="empty-state">No tokens.</p>`;
+  }
+}
+
+function saveMfaFromPanel() {
+  if (!isAdminGlobalUser()) return;
+  const settings = loadSecuritySettings();
+  const enrolledIds = new Set(
+    [...mfaEnrollmentList.querySelectorAll("[data-mfa-user]:checked")].map((input) => input.dataset.mfaUser),
+  );
+  if (mfaRequired.checked && currentUser && !enrolledIds.has(
+    managedUsers.find((user) => user.name === currentUser.name && user.userType === "adminGlobal")?.id,
+  )) {
+    showMessage(
+      securityAuthMessage,
+      "Enroll this Admin-Global account before requiring MFA.",
+      true,
+    );
+    return;
+  }
+  managedUsers = managedUsers.map((user) => ({
+    ...user,
+    mfaEnrolled: enrolledIds.has(user.id),
+  }));
+  saveManagedUsers();
+  settings.mfaRequired = mfaRequired.checked;
+  saveSecuritySettings(settings);
+  renderSecurityAuthPanel();
+  showMessage(securityAuthMessage, settings.mfaRequired ? "MFA is required for sign-in." : "MFA is not required.");
+}
+
+function saveSsoFromPanel() {
+  if (!isAdminGlobalUser()) return;
+  const settings = loadSecuritySettings();
+  settings.ssoMode = ssoMode.value === "entra" ? "entra" : "prototype";
+  saveSecuritySettings(settings);
+  showMessage(
+    securityAuthMessage,
+    settings.ssoMode === "entra"
+      ? "City SSO / Entra ID is recorded. Identifiers are not set, so sign-in stays on prototype access codes."
+      : "Sign-in path is the prototype access code.",
+  );
+}
+
+function saveSessionFromPanel() {
+  if (!isAdminGlobalUser()) return;
+  const settings = loadSecuritySettings();
+  settings.idleTimeoutMinutes = clampSecurityInt(idleTimeoutMinutes.value, 0, 480, 0);
+  settings.concurrentLoginLimit = clampSecurityInt(concurrentLoginLimit.value, 1, 10, 1);
+  settings.ipAllowlist = ipAllowlist.value.trim();
+  saveSecuritySettings(settings);
+  lastActivityAt = Date.now();
+  renderSecurityAuthPanel();
+  const ipNote = settings.ipAllowlist ? " IP allowlist is recorded and is not enforced in the browser." : "";
+  showMessage(
+    securityAuthMessage,
+    `Session rules saved. Idle timeout is ${settings.idleTimeoutMinutes} minutes.${ipNote}`,
+  );
+}
+
+function generateApiTokenFromPanel() {
+  if (!isAdminGlobalUser()) return;
+  const settings = loadSecuritySettings();
+  const bytes = new Uint8Array(18);
+  crypto.getRandomValues(bytes);
+  const secret = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+  const token = `ctk_${secret}`;
+  settings.tokens = [
+    {
+      id: crypto.randomUUID(),
+      label: apiTokenLabel.value.trim() || "Token",
+      last4: token.slice(-4),
+      createdAt: new Date().toISOString(),
+    },
+    ...settings.tokens,
+  ].slice(0, 20);
+  saveSecuritySettings(settings);
+  apiTokenLabel.value = "";
+  renderSecurityAuthPanel();
+  showMessage(securityAuthMessage, `Token created. Copy it now. The API does not accept it: ${token}`);
+}
+
+function revokeApiToken(tokenId) {
+  if (!isAdminGlobalUser()) return;
+  const settings = loadSecuritySettings();
+  settings.tokens = settings.tokens.filter((token) => token.id !== tokenId);
+  saveSecuritySettings(settings);
+  renderSecurityAuthPanel();
+  showMessage(securityAuthMessage, "Token revoked.");
 }
 
 function canAccessAdminConsole() {
@@ -3063,6 +3315,7 @@ function addManagedUser(event) {
       name,
       userType,
       accessCode,
+      mfaEnrolled: false,
     },
   ];
   saveManagedUsers();
@@ -3070,6 +3323,7 @@ function addManagedUser(event) {
   document.querySelector("#newManagedUserType").value = "admin";
   showMessage(managedUserMessage, `Added ${USER_TYPE_LABELS[userType]} user ${name}.`);
   renderManagedUserTable();
+  renderSecurityAuthPanel();
 }
 
 function handleManagedUserTableClick(event) {
@@ -3912,6 +4166,24 @@ function escapeHtml(value) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
+
+document.addEventListener("pointerdown", () => {
+  lastActivityAt = Date.now();
+});
+document.addEventListener("keydown", () => {
+  lastActivityAt = Date.now();
+});
+window.addEventListener("storage", (event) => {
+  if (event.key === STORAGE_KEYS.securitySettings) enforceSessionGeneration();
+});
+window.setInterval(() => {
+  enforceSessionGeneration();
+  const minutes = loadSecuritySettings().idleTimeoutMinutes;
+  if (!currentUser || minutes <= 0) return;
+  if (Date.now() - lastActivityAt >= minutes * 60 * 1000) {
+    signOutManagementUser(`Signed out after ${minutes} minutes of inactivity.`);
+  }
+}, 15000);
 
 renderManagedDropdowns();
 updateSetupVisibility();
