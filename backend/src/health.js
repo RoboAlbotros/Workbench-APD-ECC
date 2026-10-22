@@ -25,6 +25,18 @@ function handleHealth(db, extra = {}) {
       roles: ["limited", "records", "admin"],
       prototypePins: "never production",
     },
+    protection: {
+      sqlTransportEncrypt: Boolean(db && db.encrypt),
+      sqlTrustServerCertificate: Boolean(db && db.trustServerCertificate),
+      applicationFieldEncryption: false,
+      browserStoreEncrypted: false,
+      apiUsesTls: false,
+      cjisSecurityPolicy: {
+        applicability: "DEC-013 not directly applicable (no CJI stored)",
+        claim: "not-claimed",
+        note: "This check does not certify CJIS compliance and does not satisfy G-SEC.",
+      },
+    },
   };
 }
 

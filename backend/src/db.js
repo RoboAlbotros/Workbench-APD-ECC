@@ -45,6 +45,8 @@ function createDb() {
     configured: isConfigured(config),
     server: config.server,
     database: config.database,
+    encrypt: config.encrypt,
+    trustServerCertificate: config.trustServerCertificate,
     driverLoaded: Boolean(loadMssql()),
     lastError() {
       return lastError;

@@ -918,6 +918,12 @@ function completeAccessSetup(event) {
 signOutButton.addEventListener("click", signOutManagementUser);
 if (archivedRecordsButton) archivedRecordsButton.addEventListener("click", openArchivedRecordsPage);
 if (adminConsoleButton) adminConsoleButton.addEventListener("click", openAdminConsole);
+const checkDataProtectionButton = document.querySelector("#checkDataProtection");
+if (checkDataProtectionButton) {
+  checkDataProtectionButton.addEventListener("click", () => {
+    checkDataProtectionStatus();
+  });
+}
 if (closeAdminConsoleButton) closeAdminConsoleButton.addEventListener("click", closeFullScreenPage);
 if (closeArchivedRecordsButton) closeArchivedRecordsButton.addEventListener("click", closeFullScreenPage);
 if (archivedSearchInput) archivedSearchInput.addEventListener("input", renderArchivedTable);
@@ -1199,6 +1205,126 @@ function updatePersistenceStatus() {
     return;
   }
   target.textContent = "Storage: this browser";
+}
+
+function protectionToneClass(result) {
+  const normalized = String(result || "").toLowerCase();
+  if (normalized === "configured") return "protection-configured";
+  if (normalized === "not claimed" || normalized === "not verified") return "protection-unknown";
+  return "protection-not-met";
+}
+
+function buildDataProtectionRows(health) {
+  const protection = health && health.protection ? health.protection : {};
+  const sqlReachable = Boolean(health && health.database && health.database.connected);
+  const pageHttps = window.location.protocol === "https:";
+  const sqlEncrypt = protection.sqlTransportEncrypt;
+  return [
+    {
+      check: "Encryption at rest (this browser)",
+      result: "Not encrypted",
+      detail: "Applicant rows and access codes in localStorage are plaintext on this Windows profile.",
+    },
+    {
+      check: "Encryption while records are edited",
+      result: "Not implemented",
+      detail: "Form values and saved JSON are not application-encrypted before write.",
+    },
+    {
+      check: "Updates in transit (browser to API)",
+      result: protection.apiUsesTls ? "TLS" : "Not TLS",
+      detail: sqlReachable
+        ? `API is ${SQL_API_BASE}. This prototype uses HTTP on 127.0.0.1, not HTTPS.`
+        : `API at ${SQL_API_BASE} did not answer. Browser copy still writes plaintext localStorage.`,
+    },
+    {
+      check: "SQL driver encrypt (TDS to SQL Server)",
+      result: !health ? "Not verified" : sqlEncrypt ? "Configured" : "Off",
+      detail: !health
+        ? "Health endpoint did not return. Cannot read SQL_ENCRYPT."
+        : sqlEncrypt
+          ? "mssql encrypt option is on. That is the SQL login channel, not disk encryption at rest."
+          : "SQL_ENCRYPT is false. The SQL login channel is not requesting encryption.",
+    },
+    {
+      check: "SQL encryption at rest (TDE or equivalent)",
+      result: "Not verified",
+      detail: "This prototype does not query SQL Server TDE or file-system encryption.",
+    },
+    {
+      check: "Page served over HTTPS",
+      result: pageHttps ? "Yes" : "No",
+      detail: pageHttps
+        ? "The tracker page used HTTPS."
+        : `This page is ${window.location.protocol || "unknown"}. File or HTTP origins are expected for the localhost prototype.`,
+    },
+    {
+      check: "CJIS Security Policy",
+      result: "Not claimed",
+      detail: protection.cjisSecurityPolicy
+        ? `${protection.cjisSecurityPolicy.applicability}. ${protection.cjisSecurityPolicy.note}`
+        : "DEC-013: CJIS Security Policy is not directly applicable (no CJI stored). This check does not certify compliance and does not satisfy G-SEC.",
+    },
+  ];
+}
+
+function renderDataProtectionResults(rows, sourceNote) {
+  const table = document.querySelector("#dataProtectionResults");
+  const overall = document.querySelector("#dataProtectionOverall");
+  if (!table) return;
+  const claimed = rows.some((row) => {
+    const result = String(row.result || "").toLowerCase();
+    return result === "met" || result === "compliant" || result === "yes — cjis";
+  });
+  if (overall) {
+    overall.textContent = claimed ? "Do not treat as CJIS certified" : "CJIS not claimed";
+  }
+  table.innerHTML = `<table class="admin-records-table protection-status-table">
+    <thead>
+      <tr>
+        <th>Check</th>
+        <th>Result</th>
+        <th>What this means</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${rows
+        .map((row) => {
+          return `<tr>
+            <td>${escapeHtml(row.check)}</td>
+            <td><span class="status-pill ${protectionToneClass(row.result)}">${escapeHtml(row.result)}</span></td>
+            <td>${escapeHtml(row.detail)}</td>
+          </tr>`;
+        })
+        .join("")}
+    </tbody>
+  </table>
+  <p class="field-caption">${escapeHtml(sourceNote)}</p>`;
+}
+
+async function checkDataProtectionStatus() {
+  const message = document.querySelector("#dataProtectionMessage");
+  const button = document.querySelector("#checkDataProtection");
+  showMessage(message, "Checking encryption and recorded CJIS status…");
+  if (button) button.disabled = true;
+  let health = null;
+  try {
+    const response = await fetch(`${SQL_API_BASE}/health`);
+    health = await response.json();
+  } catch {
+    health = null;
+  }
+  const rows = buildDataProtectionRows(health);
+  const sourceNote = health
+    ? "Source: this browser plus GET /health on the localhost API. Not a CJIS audit."
+    : "Source: this browser only. Localhost API did not answer. Not a CJIS audit.";
+  renderDataProtectionResults(rows, sourceNote);
+  showMessage(
+    message,
+    "Check finished. Encryption at rest and CJIS compliance are not met or not claimed in this prototype.",
+    true,
+  );
+  if (button) button.disabled = false;
 }
 
 function loadChangeLog() {

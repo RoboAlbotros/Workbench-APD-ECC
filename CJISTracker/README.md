@@ -59,6 +59,7 @@ III Completion plus 5 years. The Query Due metric counts records whose due date
 is on or before today.
 
 These access codes are local prototype controls. For production use, replace them with server-side authentication, authorization, and audit logging (recorded direction: City SSO / Entra ID with server-side role-based access, decision DEC-015).
+Settings includes a Data protection status check for Admin-Full and Admin-Global. It reports browser plaintext storage, lack of application-level encryption, HTTP (not TLS) to the localhost API, the SQL driver encrypt flag, and that CJIS Security Policy is not claimed (DEC-013). The check does not enable encryption and does not satisfy G-SEC.
 
 Vendor uses suggestions from existing records and is optional. Department is a closed city-code list (AV-Aviation through TR-Transit, plus APD). Position/Role uses suggestions from existing records. Search checks Last Name, First Name, Middle Initial, Suffix, composed name, Driver Lic Num, vendor, department, position/role, requestor, and Applicant Email Address.
 Applicant document data remains in the data model, but the Applicant Documents field is hidden in the UI.

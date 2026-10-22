@@ -4,7 +4,8 @@ Status: SCAFFOLDING — not implemented
 Owner: Brett (technical owner and security/privacy authority)
 Decision: DEC-015 (2026-10-08)
 Date: 2026-10-13
-Controlling work ID: SPRINT-006
+Controlling work ID: SPRINT-006 (scaffolding). Proposed wiring sprint: SPRINT-008
+(docs/planning/sprints/sprint-008-sso-entra-rbac.md) — DRAFT / NOT READY.
 
 This document outlines how production authentication SHOULD attach later. It is
 not an approved architecture decision record, not a City policy, and not a live

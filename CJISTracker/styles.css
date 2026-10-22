@@ -583,6 +583,26 @@ body.admin-console-open .shell {
   white-space: nowrap;
 }
 
+.status-pill.protection-not-met {
+  background: #f8dfdc;
+  color: var(--danger);
+}
+
+.status-pill.protection-unknown {
+  background: #fff3d6;
+  color: #8a5a00;
+}
+
+.status-pill.protection-configured {
+  background: #e7eef8;
+  color: var(--accent-strong);
+}
+
+.protection-status-table td:nth-child(3) {
+  font-weight: 400;
+  white-space: normal;
+}
+
 .record-form {
   display: grid;
   grid-template-columns: 1fr;

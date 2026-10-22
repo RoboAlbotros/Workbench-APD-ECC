@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>CJIS Applicant Tracker</title>
-    <link rel="stylesheet" href="styles.css?v=sprint-007-archive-delete-actions-3" />
+    <link rel="stylesheet" href="styles.css?v=sprint-007-data-protection-check" />
   </head>
   <body class="signed-out">
     <header class="app-header" aria-label="Application header">
@@ -298,6 +298,29 @@
           </form>
           <p id="managedUserMessage" class="form-message" role="status"></p>
           <div id="managedUserTable" class="table-wrap" aria-live="polite"></div>
+        </section>
+
+        <section class="panel" aria-labelledby="dataProtectionHeading">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Prototype diagnostic</p>
+              <h2 id="dataProtectionHeading">Data protection status</h2>
+            </div>
+            <span id="dataProtectionOverall" class="status-pill">Not checked</span>
+          </div>
+          <p class="field-caption">
+            Checks what this prototype can observe: browser storage, the localhost API, and the SQL
+            driver encrypt flag. It does not turn encryption on. It does not certify CJIS compliance.
+            Recorded decision DEC-013: CJIS Security Policy is not directly applicable because this
+            tracker does not store CJI. G-SEC remains pending.
+          </p>
+          <div class="form-actions">
+            <button id="checkDataProtection" class="secondary-action" type="button">
+              Check encryption and CJIS status
+            </button>
+          </div>
+          <p id="dataProtectionMessage" class="form-message" role="status"></p>
+          <div id="dataProtectionResults" class="table-wrap"></div>
         </section>
 
         <section class="panel future-admin-panel admin-global-only hidden" aria-labelledby="futureSecurityHeading">
@@ -750,7 +773,7 @@
     </aside>
 
     <script src="test-applicants.js?v=sprint-007-anna-import"></script>
-    <script src="app.js?v=sprint-007-readonly-exclude-otv"></script>
+    <script src="app.js?v=sprint-007-data-protection-check"></script>
     <!-- tracker-list-overrides.js retired in SPRINT-005; behaviors folded into app.js and styles.css. -->
   </body>
 </html>
