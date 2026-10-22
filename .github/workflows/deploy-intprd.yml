@@ -27,7 +27,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Publish site and restart API
-        shell: pwsh
+        shell: powershell
         env:
           SITE_ROOT: ${{ vars.INTPRD_SITE_ROOT }}
         run: |
@@ -41,7 +41,7 @@ jobs:
             -ServiceName "ClearanceTrackerApi"
 
       - name: Smoke health (localhost API)
-        shell: pwsh
+        shell: powershell
         run: |
           $health = Invoke-RestMethod -Uri "http://127.0.0.1:8741/health" -TimeoutSec 15
           Write-Host ($health | ConvertTo-Json -Depth 6 -Compress)
