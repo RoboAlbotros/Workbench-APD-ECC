@@ -4,6 +4,8 @@ const http = require("http");
 const { loadDotEnv } = require("./env");
 const { createDb } = require("./db");
 const { handleHealth } = require("./health");
+const { describeSqlSettings, testIntegratedSettings, saveIntegratedSettings } = require("./sql-settings");
+const { describeSsoSettings, saveSsoSettings } = require("./sso-settings");
 const { listApplicants, replaceApplicants } = require("./repositories/applicants");
 
 loadDotEnv();
@@ -24,13 +26,22 @@ function allowedCorsOrigins() {
   ]);
 }
 
+function isLoopbackOrigin(origin) {
+  try {
+    const url = new URL(origin);
+    return url.protocol === "http:" && (url.hostname === "127.0.0.1" || url.hostname === "localhost");
+  } catch {
+    return false;
+  }
+}
+
 function corsHeaders(request) {
   const origin = request.headers.origin || "";
   const allowedSet = allowedCorsOrigins();
-  const allowed = allowedSet.has(origin) ? origin : "http://127.0.0.1:8740";
+  const allowed = allowedSet.has(origin) || isLoopbackOrigin(origin) ? origin : "http://127.0.0.1:8740";
   return {
     "Access-Control-Allow-Origin": allowed,
-    "Access-Control-Allow-Methods": "GET, PUT, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, PUT, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
   };
 }
@@ -43,6 +54,27 @@ function sendJson(request, response, status, body) {
     ...corsHeaders(request),
   });
   response.end(payload);
+}
+
+async function readJsonBody(request, response) {
+  let raw;
+  try {
+    raw = await readBody(request);
+  } catch (error) {
+    sendJson(request, response, 413, { error: error.message || "request-too-large" });
+    return null;
+  }
+  try {
+    const parsed = JSON.parse(raw || "{}");
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      sendJson(request, response, 400, { reason: "Settings must be a JSON object." });
+      return null;
+    }
+    return parsed;
+  } catch {
+    sendJson(request, response, 400, { reason: "Settings must be JSON." });
+    return null;
+  }
 }
 
 function readBody(request) {
@@ -76,6 +108,40 @@ async function handleRequest(request, response) {
       connected: Boolean(pool),
       listen: `${process.env.API_LISTEN_HOST || "127.0.0.1"}:${process.env.API_LISTEN_PORT || "8741"}`,
     }));
+    return;
+  }
+
+  if (request.method === "GET" && url.pathname === "/api/sso-settings") {
+    sendJson(request, response, 200, describeSsoSettings());
+    return;
+  }
+
+  if (request.method === "PUT" && url.pathname === "/api/sso-settings") {
+    const parsed = await readJsonBody(request, response);
+    if (!parsed) return;
+    const result = saveSsoSettings(parsed);
+    sendJson(request, response, result.status, result.body);
+    return;
+  }
+
+  if (request.method === "GET" && url.pathname === "/api/sql-settings") {
+    sendJson(request, response, 200, await describeSqlSettings(db));
+    return;
+  }
+
+  if (request.method === "POST" && url.pathname === "/api/sql-settings/test") {
+    const parsed = await readJsonBody(request, response);
+    if (!parsed) return;
+    const result = await testIntegratedSettings(db, parsed);
+    sendJson(request, response, result.status, result.body);
+    return;
+  }
+
+  if (request.method === "PUT" && url.pathname === "/api/sql-settings") {
+    const parsed = await readJsonBody(request, response);
+    if (!parsed) return;
+    const result = await saveIntegratedSettings(db, parsed);
+    sendJson(request, response, result.status, result.body);
     return;
   }
 

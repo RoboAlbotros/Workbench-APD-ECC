@@ -12,6 +12,7 @@ function handleHealth(db, extra = {}) {
       configured: Boolean(db && db.configured),
       driverLoaded: Boolean(db && db.driverLoaded),
       name: db && db.database ? db.database : "CjisApplicantTracker",
+      authentication: db && db.authentication ? db.authentication : "sql",
       schema: "CJISTracker/database-schema.sql",
       reason: connected
         ? "SQL Server connected."
