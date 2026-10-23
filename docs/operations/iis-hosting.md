@@ -1,10 +1,22 @@
 # Clearance Tracker — IIS hosting (INTDEV / INTPRD)
 
-Status: SPRINT-009 active scaffolding
+Status: SPRINT-009 INTDEV site and runner applied 2026-10-22; identity, SQL, and DNS still open
 Owner: Brett (technical / operations)
 Hosts: `DTIAPPSINTDEV` (develop), `DTIAPPSINTPRD` (main)
 Public hostname (INTDEV): `clearancetracker.cabq.gov`
 Service account: `COA\svc-clearancetracker`
+
+## INTDEV apply (2026-10-22)
+
+Applied on `DTIAPPSINTDEV` (`10.5.16.108`):
+
+- Site `ClearanceTracker` at `D:\inetpub\clearancetracker`, started, binding `http *:80:clearancetracker.cabq.gov`.
+- App pool `ClearanceTrackerAppPool` runs as `ApplicationPoolIdentity` (service-account password was not available).
+- `ClearanceTrackerApi` is Automatic and running as `LocalSystem`. Node v22.23.2. NSSM is `C:\Tools\nssm\nssm.exe`.
+- `GET /` and `GET /health` return HTTP 200 through IIS when the host header is `clearancetracker.cabq.gov`. Health is degraded because `backend\.env` still has placeholder SQL values.
+- `COA\svc-clearancetracker` has Modify on the site root. Re-run the install scripts with that password to switch the service and app pool.
+- `clearancetracker.cabq.gov` does not resolve. No HTTPS binding.
+- GitHub runner `DTIAPPSINTDEV` is online with labels `self-hosted`, `Windows`, `X64`, `intdev`. Service `actions.runner.RoboAlbotros-Workbench-APD-ECC.DTIAPPSINTDEV` runs as `NT AUTHORITY\SYSTEM` from `D:\actions-runner\intdev`. Repository variable `INTDEV_SITE_ROOT` is `D:\inetpub\clearancetracker`. Environment `intdev` exists.
 
 ## Architecture
 

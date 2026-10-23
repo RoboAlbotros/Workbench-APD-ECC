@@ -101,6 +101,8 @@ Reason: public hostname, service account identity, CI deploy to app servers.
 
 ## Readiness decision and evidence
 
-Readiness: READY for repo scaffolding; server apply blocked until SSH/WinRM
-or RDP admin session and passwords are provided.
-Decided by: Owner implement-plan direction 2026-10-22.
+Readiness: INTDEV site and API service are installed. Still open: service-account
+password (service currently LocalSystem; app pool ApplicationPoolIdentity),
+SQL credentials in the server `backend\.env`, and DNS and certificate for
+`clearancetracker.cabq.gov`. The INTDEV runner is online.
+Decided by: Owner direction 2026-10-22 to complete setup on DTIAPPSINTDEV.
