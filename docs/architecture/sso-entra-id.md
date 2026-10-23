@@ -9,8 +9,13 @@ Controlling work ID: SPRINT-006 (scaffolding). Proposed wiring sprint: SPRINT-00
 
 This document outlines how production authentication SHOULD attach later. It is
 not an approved architecture decision record, not a City policy, and not a live
-integration. Tenant ID, client ID, client secret, redirect URI, and role-claim
-names remain **TBD**. Do not invent them.
+integration. Do not invent identifiers.
+
+Owner direction (Brett, 2026-10-23): sign-in for this application uses **SAML**,
+not an Entra OIDC app registration. Tenant ID and Client ID are not required.
+Identifier (Entity ID), Reply URL, and the identity-provider certificate remain
+**TBD** and must be issued for this application. Live SAML login is not
+implemented. DEC-015 (below) remains the earlier recorded Entra ID direction.
 
 ## Recorded direction (DEC-015)
 

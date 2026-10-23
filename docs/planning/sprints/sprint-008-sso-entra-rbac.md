@@ -1,6 +1,7 @@
 # Sprint 008 — City SSO / Entra and server-side RBAC (DEC-015)
 
 Status: DRAFT — PROPOSED / NOT READY
+Owner direction 2026-10-23: SAML for this application, not an Entra OIDC app registration. This draft's authorize/token wiring is not the selected protocol. Live SAML login is not authorized by this note.
 Owner: Brett (technical owner and security/privacy authority)
 Version: 0.1.0
 Approval: Pending

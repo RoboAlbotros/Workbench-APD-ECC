@@ -1,20 +1,20 @@
 {
-  "provider": "entra-id",
+  "provider": "saml",
   "decision": "DEC-015",
+  "ownerDirection": "2026-10-23 SAML instead of an Entra OIDC app registration",
   "status": "scaffolding-only",
   "notes": [
-    "City SSO / Entra ID is the recorded production authentication direction.",
+    "SAML is the owner-directed sign-in protocol for this application.",
+    "DEC-015 remains the earlier Entra ID record. Tenant ID and Client ID are not used.",
     "Server-side RBAC must enforce Limited / Records / Admin. Browser PINs never apply in production.",
-    "All identifiers below are unassigned. Do not invent tenant IDs, client secrets, or City policy.",
-    "Do not implement a live login against Entra in this sprint."
+    "Entity ID, Reply URL, and the identity-provider certificate are unassigned. Do not invent them.",
+    "Do not implement live SAML login in this sprint."
   ],
-  "tenantId": "TBD",
-  "clientId": "TBD",
-  "clientSecret": "TBD",
-  "redirectUri": "TBD",
-  "authorizeUrl": "https://login.microsoftonline.com/TBD/oauth2/v2.0/authorize",
-  "tokenUrl": "https://login.microsoftonline.com/TBD/oauth2/v2.0/token",
-  "roleClaim": "TBD",
+  "entityId": "TBD",
+  "replyUrl": "TBD",
+  "signOnUrl": "",
+  "relayState": "",
+  "logoutUrl": "",
   "roleMap": {
     "TBD-limited-claim": "limited",
     "TBD-records-claim": "records",
