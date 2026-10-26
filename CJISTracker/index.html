@@ -345,8 +345,8 @@
           <p class="field-caption">
             Active for named Admin-Global users only. Sign-in settings are stored in this browser.
             Database credentials are saved on the API host. Microsoft Authenticator uses a time-based
-            code from a QR setup in this browser. City SSO / Entra ID (DEC-015) is not connected,
-            and these controls do not satisfy G-SEC.
+            code from a QR setup in this browser. SAML / SSO settings can be recorded below; live SSO
+            login is not connected, and these controls do not satisfy G-SEC.
           </p>
           <p id="securityAuthMessage" class="form-message" role="status"></p>
           <div class="future-admin-grid">
@@ -424,79 +424,111 @@
               </div>
               <button id="saveMfaSettings" class="secondary-action" type="button">Save MFA requirement</button>
             </article>
-            <article class="future-admin-card future-admin-card-wide">
-              <h3>Single Sign-On (SSO)</h3>
+            <article class="future-admin-card future-admin-card-wide" id="samlSsoConfigCard">
+              <div class="panel-heading sso-config-heading">
+                <div>
+                  <p class="eyebrow">Admin-Global</p>
+                  <h3>SAML Configuration &amp; SSO</h3>
+                </div>
+                <span id="ssoEnabledStatus" class="status-pill">SSO off</span>
+              </div>
               <p>
-                Production direction is City SSO / Entra ID or SAML. Tenant ID, Client ID, Entity ID,
-                and Reply URL still need to be set for this application. Sign-in stays on prototype
-                access codes.
+                Record SAML settings for this application and turn SSO on when the IdP values are
+                ready. Live SAML sign-in is not wired yet; prototype access codes remain the active
+                login until a later authorized SSO sprint.
               </p>
+              <label class="security-check">
+                <input id="ssoEnabled" type="checkbox" />
+                Enable SSO
+              </label>
               <label>
-                Sign-in path
+                SSO protocol
                 <select id="ssoMode">
-                  <option value="prototype">Prototype access code (active)</option>
-                  <option value="entra">City SSO / Entra ID (not configured)</option>
-                  <option value="saml">SAML (not configured)</option>
+                  <option value="prototype">Prototype access code only</option>
+                  <option value="saml">SAML</option>
+                  <option value="entra">City SSO / Entra ID (optional / not selected)</option>
                 </select>
               </label>
-              <div class="sql-settings-grid">
-                <label>
-                  Tenant ID
-                  <input id="entraTenantId" type="text" value="Needs to be Generated" autocomplete="off" spellcheck="false" />
-                </label>
-                <label>
-                  Client ID
-                  <input id="entraClientId" type="text" value="Needs to be Generated" autocomplete="off" spellcheck="false" />
-                </label>
-                <label>
-                  Client secret
-                  <input id="entraClientSecret" type="text" value="TBD" autocomplete="off" spellcheck="false" />
-                </label>
-                <label>
-                  Redirect URI
-                  <input id="entraRedirectUri" type="text" value="TBD" autocomplete="off" spellcheck="false" />
-                </label>
-                <label>
-                  Authorize URL
-                  <input id="entraAuthorizeUrl" type="text" value="" autocomplete="off" spellcheck="false" />
-                </label>
-                <label>
-                  Token URL
-                  <input id="entraTokenUrl" type="text" value="" autocomplete="off" spellcheck="false" />
-                </label>
-                <label>
-                  Role claim
-                  <input id="entraRoleClaim" type="text" value="TBD" autocomplete="off" spellcheck="false" />
-                </label>
-              </div>
-              <p class="field-caption">
-                Client secret is saved on the API host. After a real secret is saved, this page does not show it again.
+              <p id="ssoEnabledHint" class="field-caption">
+                Turn Enable SSO on and choose SAML to save the service-provider addresses below.
               </p>
-              <h4>SAML</h4>
-              <p>Basic SAML configuration for this application. These addresses stay unset until this app is registered.</p>
-              <div class="sql-settings-grid">
-                <label>
-                  Identifier (Entity ID)
-                  <input id="samlEntityId" type="text" value="TBD" autocomplete="off" spellcheck="false" />
-                </label>
-                <label>
-                  Reply URL (Assertion Consumer Service URL)
-                  <input id="samlReplyUrl" type="text" value="TBD" autocomplete="off" spellcheck="false" />
-                </label>
-                <label>
-                  Sign on URL (Optional)
-                  <input id="samlSignOnUrl" type="text" value="" placeholder="Optional" autocomplete="off" spellcheck="false" />
-                </label>
-                <label>
-                  Relay State (Optional)
-                  <input id="samlRelayState" type="text" value="" placeholder="Optional" autocomplete="off" spellcheck="false" />
-                </label>
-                <label>
-                  Logout URL (Optional)
-                  <input id="samlLogoutUrl" type="text" value="" placeholder="Optional" autocomplete="off" spellcheck="false" />
-                </label>
+
+              <div id="samlSettingsPanel">
+                <h4>SAML</h4>
+                <p class="field-caption">
+                  Service provider values for the City identity provider. Leave optional fields blank
+                  until the IdP supplies them. Do not invent Entity ID or Reply URL values.
+                </p>
+                <div class="sql-settings-grid">
+                  <label>
+                    Identifier (Entity ID)
+                    <input id="samlEntityId" type="text" value="TBD" autocomplete="off" spellcheck="false" />
+                  </label>
+                  <label>
+                    Reply URL (Assertion Consumer Service URL)
+                    <input id="samlReplyUrl" type="text" value="TBD" autocomplete="off" spellcheck="false" />
+                  </label>
+                  <label>
+                    Sign on URL (Optional)
+                    <input id="samlSignOnUrl" type="text" value="" placeholder="Optional" autocomplete="off" spellcheck="false" />
+                  </label>
+                  <label>
+                    Relay State (Optional)
+                    <input id="samlRelayState" type="text" value="" placeholder="Optional" autocomplete="off" spellcheck="false" />
+                  </label>
+                  <label>
+                    Logout URL (Optional)
+                    <input id="samlLogoutUrl" type="text" value="" placeholder="Optional" autocomplete="off" spellcheck="false" />
+                  </label>
+                  <label>
+                    IdP Metadata URL (Optional)
+                    <input id="samlIdpMetadataUrl" type="text" value="" placeholder="Optional" autocomplete="off" spellcheck="false" />
+                  </label>
+                </div>
               </div>
-              <button id="saveSsoSettings" class="secondary-action" type="button">Save SSO</button>
+
+              <div id="entraSettingsPanel" class="hidden">
+                <h4>Entra ID (optional)</h4>
+                <p class="field-caption">
+                  Kept for reference if City identity later requires OIDC. Owner direction for this
+                  application is SAML. Client secret is saved on the API host and is not shown again
+                  after a real secret is stored.
+                </p>
+                <div class="sql-settings-grid">
+                  <label>
+                    Tenant ID
+                    <input id="entraTenantId" type="text" value="Needs to be Generated" autocomplete="off" spellcheck="false" />
+                  </label>
+                  <label>
+                    Client ID
+                    <input id="entraClientId" type="text" value="Needs to be Generated" autocomplete="off" spellcheck="false" />
+                  </label>
+                  <label>
+                    Client secret
+                    <input id="entraClientSecret" type="text" value="TBD" autocomplete="off" spellcheck="false" />
+                  </label>
+                  <label>
+                    Redirect URI
+                    <input id="entraRedirectUri" type="text" value="TBD" autocomplete="off" spellcheck="false" />
+                  </label>
+                  <label>
+                    Authorize URL
+                    <input id="entraAuthorizeUrl" type="text" value="" autocomplete="off" spellcheck="false" />
+                  </label>
+                  <label>
+                    Token URL
+                    <input id="entraTokenUrl" type="text" value="" autocomplete="off" spellcheck="false" />
+                  </label>
+                  <label>
+                    Role claim
+                    <input id="entraRoleClaim" type="text" value="TBD" autocomplete="off" spellcheck="false" />
+                  </label>
+                </div>
+              </div>
+
+              <div class="form-actions">
+                <button id="saveSsoSettings" class="secondary-action" type="button">Save SAML / SSO settings</button>
+              </div>
               <p id="ssoSettingsMessage" class="form-message" role="status"></p>
             </article>
             <article class="future-admin-card">

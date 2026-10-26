@@ -43,11 +43,14 @@ const ENTRA_ENV_KEYS = [
 ];
 
 const SAML_ENV_KEYS = [
+  "SSO_ENABLED",
+  "SSO_MODE",
   "SAML_ENTITY_ID",
   "SAML_REPLY_URL",
   "SAML_SIGN_ON_URL",
   "SAML_RELAY_STATE",
   "SAML_LOGOUT_URL",
+  "SAML_IDP_METADATA_URL",
 ];
 
 function updateEnvKeys(updates, allowedKeys) {

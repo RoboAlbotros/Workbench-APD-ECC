@@ -838,8 +838,13 @@ const mfaChallengeCode = document.querySelector("#mfaChallengeCode");
 const mfaChallengeCancel = document.querySelector("#mfaChallengeCancel");
 const saveMfaSettings = document.querySelector("#saveMfaSettings");
 let pendingMfaSignIn = null;
+const ssoEnabledInput = document.querySelector("#ssoEnabled");
+const ssoEnabledStatus = document.querySelector("#ssoEnabledStatus");
+const ssoEnabledHint = document.querySelector("#ssoEnabledHint");
 const ssoMode = document.querySelector("#ssoMode");
 const saveSsoSettings = document.querySelector("#saveSsoSettings");
+const samlSettingsPanel = document.querySelector("#samlSettingsPanel");
+const entraSettingsPanel = document.querySelector("#entraSettingsPanel");
 const entraTenantIdInput = document.querySelector("#entraTenantId");
 const entraClientIdInput = document.querySelector("#entraClientId");
 const entraClientSecretInput = document.querySelector("#entraClientSecret");
@@ -852,6 +857,7 @@ const samlReplyUrlInput = document.querySelector("#samlReplyUrl");
 const samlSignOnUrlInput = document.querySelector("#samlSignOnUrl");
 const samlRelayStateInput = document.querySelector("#samlRelayState");
 const samlLogoutUrlInput = document.querySelector("#samlLogoutUrl");
+const samlIdpMetadataUrlInput = document.querySelector("#samlIdpMetadataUrl");
 const ssoSettingsMessage = document.querySelector("#ssoSettingsMessage");
 const idleTimeoutMinutes = document.querySelector("#idleTimeoutMinutes");
 const concurrentLoginLimit = document.querySelector("#concurrentLoginLimit");
@@ -1001,6 +1007,8 @@ if (mfaEnrollmentList) mfaEnrollmentList.addEventListener("click", handleMfaEnro
 if (mfaChallenge) mfaChallenge.addEventListener("submit", submitMfaChallenge);
 if (mfaChallengeCancel) mfaChallengeCancel.addEventListener("click", cancelMfaChallenge);
 if (saveSsoSettings) saveSsoSettings.addEventListener("click", saveSsoFromPanel);
+if (ssoEnabledInput) ssoEnabledInput.addEventListener("change", syncSsoConfigPanels);
+if (ssoMode) ssoMode.addEventListener("change", syncSsoConfigPanels);
 if (saveSessionSettings) saveSessionSettings.addEventListener("click", saveSessionFromPanel);
 if (testSqlSettingsButton) testSqlSettingsButton.addEventListener("click", () => submitSqlSettings(true));
 if (saveSqlSettingsButton) saveSqlSettingsButton.addEventListener("click", () => submitSqlSettings(false));
@@ -2235,6 +2243,7 @@ function clampSecurityInt(value, min, max, fallback) {
 function defaultSecuritySettings() {
   return {
     mfaRequired: false,
+    ssoEnabled: false,
     ssoMode: "prototype",
     idleTimeoutMinutes: 0,
     concurrentLoginLimit: 1,
@@ -2242,6 +2251,11 @@ function defaultSecuritySettings() {
     sessionGeneration: 0,
     tokens: [],
   };
+}
+
+function normalizeSsoMode(value) {
+  if (value === "entra" || value === "saml" || value === "prototype") return value;
+  return "prototype";
 }
 
 function loadSecuritySettings() {
@@ -2253,7 +2267,8 @@ function loadSecuritySettings() {
     return {
       ...defaults,
       mfaRequired: Boolean(parsed.mfaRequired),
-      ssoMode: parsed.ssoMode === "entra" || parsed.ssoMode === "saml" ? parsed.ssoMode : "prototype",
+      ssoEnabled: Boolean(parsed.ssoEnabled),
+      ssoMode: normalizeSsoMode(parsed.ssoMode),
       idleTimeoutMinutes: clampSecurityInt(parsed.idleTimeoutMinutes, 0, 480, 0),
       concurrentLoginLimit: clampSecurityInt(parsed.concurrentLoginLimit, 1, 10, 1),
       ipAllowlist: String(parsed.ipAllowlist || ""),
@@ -2327,7 +2342,9 @@ function renderSecurityAuthPanel() {
     mfaEnrollmentMetric.textContent = `Enrollment: ${percent}% (${enrolled} of ${total})`;
   }
   if (mfaRequired) mfaRequired.checked = settings.mfaRequired;
+  if (ssoEnabledInput) ssoEnabledInput.checked = settings.ssoEnabled;
   if (ssoMode) ssoMode.value = settings.ssoMode;
+  syncSsoConfigPanels();
   if (idleTimeoutMinutes) idleTimeoutMinutes.value = String(settings.idleTimeoutMinutes);
   if (concurrentLoginLimit) concurrentLoginLimit.value = String(settings.concurrentLoginLimit);
   if (ipAllowlist) ipAllowlist.value = settings.ipAllowlist;
@@ -2497,8 +2514,43 @@ function saveMfaFromPanel() {
   );
 }
 
+function syncSsoConfigPanels() {
+  const enabled = Boolean(ssoEnabledInput && ssoEnabledInput.checked);
+  const mode = normalizeSsoMode(ssoMode ? ssoMode.value : "prototype");
+  if (ssoEnabledStatus) {
+    ssoEnabledStatus.textContent = enabled
+      ? mode === "saml"
+        ? "SSO on · SAML"
+        : mode === "entra"
+          ? "SSO on · Entra"
+          : "SSO on · path unset"
+      : "SSO off";
+  }
+  if (ssoEnabledHint) {
+    if (!enabled) {
+      ssoEnabledHint.textContent = "SSO is off. Prototype access codes remain the sign-in path.";
+    } else if (mode === "saml") {
+      ssoEnabledHint.textContent =
+        "SSO is marked enabled for SAML. Values are recorded on the API host; live SAML login is not active yet.";
+    } else if (mode === "entra") {
+      ssoEnabledHint.textContent =
+        "SSO is marked enabled for Entra ID. Owner direction for this app is SAML; live Entra login is not active.";
+    } else {
+      ssoEnabledHint.textContent = "Enable SSO is on, but the protocol is still prototype access code only.";
+    }
+  }
+  if (samlSettingsPanel) {
+    samlSettingsPanel.classList.toggle("hidden", mode === "entra");
+  }
+  if (entraSettingsPanel) {
+    entraSettingsPanel.classList.toggle("hidden", mode !== "entra");
+  }
+}
+
 function ssoSettingsPayload() {
   return {
+    ssoEnabled: Boolean(ssoEnabledInput && ssoEnabledInput.checked),
+    ssoMode: normalizeSsoMode(ssoMode ? ssoMode.value : "prototype"),
     tenantId: entraTenantIdInput ? entraTenantIdInput.value.trim() : "",
     clientId: entraClientIdInput ? entraClientIdInput.value.trim() : "",
     clientSecret: entraClientSecretInput ? entraClientSecretInput.value.trim() : "",
@@ -2511,11 +2563,18 @@ function ssoSettingsPayload() {
     signOnUrl: samlSignOnUrlInput ? samlSignOnUrlInput.value.trim() : "",
     relayState: samlRelayStateInput ? samlRelayStateInput.value.trim() : "",
     logoutUrl: samlLogoutUrlInput ? samlLogoutUrlInput.value.trim() : "",
+    idpMetadataUrl: samlIdpMetadataUrlInput ? samlIdpMetadataUrlInput.value.trim() : "",
   };
 }
 
 function applySsoSettingsForm(settings) {
   if (!settings) return;
+  if (typeof settings.ssoEnabled === "boolean" && ssoEnabledInput) {
+    ssoEnabledInput.checked = settings.ssoEnabled;
+  }
+  if (settings.ssoMode && ssoMode) {
+    ssoMode.value = normalizeSsoMode(settings.ssoMode);
+  }
   if (entraTenantIdInput) entraTenantIdInput.value = settings.tenantId || "Needs to be Generated";
   if (entraClientIdInput) entraClientIdInput.value = settings.clientId || "Needs to be Generated";
   if (entraClientSecretInput) {
@@ -2531,31 +2590,44 @@ function applySsoSettingsForm(settings) {
   if (samlSignOnUrlInput) samlSignOnUrlInput.value = settings.signOnUrl || "";
   if (samlRelayStateInput) samlRelayStateInput.value = settings.relayState || "";
   if (samlLogoutUrlInput) samlLogoutUrlInput.value = settings.logoutUrl || "";
+  if (samlIdpMetadataUrlInput) samlIdpMetadataUrlInput.value = settings.idpMetadataUrl || "";
+  syncSsoConfigPanels();
 }
 
-function ssoPathNote(mode) {
-  if (mode === "entra") return "City SSO / Entra ID is recorded.";
-  if (mode === "saml") return "SAML is recorded.";
-  return "Sign-in path is the prototype access code.";
+function ssoPathNote(enabled, mode) {
+  if (!enabled) return "SSO is off.";
+  if (mode === "entra") return "SSO is enabled for City SSO / Entra ID (recorded only).";
+  if (mode === "saml") return "SSO is enabled for SAML (recorded only).";
+  return "SSO is enabled, but the protocol is still prototype access code only.";
 }
 
 async function loadSsoSettings() {
-  if (!isAdminGlobalUser() || !entraTenantIdInput) return;
+  if (!isAdminGlobalUser() || !samlEntityIdInput) return;
   try {
     const response = await fetch(`${SQL_API_BASE}/api/sso-settings`);
     if (!response.ok) throw new Error("status");
     applySsoSettingsForm(await response.json());
   } catch {
-    /* The fields already show the unset Entra values. */
+    syncSsoConfigPanels();
   }
 }
 
 async function saveSsoFromPanel() {
   if (!isAdminGlobalUser()) return;
   const settings = loadSecuritySettings();
-  settings.ssoMode = ssoMode.value === "entra" || ssoMode.value === "saml" ? ssoMode.value : "prototype";
+  settings.ssoEnabled = Boolean(ssoEnabledInput && ssoEnabledInput.checked);
+  settings.ssoMode = normalizeSsoMode(ssoMode ? ssoMode.value : "prototype");
+  if (settings.ssoEnabled && settings.ssoMode === "prototype") {
+    showMessage(
+      ssoSettingsMessage,
+      "Choose SAML (or Entra) before enabling SSO, or leave Enable SSO off for prototype access codes.",
+      true,
+    );
+    syncSsoConfigPanels();
+    return;
+  }
   saveSecuritySettings(settings);
-  const pathNote = ssoPathNote(settings.ssoMode);
+  const pathNote = ssoPathNote(settings.ssoEnabled, settings.ssoMode);
   if (saveSsoSettings) saveSsoSettings.disabled = true;
   try {
     const response = await fetch(`${SQL_API_BASE}/api/sso-settings`, {
@@ -2571,16 +2643,17 @@ async function saveSsoFromPanel() {
     applySsoSettingsForm(body);
     showMessage(
       ssoSettingsMessage,
-      `${pathNote} Entra and SAML fields were saved on the API host. Sign-in stays on prototype access codes.`,
+      `${pathNote} SAML / SSO fields were saved on the API host. Live SSO login is not active yet.`,
     );
   } catch {
     showMessage(
       ssoSettingsMessage,
-      `${pathNote} The API did not answer, so the Entra and SAML fields were not written to the API host.`,
+      `${pathNote} The API did not answer, so the SAML / SSO fields were not written to the API host.`,
       true,
     );
   } finally {
     if (saveSsoSettings) saveSsoSettings.disabled = false;
+    syncSsoConfigPanels();
   }
 }
 

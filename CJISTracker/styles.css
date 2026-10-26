@@ -551,6 +551,10 @@ body.admin-console-open .shell {
   opacity: 0.65;
 }
 
+.sso-config-heading {
+  margin-bottom: 0.75rem;
+}
+
 .security-auth-panel .future-admin-card {
   border-style: solid;
 }

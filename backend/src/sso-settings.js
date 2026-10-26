@@ -57,6 +57,19 @@ function publicEntraSettings(source) {
   };
 }
 
+function normalizeSsoMode(value) {
+  const mode = clean(value).toLowerCase();
+  if (mode === "entra" || mode === "saml" || mode === "prototype") return mode;
+  return "prototype";
+}
+
+function readSsoFlags() {
+  return {
+    ssoEnabled: String(process.env.SSO_ENABLED || "").toLowerCase() === "true",
+    ssoMode: normalizeSsoMode(process.env.SSO_MODE || "prototype"),
+  };
+}
+
 function readSamlEnv() {
   return {
     entityId: process.env.SAML_ENTITY_ID || "",
@@ -64,6 +77,7 @@ function readSamlEnv() {
     signOnUrl: process.env.SAML_SIGN_ON_URL || "",
     relayState: process.env.SAML_RELAY_STATE || "",
     logoutUrl: process.env.SAML_LOGOUT_URL || "",
+    idpMetadataUrl: process.env.SAML_IDP_METADATA_URL || "",
   };
 }
 
@@ -74,20 +88,29 @@ function publicSamlSettings(source) {
     signOnUrl: shownUrl(source.signOnUrl),
     relayState: shownUrl(source.relayState),
     logoutUrl: shownUrl(source.logoutUrl),
+    idpMetadataUrl: shownUrl(source.idpMetadataUrl),
   };
 }
 
 function describeSsoSettings() {
+  const flags = readSsoFlags();
   return {
+    ...flags,
     ...publicEntraSettings(readEntraEnv()),
     ...publicSamlSettings(readSamlEnv()),
     liveLogin: false,
   };
 }
 
+function isHttpOrHttpsUrl(value) {
+  return /^https?:\/\/\S+$/i.test(value);
+}
+
 function validateSsoSettings(body) {
   const source = body && typeof body === "object" ? body : {};
   const settings = {
+    ssoEnabled: Boolean(source.ssoEnabled),
+    ssoMode: normalizeSsoMode(source.ssoMode),
     tenantId: clean(source.tenantId),
     clientId: clean(source.clientId),
     clientSecret: clean(source.clientSecret),
@@ -100,8 +123,12 @@ function validateSsoSettings(body) {
     signOnUrl: clean(source.signOnUrl),
     relayState: clean(source.relayState),
     logoutUrl: clean(source.logoutUrl),
+    idpMetadataUrl: clean(source.idpMetadataUrl),
   };
   const errors = [];
+  if (settings.ssoEnabled && settings.ssoMode === "prototype") {
+    errors.push("Choose SAML or Entra before enabling SSO.");
+  }
   const limits = [
     ["Tenant ID", settings.tenantId, 128],
     ["Client ID", settings.clientId, 128],
@@ -115,21 +142,23 @@ function validateSsoSettings(body) {
     ["Sign on URL", settings.signOnUrl, 300],
     ["Relay State", settings.relayState, 300],
     ["Logout URL", settings.logoutUrl, 300],
+    ["IdP Metadata URL", settings.idpMetadataUrl, 300],
   ];
   limits.forEach(([label, value, max]) => {
     if (value.length > max) errors.push(`${label} is too long.`);
   });
-  const httpsFields = [
+  const urlFields = [
     ["authorizeUrl", "Authorize URL"],
     ["tokenUrl", "Token URL"],
     ["replyUrl", "Reply URL"],
     ["signOnUrl", "Sign on URL"],
     ["logoutUrl", "Logout URL"],
+    ["idpMetadataUrl", "IdP Metadata URL"],
   ];
-  httpsFields.forEach(([key, label]) => {
+  urlFields.forEach(([key, label]) => {
     const value = settings[key];
-    if (value && value !== "TBD" && !/^https:\/\/\S+$/.test(value)) {
-      errors.push(`${label} must be an https address or blank.`);
+    if (value && value !== "TBD" && !isHttpOrHttpsUrl(value)) {
+      errors.push(`${label} must be an http(s) address or blank.`);
     }
   });
   return { ok: errors.length === 0, errors, settings };
@@ -155,11 +184,14 @@ function saveSsoSettings(body) {
     updates.ENTRA_CLIENT_SECRET = next.clientSecret || "TBD";
   }
   const samlUpdates = {
+    SSO_ENABLED: next.ssoEnabled ? "true" : "false",
+    SSO_MODE: next.ssoMode,
     SAML_ENTITY_ID: next.entityId || "TBD",
     SAML_REPLY_URL: next.replyUrl || "TBD",
     SAML_SIGN_ON_URL: next.signOnUrl === "TBD" ? "" : next.signOnUrl,
     SAML_RELAY_STATE: next.relayState === "TBD" ? "" : next.relayState,
     SAML_LOGOUT_URL: next.logoutUrl === "TBD" ? "" : next.logoutUrl,
+    SAML_IDP_METADATA_URL: next.idpMetadataUrl === "TBD" ? "" : next.idpMetadataUrl,
   };
   try {
     updateEntraEnv(updates);
