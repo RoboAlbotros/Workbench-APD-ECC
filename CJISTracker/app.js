@@ -81,6 +81,27 @@ const CREATE_REQUIRED_FIELDS = [
 ];
 const NAME_SUFFIX_VALUES = new Set(["JR", "SR", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "ESQ", "PHD", "MD", "DDS"]);
 const DEFAULT_DEPARTMENT_OPTIONS = [
+  "APD",
+  "ACS",
+  "ECC",
+  "RTCC",
+  "AFR",
+  "IPRA",
+  "DTI",
+  "TRU",
+  "PIO",
+  "GSD",
+  "Radio Shop",
+  "Compliance & Oversight",
+  "OEM",
+  "Video Unit",
+  "CPOA",
+  "Shield",
+  "Crime Stoppers",
+  "CAO",
+  "DIT",
+  "Records",
+  "Risk Management",
   "AV-Aviation",
   "AW-Animal Welfare",
   "CA-Chief Administrative Office",
@@ -102,7 +123,6 @@ const DEFAULT_DEPARTMENT_OPTIONS = [
   "LG-Legal",
   "MA-Mayor's Office Department",
   "MD-Municipal Development",
-  "APD",
   "PD-Police",
   "PL-Planning Department",
   "PR-Parks and Recreation",
@@ -3610,20 +3630,22 @@ function logInquiryDueMigration(changedCount) {
 // License" headers stay blocked. A Driver Lic Num header is accepted only when
 // the value matches ST + / + up to 15 letters or numbers (DEC-020). Never commit spreadsheet PII.
 
-const IMPORT_BLOCKED_HEADER_PATTERNS = [/birth/i, /social\s*security/i, /\bssn\b/i, /licen[cs]e/i];
-const IMPORT_DRIVERS_LICENSE_HEADER = /^(driver\s*lic(\.|ense)?\s*num(ber)?|drivers?License(Number)?)$/i;
+const IMPORT_BLOCKED_HEADER_PATTERNS = [/birth/i, /social\s*security/i, /\bssn\b/i];
+const IMPORT_DRIVERS_LICENSE_HEADER =
+  /^(driver\s*lic(\.|ense)?\s*num(ber)?|drivers?\s*licen[cs]e(\s*num(ber)?)?|drivers?License(Number)?)$/i;
 
 const IMPORT_HEADER_MAP = [
-  { match: /^source$/i, field: "source" },
+  { match: /^source:?$/i, field: "source" },
   { match: /^control[\s_-]*id$/i, field: "controlNumber" },
-  { match: /^last\s*name$/i, field: "lastName" },
-  { match: /^first\s*name$/i, field: "firstName" },
-  { match: /^middle(\s*init(ial)?)?$/i, field: "middleInitial" },
-  { match: /^suffix$/i, field: "suffix" },
+  { match: /^(last\s*name|lastname(\s*name)?|name breaker \(lastname name\))$/i, field: "lastName" },
+  { match: /^(first\s*name|name breaker \(first name\))$/i, field: "firstName" },
+  { match: /^(middle(\s*init(ial)?)?|name breaker \(middle\))$/i, field: "middleInitial" },
+  { match: /^(suffix|name breaker \(suffix\))$/i, field: "suffix" },
+  { match: /^also known as|name breaker \(also known as\)$/i, field: "notes" },
   { match: /^name/i, field: "name" },
-  { match: /^vendor$/i, field: "vendor" },
+  { match: /^vendor:?$/i, field: "vendor" },
   { match: /^department$/i, field: "department" },
-  { match: /^position(\s*\/\s*|\s+|\/)?role$/i, field: "positionRole" },
+  { match: /^(position(\s*\/\s*|\s+|\/)?role|role\s*\/\s*position):?$/i, field: "positionRole" },
   { match: /^requestor$/i, field: "requestor" },
   { match: /^date information provided$/i, field: "dateInformationProvided", type: "isoDate" },
   { match: /iii\s*completion/i, field: "dateOfIiiCompletion", type: "isoDate" },
@@ -3644,7 +3666,7 @@ const IMPORT_HEADER_MAP = [
   { match: /site visit/i, field: "dateOfSiteVisitOnly", type: "isoDate" },
   { match: /quer/i, field: "queriedEveryFiveYears", type: "isoDate" },
   { match: /e-?mail/i, field: "emailAddress" },
-  { match: /^notes$/i, field: "notes" },
+  { match: /^(notes|comments):?$/i, field: "notes" },
 ];
 
 function parseCsv(text) {

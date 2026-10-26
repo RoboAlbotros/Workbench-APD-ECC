@@ -295,39 +295,6 @@ BEGIN
         AND SUBSTRING(DriverLicenseNumber, 4, 15) NOT LIKE N'%[^A-Z0-9]%'
       )
     ),
-    CONSTRAINT CK_Applicants_Department CHECK (
-      Department IS NULL OR Department IN (
-        N'AV-Aviation',
-        N'AW-Animal Welfare',
-        N'CA-Chief Administrative Office',
-        N'CC-Office of the City Clerk',
-        N'CL-Council Services',
-        N'CM-Community Safety Department',
-        N'CP-Civilian Police OS Dept',
-        N'CS-Cultural Services',
-        N'ED-Economic Development',
-        N'EH-Environmental Health',
-        N'FA-Finance Admin Svc',
-        N'FC-Youth and Family Svcs Dept',
-        N'FD-Fire',
-        N'GS-General Services Department',
-        N'HH-Health,Housing,Hmlsns Dept',
-        N'HR-Human Resources',
-        N'IA-Internal Audit',
-        N'IG-Office of Inspector GenDept',
-        N'LG-Legal',
-        N'MA-Mayor''s Office Department',
-        N'MD-Municipal Development',
-        N'APD',
-        N'PD-Police',
-        N'PL-Planning Department',
-        N'PR-Parks and Recreation',
-        N'SA-Senior Affairs',
-        N'SW-Solid Waste',
-        N'TI-Technology and Innovation',
-        N'TR-Transit'
-      )
-    ),
     CONSTRAINT FK_Applicants_Vendors
       FOREIGN KEY (VendorId) REFERENCES dbo.Vendors(VendorId),
     CONSTRAINT FK_Applicants_ClearanceTypes
@@ -505,7 +472,7 @@ BEGIN
 END;
 GO
 
-/* Refresh department allowed values to the current app.js list (includes APD). */
+/* Department is an open list (Anna seed values + city codes). Drop the closed CHECK. */
 IF EXISTS (
   SELECT 1
   FROM sys.check_constraints
@@ -514,51 +481,6 @@ IF EXISTS (
 )
 BEGIN
   ALTER TABLE dbo.Applicants DROP CONSTRAINT CK_Applicants_Department;
-END;
-GO
-
-IF OBJECT_ID(N'dbo.Applicants', N'U') IS NOT NULL
-  AND NOT EXISTS (
-    SELECT 1
-    FROM sys.check_constraints
-    WHERE name = N'CK_Applicants_Department'
-      AND parent_object_id = OBJECT_ID(N'dbo.Applicants')
-  )
-BEGIN
-  ALTER TABLE dbo.Applicants ADD CONSTRAINT CK_Applicants_Department
-    CHECK (
-      Department IS NULL OR Department IN (
-        N'AV-Aviation',
-        N'AW-Animal Welfare',
-        N'CA-Chief Administrative Office',
-        N'CC-Office of the City Clerk',
-        N'CL-Council Services',
-        N'CM-Community Safety Department',
-        N'CP-Civilian Police OS Dept',
-        N'CS-Cultural Services',
-        N'ED-Economic Development',
-        N'EH-Environmental Health',
-        N'FA-Finance Admin Svc',
-        N'FC-Youth and Family Svcs Dept',
-        N'FD-Fire',
-        N'GS-General Services Department',
-        N'HH-Health,Housing,Hmlsns Dept',
-        N'HR-Human Resources',
-        N'IA-Internal Audit',
-        N'IG-Office of Inspector GenDept',
-        N'LG-Legal',
-        N'MA-Mayor''s Office Department',
-        N'MD-Municipal Development',
-        N'APD',
-        N'PD-Police',
-        N'PL-Planning Department',
-        N'PR-Parks and Recreation',
-        N'SA-Senior Affairs',
-        N'SW-Solid Waste',
-        N'TI-Technology and Innovation',
-        N'TR-Transit'
-      )
-    );
 END;
 GO
 

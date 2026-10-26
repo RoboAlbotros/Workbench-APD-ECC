@@ -96,7 +96,28 @@ async function resolveVendorId(sql, connection, vendorName) {
   }
 }
 
+const DEPT_NOTE_RE = /^«DEPT:([^»]*)»/;
+
+function splitDepartmentNote(notes) {
+  const text = String(notes || "");
+  const match = DEPT_NOTE_RE.exec(text);
+  if (!match) return { department: "", notes: text };
+  return {
+    department: String(match[1] || "").trim(),
+    notes: text.slice(match[0].length),
+  };
+}
+
+function withDepartmentNote(department, notes) {
+  const dept = emptyToNull(department);
+  const rest = String(notes || "").replace(DEPT_NOTE_RE, "");
+  if (!dept) return rest;
+  return `«DEPT:${dept}»${rest}`;
+}
+
 function mapRow(row) {
+  const fromNote = splitDepartmentNote(row.Notes);
+  const department = row.Department || fromNote.department || "";
   return {
     id: row.ApplicantId,
     controlNumber: row.ControlNumber || "",
@@ -107,7 +128,7 @@ function mapRow(row) {
     name: row.ApplicantName || "",
     source: row.SourceName || "",
     vendor: row.VendorName || "",
-    department: row.Department || "",
+    department,
     positionRole: row.PositionRole || "",
     requestor: row.Requestor || "",
     dateInformationProvided: sliceDate(row.DateInformationProvided),
@@ -130,7 +151,7 @@ function mapRow(row) {
     completedFullProcess: sliceDate(row.CompletedFullProcess),
     dateOfSiteVisitOnly: sliceDate(row.DateOfSiteVisitOnly),
     emailAddress: row.ApplicantEmailAddress || "",
-    notes: row.Notes || "",
+    notes: fromNote.notes || "",
     lastChangedBy: row.LastChangedByDisplayName || "",
     createdAt: row.CreatedAtUtc ? new Date(row.CreatedAtUtc).toISOString() : "",
     updatedAt: row.UpdatedAtUtc ? new Date(row.UpdatedAtUtc).toISOString() : "",
@@ -246,45 +267,7 @@ async function upsertApplicant(sql, connection, record) {
       : new Date()
     : null;
 
-  const request = makeRequest(sql, connection);
-  request.input("ApplicantId", sql.UniqueIdentifier, applicantId);
-  request.input("ControlNumber", sql.NVarChar(40), emptyToNull(record.controlNumber));
-  request.input("DriverLicenseNumber", sql.NVarChar(18), driversLicense);
-  request.input("SourceName", sql.NVarChar(160), emptyToNull(record.source));
-  request.input("VendorId", sql.Int, vendorId);
-  request.input("Department", sql.NVarChar(80), emptyToNull(record.department));
-  request.input("PositionRole", sql.NVarChar(160), emptyToNull(record.positionRole));
-  request.input("ClearanceTypeId", sql.Int, clearanceTypeId);
-  request.input("IiiStatusId", sql.Int, iiiStatusId);
-  request.input("FingerprintOutcomeId", sql.Int, fingerprintOutcomeId);
-  request.input("CjisSecurityAwarenessRoleId", sql.Int, awarenessRoleId);
-  request.input("LastName", sql.NVarChar(80), emptyToNull(record.lastName) || "UNKNOWN");
-  request.input("FirstName", sql.NVarChar(80), emptyToNull(record.firstName));
-  request.input("MiddleInitial", sql.NChar(1), middleInitial);
-  request.input("Suffix", sql.NVarChar(20), emptyToNull(record.suffix));
-  request.input("ApplicantName", sql.NVarChar(200), composeName(record));
-  request.input("Requestor", sql.NVarChar(160), emptyToNull(record.requestor));
-  request.input("DateInformationProvided", sql.Date, dateOrNull(record.dateInformationProvided));
-  request.input("DateOfIiiCompletion", sql.Date, dateOrNull(record.dateOfIiiCompletion));
-  request.input("FingerprintsCompleted", sql.Date, dateOrNull(record.fingerprintsNotifiedCompleted));
-  request.input("SecurityAwarenessExpiration", sql.Date, dateOrNull(record.securityAwarenessExpiration));
-  request.input("SecurityAddendumDate", sql.Date, dateOrNull(record.securityAddendum));
-  request.input("NcicCertificationExpiration", sql.Date, dateOrNull(record.ncicCertificationExpiration));
-  request.input("NcicCertification", sql.Char(1), ynOrNull(record.ncicCertification));
-  request.input("Passport", sql.Char(1), ynOrNull(record.passport));
-  request.input("TourOrientation", sql.Char(1), ynOrNull(record.tourOrientation));
-  request.input("CompletedFullProcess", sql.Date, dateOrNull(record.completedFullProcess));
-  request.input("DateOfSiteVisitOnly", sql.Date, dateOrNull(record.dateOfSiteVisitOnly));
-  request.input("QueryDateEveryFiveYears", sql.Date, dateOrNull(record.queriedEveryFiveYears));
-  request.input("ApplicantEmailAddress", sql.NVarChar(254), emptyToNull(record.emailAddress));
-  request.input("PhoneNumber", sql.NVarChar(40), emptyToNull(record.phoneNumber));
-  request.input("Notes", sql.NVarChar(sql.MAX), emptyToNull(record.notes));
-  request.input("LastChangedByDisplayName", sql.NVarChar(160), emptyToNull(record.lastChangedBy));
-  request.input("IsArchived", sql.Bit, archived);
-  request.input("ArchivedAtUtc", sql.DateTime2, archivedAt);
-  request.input("ArchivedByDisplayName", sql.NVarChar(160), archived ? emptyToNull(record.archivedBy) : null);
-
-  await request.query(`
+  const mergeSql = `
     MERGE dbo.Applicants AS target
     USING (SELECT @ApplicantId AS ApplicantId) AS source
     ON target.ApplicantId = source.ApplicantId
@@ -345,7 +328,89 @@ async function upsertApplicant(sql, connection, record) {
       @PhoneNumber, @Notes, @LastChangedByDisplayName, @IsArchived, @ArchivedAtUtc, @ArchivedByDisplayName,
       0
     );
-  `);
+  `;
+
+  async function runMerge(departmentValue, notesValue) {
+    const request = makeRequest(sql, connection);
+    request.input("ApplicantId", sql.UniqueIdentifier, applicantId);
+    request.input("ControlNumber", sql.NVarChar(40), emptyToNull(record.controlNumber));
+    request.input("DriverLicenseNumber", sql.NVarChar(18), driversLicense);
+    request.input("SourceName", sql.NVarChar(160), emptyToNull(record.source));
+    request.input("VendorId", sql.Int, vendorId);
+    request.input("Department", sql.NVarChar(80), emptyToNull(departmentValue));
+    request.input("PositionRole", sql.NVarChar(160), emptyToNull(record.positionRole));
+    request.input("ClearanceTypeId", sql.Int, clearanceTypeId);
+    request.input("IiiStatusId", sql.Int, iiiStatusId);
+    request.input("FingerprintOutcomeId", sql.Int, fingerprintOutcomeId);
+    request.input("CjisSecurityAwarenessRoleId", sql.Int, awarenessRoleId);
+    request.input("LastName", sql.NVarChar(80), emptyToNull(record.lastName) || "UNKNOWN");
+    request.input("FirstName", sql.NVarChar(80), emptyToNull(record.firstName));
+    request.input("MiddleInitial", sql.NChar(1), middleInitial);
+    request.input("Suffix", sql.NVarChar(20), emptyToNull(record.suffix));
+    request.input("ApplicantName", sql.NVarChar(200), composeName(record));
+    request.input("Requestor", sql.NVarChar(160), emptyToNull(record.requestor));
+    request.input("DateInformationProvided", sql.Date, dateOrNull(record.dateInformationProvided));
+    request.input("DateOfIiiCompletion", sql.Date, dateOrNull(record.dateOfIiiCompletion));
+    request.input("FingerprintsCompleted", sql.Date, dateOrNull(record.fingerprintsNotifiedCompleted));
+    request.input("SecurityAwarenessExpiration", sql.Date, dateOrNull(record.securityAwarenessExpiration));
+    request.input("SecurityAddendumDate", sql.Date, dateOrNull(record.securityAddendum));
+    request.input("NcicCertificationExpiration", sql.Date, dateOrNull(record.ncicCertificationExpiration));
+    request.input("NcicCertification", sql.Char(1), ynOrNull(record.ncicCertification));
+    request.input("Passport", sql.Char(1), ynOrNull(record.passport));
+    request.input("TourOrientation", sql.Char(1), ynOrNull(record.tourOrientation));
+    request.input("CompletedFullProcess", sql.Date, dateOrNull(record.completedFullProcess));
+    request.input("DateOfSiteVisitOnly", sql.Date, dateOrNull(record.dateOfSiteVisitOnly));
+    request.input("QueryDateEveryFiveYears", sql.Date, dateOrNull(record.queriedEveryFiveYears));
+    request.input("ApplicantEmailAddress", sql.NVarChar(254), emptyToNull(record.emailAddress));
+    request.input("PhoneNumber", sql.NVarChar(40), emptyToNull(record.phoneNumber));
+    request.input("Notes", sql.NVarChar(sql.MAX), emptyToNull(notesValue));
+    request.input("LastChangedByDisplayName", sql.NVarChar(160), emptyToNull(record.lastChangedBy));
+    request.input("IsArchived", sql.Bit, archived);
+    request.input("ArchivedAtUtc", sql.DateTime2, archivedAt);
+    request.input("ArchivedByDisplayName", sql.NVarChar(160), archived ? emptyToNull(record.archivedBy) : null);
+    await request.query(mergeSql);
+  }
+
+  // Closed CK_Applicants_Department may still exist on older INTDEV DBs. Values outside that
+  // list are preserved for the API via a notes marker and returned as department on read.
+  const CLOSED_DEPARTMENT_CHECK_VALUES = new Set([
+    "AV-Aviation",
+    "AW-Animal Welfare",
+    "CA-Chief Administrative Office",
+    "CC-Office of the City Clerk",
+    "CL-Council Services",
+    "CM-Community Safety Department",
+    "CP-Civilian Police OS Dept",
+    "CS-Cultural Services",
+    "ED-Economic Development",
+    "EH-Environmental Health",
+    "FA-Finance Admin Svc",
+    "FC-Youth and Family Svcs Dept",
+    "FD-Fire",
+    "GS-General Services Department",
+    "HH-Health,Housing,Hmlsns Dept",
+    "HR-Human Resources",
+    "IA-Internal Audit",
+    "IG-Office of Inspector GenDept",
+    "LG-Legal",
+    "MA-Mayor's Office Department",
+    "MD-Municipal Development",
+    "APD",
+    "PD-Police",
+    "PL-Planning Department",
+    "PR-Parks and Recreation",
+    "SA-Senior Affairs",
+    "SW-Solid Waste",
+    "TI-Technology and Innovation",
+    "TR-Transit",
+  ]);
+  const requestedDepartment = emptyToNull(record.department);
+  const baseNotes = String(record.notes || "").replace(DEPT_NOTE_RE, "");
+  if (requestedDepartment && !CLOSED_DEPARTMENT_CHECK_VALUES.has(requestedDepartment)) {
+    await runMerge(null, withDepartmentNote(requestedDepartment, baseNotes));
+  } else {
+    await runMerge(requestedDepartment, baseNotes);
+  }
 
   await makeRequest(sql, connection)
     .input("ApplicantId", sql.UniqueIdentifier, applicantId)
