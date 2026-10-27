@@ -1975,7 +1975,7 @@ function openFullScreenView(page) {
     showMessage(
       accessMessage,
       page === "admin"
-        ? "Only Admin-Full and Admin-Global can open the Settings Console."
+        ? "Only Admin-Full, Admin-Global, and Admin-Staff can open the Settings Console."
         : "Only Full Admin can open this page.",
       true,
     );
@@ -2345,7 +2345,7 @@ function syncAdminGlobalOnlySections() {
 }
 
 function canAccessAdminConsole() {
-  return isFullAdmin() && !isAdminStaffUser();
+  return isFullAdmin();
 }
 
 function canReviewArchived() {
@@ -3276,7 +3276,7 @@ function reservedAccessCodes() {
 function addManagedUser(event) {
   event.preventDefault();
   if (!canAccessAdminConsole()) {
-    showMessage(managedUserMessage, "Only Admin-Full and Admin-Global can manage users.", true);
+    showMessage(managedUserMessage, "Only Admin-Full, Admin-Global, and Admin-Staff can manage users.", true);
     return;
   }
   const name = document.querySelector("#newManagedUserName").value.trim();
