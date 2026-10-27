@@ -8,9 +8,52 @@ const STORAGE_KEYS = {
   seedBatch: "cjisApplicantTracker.seedBatch",
 };
 
-const SQL_API_BASE = "http://127.0.0.1:8741";
+/** UUID helper that works on HTTP intranet hosts (crypto.randomUUID needs a secure context). */
+function createId() {
+  try {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+      return crypto.randomUUID();
+    }
+  } catch (_error) {
+    /* fall through */
+  }
+  try {
+    if (typeof crypto !== "undefined" && typeof crypto.getRandomValues === "function") {
+      const bytes = new Uint8Array(16);
+      crypto.getRandomValues(bytes);
+      bytes[6] = (bytes[6] & 0x0f) | 0x40;
+      bytes[8] = (bytes[8] & 0x3f) | 0x80;
+      const hex = [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
+      return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+    }
+  } catch (_error) {
+    /* fall through */
+  }
+  return `id-${Date.now().toString(16)}-${Math.random().toString(16).slice(2, 10)}`;
+}
+
+function resolveSqlApiBase() {
+  try {
+    const host = String(window.location.hostname || "");
+    // IIS hosts (e.g. clearancetracker.coa.cabq.lcl) reverse-proxy /api and /health.
+    // Direct 127.0.0.1 in the browser hits the user's PC, not the app server.
+    if (host && host !== "127.0.0.1" && host !== "localhost") {
+      return "";
+    }
+  } catch (_error) {
+    /* ignore */
+  }
+  return "http://127.0.0.1:8741";
+}
+const SQL_API_BASE = resolveSqlApiBase();
+const SQL_SILENT_REFRESH_MS = 20000;
 let persistenceMode = "local";
 let sqlPersistError = "";
+let sqlPersistInFlight = false;
+let sqlRefreshInFlight = false;
+let sqlSilentRefreshTimer = null;
+let sqlRecordsFingerprint = "";
+let sqlLastRefreshAt = null;
 
 // Access codes are local prototype controls. Full Admin is operator-set to 12345
 // (owner-directed, SPRINT-004). Former defaults 1111/2222/2468 stay forbidden.
@@ -398,7 +441,7 @@ function loadManagedUsers() {
     if (!Array.isArray(parsed)) return [];
     return parsed
       .map((user) => ({
-        id: String(user.id || crypto.randomUUID()),
+        id: String(user.id || createId()),
         name: String(user.name || "").trim(),
         userType: normalizeManagedUserType(user.userType),
         accessCode: String(user.accessCode || ""),
@@ -652,13 +695,14 @@ const recordsFields = [
 
 const adminFields = fields.filter((field) => !["notes", "documents"].includes(field));
 // Admin table diet (DEC-019): Actions plus slim data columns. Control ID stays
-// off lists (DEC-020). Driver Lic Num is shown near Name. Tour/Orientation,
-// Source, III - Status, CJIS Security Role, NCIC Certification, Passport,
-// Fingerprint Outcome, and Access Type stay in the form, search, and data
-// model, not on Limited or All Applicant Records listings.
+// off lists (DEC-020). Driver Lic Num and Vendor are shown near Name.
+// Tour/Orientation, Source, III - Status, CJIS Security Role, NCIC Certification,
+// Passport, Fingerprint Outcome, and Access Type stay in the form, search, and
+// data model, not on Limited or All Applicant Records listings.
 const adminTableFields = [
   "name",
   "driversLicense",
+  "vendor",
   "clearanceType",
   "department",
   "activityStatus",
@@ -730,6 +774,9 @@ let inquiryDueMigrationCount = 0;
 let iiiCompletionMigrationCount = 0;
 let iiiCompletionIsoMigrated = localStorage.getItem(STORAGE_KEYS.iiiCompletionIsoMigrated) === "1";
 function ensureLimitedViewSeedRecords(recordSet) {
+  // Local/offline prototype only. Never merge browser seed rows onto SQL data —
+  // that duplicated Anna import rows (seed-anna-* IDs vs new import GUIDs).
+  if (persistenceMode === "sql") return recordSet;
   const extras = typeof getLimitedViewApplicantSeed === "function" ? getLimitedViewApplicantSeed() : [];
   if (!extras.length) return recordSet;
   const existingIds = new Set(recordSet.map((record) => record.id));
@@ -873,6 +920,10 @@ const adminTable = document.querySelector("#adminTable");
 const adminTools = document.querySelector("#adminTools");
 const changeLogTable = document.querySelector("#changeLogTable");
 const changeLogPanel = document.querySelector("#changeLogPanel");
+const auditActivitySearch = document.querySelector("#auditActivitySearch");
+const auditActivityTable = document.querySelector("#auditActivityTable");
+const auditActivityMessage = document.querySelector("#auditActivityMessage");
+const auditLogsStatusPill = document.querySelector("#auditLogsStatusPill");
 const applicantForm = document.querySelector("#applicantForm");
 const saveApplicantButton = document.querySelector("#saveApplicantButton");
 const resetForm = document.querySelector("#resetForm");
@@ -953,6 +1004,17 @@ if (optionListEditors) {
 }
 if (addManagedUserForm) addManagedUserForm.addEventListener("submit", addManagedUser);
 if (managedUserTable) managedUserTable.addEventListener("click", handleManagedUserTableClick);
+if (auditActivitySearch) auditActivitySearch.addEventListener("input", renderAuditActivityStream);
+if (auditActivityTable) {
+  auditActivityTable.addEventListener("click", handleAuditActivityTableClick);
+  auditActivityTable.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    const row = event.target.closest("[data-open-audit-record]");
+    if (!row) return;
+    event.preventDefault();
+    handleAuditActivityTableClick({ target: row });
+  });
+}
 limitedViewButton.addEventListener("click", () => setView("limited"));
 if (recordsViewButton) recordsViewButton.addEventListener("click", () => setView("records"));
 adminViewButton.addEventListener("click", () => setView("admin"));
@@ -1164,6 +1226,7 @@ function recordsForSql(recordSet) {
 }
 
 async function persistRecordsToSql(recordSet) {
+  sqlPersistInFlight = true;
   try {
     const response = await fetch(`${SQL_API_BASE}/api/applicants`, {
       method: "PUT",
@@ -1177,11 +1240,92 @@ async function persistRecordsToSql(recordSet) {
       return;
     }
     sqlPersistError = "";
+    sqlRecordsFingerprint = recordsFingerprint(recordSet);
+    sqlLastRefreshAt = new Date();
     updatePersistenceStatus();
   } catch (error) {
     sqlPersistError = error.message || String(error);
     updatePersistenceStatus();
+  } finally {
+    sqlPersistInFlight = false;
   }
+}
+
+function recordsFingerprint(recordSet) {
+  return (Array.isArray(recordSet) ? recordSet : [])
+    .map((record) => `${record.id || ""}:${record.updatedAt || ""}:${record.archived ? "1" : "0"}`)
+    .sort()
+    .join("|");
+}
+
+function shouldPauseSqlSilentRefresh() {
+  if (persistenceMode !== "sql") return true;
+  if (sqlPersistInFlight || sqlRefreshInFlight) return true;
+  // Avoid overwriting an open create/edit draft in the drawer.
+  if (typeof drawerOpen !== "undefined" && drawerOpen && currentFormMode !== "view") {
+    return true;
+  }
+  return false;
+}
+
+async function fetchRemoteApplicantRecords() {
+  const listResponse = await fetch(`${SQL_API_BASE}/api/applicants`);
+  if (!listResponse.ok) {
+    const body = await listResponse.json().catch(() => ({}));
+    throw new Error(body.reason || body.error || `HTTP ${listResponse.status}`);
+  }
+  const body = await listResponse.json();
+  return Array.isArray(body.records) ? body.records : [];
+}
+
+function applyRemoteApplicantRecords(remote, { render = true } = {}) {
+  const normalized = normalizeRecords(remote);
+  const nextFingerprint = recordsFingerprint(normalized);
+  const changed = nextFingerprint !== sqlRecordsFingerprint;
+  records = normalized;
+  sqlRecordsFingerprint = nextFingerprint;
+  sqlLastRefreshAt = new Date();
+  localStorage.setItem(STORAGE_KEYS.records, JSON.stringify(records));
+  const expectedBatch = currentSeedBatch();
+  if (expectedBatch) localStorage.setItem(STORAGE_KEYS.seedBatch, expectedBatch);
+  seedBatchReplaced = false;
+  if (changed && render) renderAll();
+  updatePersistenceStatus();
+  return changed;
+}
+
+async function refreshRecordsFromSql({ force = false } = {}) {
+  if (persistenceMode !== "sql") return false;
+  if (!force && shouldPauseSqlSilentRefresh()) return false;
+  if (sqlRefreshInFlight) return false;
+  sqlRefreshInFlight = true;
+  try {
+    const remote = await fetchRemoteApplicantRecords();
+    if (!force && shouldPauseSqlSilentRefresh()) return false;
+    return applyRemoteApplicantRecords(remote);
+  } catch (error) {
+    sqlPersistError = error.message || String(error);
+    updatePersistenceStatus();
+    return false;
+  } finally {
+    sqlRefreshInFlight = false;
+  }
+}
+
+function startSqlSilentRefresh() {
+  if (sqlSilentRefreshTimer) {
+    window.clearInterval(sqlSilentRefreshTimer);
+    sqlSilentRefreshTimer = null;
+  }
+  if (persistenceMode !== "sql") return;
+  sqlSilentRefreshTimer = window.setInterval(() => {
+    void refreshRecordsFromSql();
+  }, SQL_SILENT_REFRESH_MS);
+}
+
+function handleSqlSilentRefreshSignal() {
+  if (document.visibilityState && document.visibilityState !== "visible") return;
+  void refreshRecordsFromSql();
 }
 
 async function startSqlPersistence() {
@@ -1192,23 +1336,12 @@ async function startSqlPersistence() {
       updatePersistenceStatus();
       return;
     }
-    const listResponse = await fetch(`${SQL_API_BASE}/api/applicants`);
-    if (!listResponse.ok) {
-      updatePersistenceStatus();
-      return;
-    }
-    const body = await listResponse.json();
-    const remote = Array.isArray(body.records) ? body.records : [];
+    const remote = await fetchRemoteApplicantRecords();
     persistenceMode = "sql";
-    if (seedBatchReplaced && records.length) {
-      await persistRecordsToSql(records);
-    } else if (remote.length) {
-      records = ensureLimitedViewSeedRecords(normalizeRecords(remote));
-    } else if (records.length) {
-      await persistRecordsToSql(records);
-    }
-    renderAll();
-    updatePersistenceStatus();
+    // SQL is source of truth, including an empty database after a clear.
+    // Do not push browser localStorage/seed back into SQL when remote is empty.
+    applyRemoteApplicantRecords(remote, { render: true });
+    startSqlSilentRefresh();
   } catch {
     persistenceMode = "local";
     updatePersistenceStatus();
@@ -1219,9 +1352,16 @@ function updatePersistenceStatus() {
   const target = document.querySelector("#persistenceStatus");
   if (!target) return;
   if (persistenceMode === "sql") {
-    target.textContent = sqlPersistError
-      ? `Storage: SQL error (${sqlPersistError})`
-      : "Storage: SQL (localhost)";
+    if (sqlPersistError) {
+      target.textContent = `Storage: SQL error (${sqlPersistError})`;
+      return;
+    }
+    if (sqlLastRefreshAt) {
+      const time = sqlLastRefreshAt.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+      target.textContent = `Storage: SQL · synced ${time}`;
+      return;
+    }
+    target.textContent = "Storage: SQL (localhost)";
     return;
   }
   target.textContent = "Storage: this browser";
@@ -1918,7 +2058,7 @@ function saveApplicant(event) {
     return;
   }
 
-  const id = existingRecordId || crypto.randomUUID();
+  const id = existingRecordId || createId();
   const nextRecord = formFields.reduce(
     (record, field) => {
       record[field] = getFormFieldValue(field);
@@ -2045,6 +2185,8 @@ function closeApplicantDrawer(options = {}) {
     drawerReturnFocus.focus();
   }
   drawerReturnFocus = null;
+  // Pull peer saves that were paused while this drawer was open for edit.
+  if (persistenceMode === "sql") void refreshRecordsFromSql();
 }
 
 function openApplicantDrawer(invoker) {
@@ -2246,7 +2388,7 @@ function readDocumentFile(file) {
     const reader = new FileReader();
     reader.addEventListener("load", () => {
       resolve({
-        id: crypto.randomUUID(),
+        id: createId(),
         name: file.name,
         type: file.type || "application/octet-stream",
         size: file.size,
@@ -2344,6 +2486,7 @@ function renderAll() {
   if (fullScreenView === "admin" && canAccessAdminConsole()) {
     renderOptionListEditors();
     renderManagedUserTable();
+    renderAuditActivityStream();
   }
 }
 
@@ -3070,7 +3213,7 @@ function addManagedUser(event) {
   managedUsers = [
     ...managedUsers,
     {
-      id: crypto.randomUUID(),
+      id: createId(),
       name,
       userType,
       accessCode,
@@ -3170,6 +3313,7 @@ function renderManagedUserTable() {
 }
 
 function renderChangeLog() {
+  if (!changeLogTable) return;
   const selectedRecordId = document.querySelector("#recordId").value;
   const selectedLog = changeLog.filter((entry) => entry.recordId === selectedRecordId);
   if (!selectedLog.length) {
@@ -3197,7 +3341,7 @@ function renderChangeLog() {
             <td>${escapeHtml(entry.roleLabel)}</td>
             <td>${escapeHtml(entry.action)}</td>
             <td>${escapeHtml(entry.applicantName)}</td>
-            <td>${escapeHtml(entry.changes.join("; "))}</td>
+            <td>${escapeHtml((entry.changes || []).join("; "))}</td>
           </tr>`;
         })
         .join("")}
@@ -3206,16 +3350,118 @@ function renderChangeLog() {
 }
 
 function updateChangeLogVisibility() {
-  const hasSelectedRecord = Boolean(document.querySelector("#recordId").value);
-  const shouldShow = currentView === "admin" && canAccessView("admin") && hasSelectedRecord && currentFormMode === "edit";
+  if (!changeLogPanel) return;
+  const hasSelectedRecord = Boolean(document.querySelector("#recordId")?.value);
+  const inAdminContext =
+    (currentView === "admin" || isAdminPageOpen()) && canAccessView("admin");
+  const shouldShow = inAdminContext && hasSelectedRecord;
   changeLogPanel.classList.toggle("hidden", !shouldShow);
   if (shouldShow) renderChangeLog();
+}
+
+function auditEntryStatus(entry) {
+  const action = String(entry?.action || "").toLowerCase();
+  if (action.includes("fail") || action.includes("error") || action.includes("denied")) {
+    return "Failed";
+  }
+  if (action.includes("migrat")) return "System";
+  return "Recorded";
+}
+
+function getFilteredAuditEntries() {
+  const query = auditActivitySearch ? auditActivitySearch.value.trim().toLowerCase() : "";
+  if (!query) return [...changeLog];
+  return changeLog.filter((entry) => {
+    const haystack = [
+      entry.changedAt,
+      entry.changedBy,
+      entry.roleLabel,
+      entry.action,
+      entry.applicantName,
+      entry.vendor,
+      entry.recordId,
+      auditEntryStatus(entry),
+      ...(Array.isArray(entry.changes) ? entry.changes : []),
+    ]
+      .join(" ")
+      .toLowerCase();
+    return haystack.includes(query);
+  });
+}
+
+function renderAuditActivityStream() {
+  if (!auditActivityTable) return;
+  if (auditLogsStatusPill) {
+    auditLogsStatusPill.textContent = changeLog.length ? "Active" : "Empty";
+  }
+  const entries = getFilteredAuditEntries();
+  if (auditActivityMessage) {
+    const query = auditActivitySearch ? auditActivitySearch.value.trim() : "";
+    auditActivityMessage.textContent = query
+      ? `${entries.length} of ${changeLog.length} event(s)`
+      : `${changeLog.length} event(s) in this browser`;
+  }
+  if (!entries.length) {
+    auditActivityTable.innerHTML = `<p class="empty-state">${
+      changeLog.length
+        ? "No audit events match the current search."
+        : "No applicant audit events yet. Create, edit, archive, or import records to populate this stream."
+    }</p>`;
+    return;
+  }
+
+  auditActivityTable.innerHTML = `<table class="admin-records-table audit-activity-table">
+    <thead>
+      <tr>
+        <th>Timestamp</th>
+        <th>Actor</th>
+        <th>Action</th>
+        <th>Target Resource</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${entries
+        .map((entry) => {
+          const openable = Boolean(records.find((record) => record.id === entry.recordId));
+          const target = entry.applicantName || "Unknown applicant";
+          const detail = (entry.changes || []).join("; ");
+          const rowAttrs = openable
+            ? ` class="audit-row-openable" data-open-audit-record="${escapeHtml(entry.recordId)}" tabindex="0" role="button" title="Open applicant record"`
+            : "";
+          return `<tr${rowAttrs}>
+            <td>${formatDateTime(entry.changedAt)}</td>
+            <td>${escapeHtml(entry.changedBy || "Unknown")}${
+              entry.roleLabel ? `<div class="field-caption">${escapeHtml(entry.roleLabel)}</div>` : ""
+            }</td>
+            <td>${escapeHtml(entry.action || "")}${
+              detail ? `<div class="field-caption">${escapeHtml(detail)}</div>` : ""
+            }</td>
+            <td>${escapeHtml(target)}</td>
+            <td>${escapeHtml(auditEntryStatus(entry))}</td>
+          </tr>`;
+        })
+        .join("")}
+    </tbody>
+  </table>`;
+}
+
+function handleAuditActivityTableClick(event) {
+  const row = event.target.closest("[data-open-audit-record]");
+  if (!row) return;
+  const recordId = row.dataset.openAuditRecord;
+  if (!recordId || !records.some((record) => record.id === recordId)) {
+    showMessage(auditActivityMessage, "That applicant is no longer in the active set.", true);
+    return;
+  }
+  closeFullScreenPage();
+  viewApplicant(recordId, row);
 }
 
 function logRecordChange(action, record, changes) {
   const user = currentUser || { name: "Unknown", role: "limited" };
   changeLog.unshift({
-    id: crypto.randomUUID(),
+    id: createId(),
     recordId: record.id,
     applicantName: record.name || "Unnamed applicant",
     vendor: record.vendor || "",
@@ -3228,6 +3474,10 @@ function logRecordChange(action, record, changes) {
   });
   changeLog = changeLog.slice(0, 500);
   saveChangeLog();
+  if (fullScreenView === "admin" && canAccessAdminConsole()) {
+    renderAuditActivityStream();
+  }
+  updateChangeLogVisibility();
 }
 
 function getChangedFields(previousRecord, nextRecord) {
@@ -3592,7 +3842,7 @@ function syncInquiryDueField() {
 
 function logIiiCompletionIsoMigration(changedCount) {
   changeLog.unshift({
-    id: crypto.randomUUID(),
+    id: createId(),
     recordId: "iii-completion-iso-migration",
     applicantName: `${changedCount} stored record(s)`,
     vendor: "",
@@ -3609,7 +3859,7 @@ function logIiiCompletionIsoMigration(changedCount) {
 
 function logInquiryDueMigration(changedCount) {
   changeLog.unshift({
-    id: crypto.randomUUID(),
+    id: createId(),
     recordId: "inquiry-due-migration",
     applicantName: `${changedCount} stored record(s)`,
     vendor: "",
@@ -3758,7 +4008,7 @@ function importCsvText(csvText, replaceAll) {
   const seenControlIds = new Map();
 
   rows.slice(1).forEach((cells, rowIndex) => {
-    const record = { id: crypto.randomUUID(), updatedAt: new Date().toISOString() };
+    const record = { id: createId(), updatedAt: new Date().toISOString() };
     columnMap.forEach((column, columnIndex) => {
       if (!column || column.blocked) return;
       const raw = String(cells[columnIndex] ?? "").trim();
@@ -3932,4 +4182,6 @@ updateAccessControls();
 updateFullScreenVisibility();
 setView("limited");
 updatePersistenceStatus();
+window.addEventListener("focus", handleSqlSilentRefreshSignal);
+document.addEventListener("visibilitychange", handleSqlSilentRefreshSignal);
 void startSqlPersistence();

@@ -550,6 +550,21 @@ body.admin-console-open .shell {
   width: 100%;
 }
 
+.audit-activity-table tr.audit-row-openable {
+  cursor: pointer;
+}
+
+.audit-activity-table tr.audit-row-openable:hover > td,
+.audit-activity-table tr.audit-row-openable:focus-visible > td {
+  background: color-mix(in srgb, var(--accent, #0b57d0) 10%, transparent);
+}
+
+.audit-activity-table .field-caption {
+  margin: 2px 0 0;
+  padding: 0;
+  font-size: 12px;
+}
+
 .future-audit-search {
   display: grid;
   gap: 4px;

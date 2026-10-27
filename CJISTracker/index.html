@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>CJIS Applicant Tracker</title>
-    <link rel="stylesheet" href="styles.css?v=sprint-007-data-protection-check" />
+    <link rel="stylesheet" href="styles.css?v=audit-activity-stream-2" />
   </head>
   <body class="signed-out">
     <header class="app-header" aria-label="Application header">
@@ -458,46 +458,37 @@
           </div>
         </section>
 
-        <section class="panel future-admin-panel" aria-labelledby="futureAuditHeading">
+        <section class="panel" aria-labelledby="auditLogsHeading">
           <div class="panel-heading">
             <div>
-              <h2 id="futureAuditHeading">Audit Logs &amp; Compliance</h2>
+              <p class="eyebrow">Audit trail</p>
+              <h2 id="auditLogsHeading">Audit Logs &amp; Compliance</h2>
             </div>
-            <span class="status-pill">Not implemented</span>
+            <span id="auditLogsStatusPill" class="status-pill">Active</span>
           </div>
           <p class="field-caption">
-            Reserved for a later authorized sprint. Applicant change log in the record drawer remains
-            the only active audit trail.
+            Live activity stream from the applicant change log (same trail shown in the record
+            drawer). Prototype store is this browser only — not a server-side immutable ledger.
           </p>
           <div class="future-admin-grid">
             <article class="future-admin-card future-admin-card-wide">
               <h3>Activity Stream</h3>
               <p>
-                A searchable, immutable ledger showing Timestamp, Actor (User ID/IP), Action (example:
-                role.updated), Target Resource, and Status.
+                Searchable ledger of applicant create, update, archive, restore, delete, and import
+                events. Click a row to open that applicant in the record drawer when the record
+                still exists.
               </p>
               <label class="search-field future-audit-search">
                 Search activity
-                <input type="search" placeholder="Actor, action, resource, or status" disabled />
+                <input
+                  id="auditActivitySearch"
+                  type="search"
+                  placeholder="Actor, action, applicant, status, or field changes"
+                  autocomplete="off"
+                />
               </label>
-              <div class="table-wrap">
-                <table class="admin-records-table future-placeholder-table">
-                  <thead>
-                    <tr>
-                      <th>Timestamp</th>
-                      <th>Actor</th>
-                      <th>Action</th>
-                      <th>Target Resource</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td colspan="5">Activity stream is not connected. No events loaded.</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+              <p id="auditActivityMessage" class="form-message" role="status"></p>
+              <div id="auditActivityTable" class="table-wrap" aria-live="polite"></div>
             </article>
           </div>
         </section>
@@ -773,7 +764,7 @@
     </aside>
 
     <script src="test-applicants.js?v=sprint-007-anna-import"></script>
-    <script src="app.js?v=sprint-007-data-protection-check"></script>
+    <script src="app.js?v=sql-silent-refresh"></script>
     <!-- tracker-list-overrides.js retired in SPRINT-005; behaviors folded into app.js and styles.css. -->
   </body>
 </html>
