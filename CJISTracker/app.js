@@ -456,6 +456,51 @@ function saveManagedUsers() {
   localStorage.setItem(STORAGE_KEYS.managedUsers, JSON.stringify(managedUsers));
 }
 
+// Prototype named operators (INTDEV). Emails are documentation only — sign-in
+// still uses User Name + Access Level + Access Code in this browser.
+const SEED_MANAGED_USERS = [
+  { name: "Ashley M. Herrera", userType: "adminStaff", accessCode: "ah-staff-4927", email: "aherrera@cabq.gov" },
+  { name: "Annamarie Zambrano", userType: "adminStaff", accessCode: "az-staff-5831", email: "annamariezambrano@cabq.gov" },
+  { name: "Brianna A. Berged", userType: "adminStaff", accessCode: "bb-staff-6742", email: "bberged@cabq.gov" },
+  { name: "Raymond Murphy", userType: "adminStaff", accessCode: "rm-staff-7618", email: "rmurphy@cabq.gov" },
+  { name: "Jessica Solis", userType: "admin", accessCode: "js-admin-8394", email: "jlsolis@cabq.gov" },
+];
+
+function ensureSeedManagedUsers(existingUsers) {
+  const next = Array.isArray(existingUsers) ? [...existingUsers] : [];
+  const usedCodes = new Set(next.map((user) => user.accessCode).filter(Boolean));
+  let changed = false;
+  SEED_MANAGED_USERS.forEach((seed) => {
+    const index = next.findIndex((user) => user.name.toLowerCase() === seed.name.toLowerCase());
+    if (index >= 0) {
+      const current = next[index];
+      if (current.userType !== seed.userType || current.accessCode !== seed.accessCode) {
+        next[index] = {
+          ...current,
+          userType: seed.userType,
+          accessCode: seed.accessCode,
+        };
+        changed = true;
+      }
+      usedCodes.add(seed.accessCode);
+      return;
+    }
+    if (FORBIDDEN_CODES.has(seed.accessCode) || usedCodes.has(seed.accessCode)) return;
+    next.push({
+      id: createId(),
+      name: seed.name,
+      userType: seed.userType,
+      accessCode: seed.accessCode,
+    });
+    usedCodes.add(seed.accessCode);
+    changed = true;
+  });
+  if (changed) {
+    localStorage.setItem(STORAGE_KEYS.managedUsers, JSON.stringify(next));
+  }
+  return next;
+}
+
 function currentUserAccessLabel() {
   if (!currentUser) return "";
   if (currentUser.userType && USER_TYPE_LABELS[currentUser.userType]) {
@@ -769,7 +814,7 @@ const tableLabels = {
 
 let optionLists = loadOptionLists();
 saveOptionLists();
-let managedUsers = loadManagedUsers();
+let managedUsers = ensureSeedManagedUsers(loadManagedUsers());
 let inquiryDueMigrationCount = 0;
 let iiiCompletionMigrationCount = 0;
 let iiiCompletionIsoMigrated = localStorage.getItem(STORAGE_KEYS.iiiCompletionIsoMigrated) === "1";
