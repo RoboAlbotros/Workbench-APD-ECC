@@ -456,27 +456,78 @@ function saveManagedUsers() {
   localStorage.setItem(STORAGE_KEYS.managedUsers, JSON.stringify(managedUsers));
 }
 
-// Prototype named operators (INTDEV). Emails are documentation only — sign-in
-// still uses User Name + Access Level + Access Code in this browser.
+// Prototype named operators (INTDEV). Sign-in User Name is the employee ID.
+// displayName / previousNames are documentation and migration aids only.
 const SEED_MANAGED_USERS = [
-  { name: "Ashley M. Herrera", userType: "adminStaff", accessCode: "ah-staff-4927", email: "aherrera@cabq.gov" },
-  { name: "Annamarie Zambrano", userType: "adminStaff", accessCode: "az-staff-5831", email: "annamariezambrano@cabq.gov" },
-  { name: "Brianna A. Berged", userType: "adminStaff", accessCode: "bb-staff-6742", email: "bberged@cabq.gov" },
-  { name: "Raymond Murphy", userType: "adminStaff", accessCode: "rm-staff-7618", email: "rmurphy@cabq.gov" },
-  { name: "Jessica Solis", userType: "admin", accessCode: "js-admin-8394", email: "jlsolis@cabq.gov" },
+  {
+    name: "E08727",
+    displayName: "Ashley M. Herrera",
+    previousNames: ["Ashley M. Herrera", "Ashley"],
+    userType: "adminStaff",
+    accessCode: "ah-staff-4927",
+  },
+  {
+    name: "E17433",
+    displayName: "Annamarie Zambrano",
+    previousNames: ["Annamarie Zambrano"],
+    userType: "adminStaff",
+    accessCode: "az-staff-5831",
+  },
+  {
+    name: "E28041",
+    displayName: "Brianna A. Berged",
+    previousNames: ["Brianna A. Berged", "Brienna", "Brianna"],
+    userType: "adminStaff",
+    accessCode: "bb-staff-6742",
+  },
+  {
+    name: "E14137",
+    displayName: "Jessica Solis",
+    previousNames: ["Jessica Solis", "Jessica Solice", "Jessica"],
+    userType: "admin",
+    accessCode: "js-admin-8394",
+  },
+  {
+    name: "E48822",
+    displayName: "Ray Murphy",
+    previousNames: ["Ray Murphy", "Raymond Murphy"],
+    userType: "adminStaff",
+    accessCode: "rm-staff-7618",
+  },
+  {
+    name: "E47610",
+    displayName: "Maura Flores Vasquez",
+    previousNames: ["Maura Flores Vasquez"],
+    userType: "adminStaff",
+    accessCode: "mf-staff-9053",
+  },
 ];
+
+function findSeedManagedUserIndex(users, seed) {
+  const needles = new Set(
+    [seed.name, ...(Array.isArray(seed.previousNames) ? seed.previousNames : [])]
+      .map((value) => String(value || "").trim().toLowerCase())
+      .filter(Boolean),
+  );
+  return users.findIndex((user) => needles.has(String(user.name || "").trim().toLowerCase()));
+}
 
 function ensureSeedManagedUsers(existingUsers) {
   const next = Array.isArray(existingUsers) ? [...existingUsers] : [];
   const usedCodes = new Set(next.map((user) => user.accessCode).filter(Boolean));
   let changed = false;
   SEED_MANAGED_USERS.forEach((seed) => {
-    const index = next.findIndex((user) => user.name.toLowerCase() === seed.name.toLowerCase());
+    const index = findSeedManagedUserIndex(next, seed);
     if (index >= 0) {
       const current = next[index];
-      if (current.userType !== seed.userType || current.accessCode !== seed.accessCode) {
+      if (
+        current.name !== seed.name ||
+        current.userType !== seed.userType ||
+        current.accessCode !== seed.accessCode
+      ) {
         next[index] = {
           ...current,
+          name: seed.name,
           userType: seed.userType,
           accessCode: seed.accessCode,
         };
