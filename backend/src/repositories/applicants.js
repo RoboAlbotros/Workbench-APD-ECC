@@ -40,6 +40,13 @@ function sliceDate(value) {
   return String(value).slice(0, 10);
 }
 
+function safeIsoDateTime(value) {
+  if (!value) return "";
+  const dt = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(dt.getTime())) return "";
+  return dt.toISOString();
+}
+
 function asUniqueIdentifier(id) {
   const text = String(id || "").trim();
   if (UUID_RE.test(text)) return text.toLowerCase();
@@ -153,10 +160,10 @@ function mapRow(row) {
     emailAddress: row.ApplicantEmailAddress || "",
     notes: fromNote.notes || "",
     lastChangedBy: row.LastChangedByDisplayName || "",
-    createdAt: row.CreatedAtUtc ? new Date(row.CreatedAtUtc).toISOString() : "",
-    updatedAt: row.UpdatedAtUtc ? new Date(row.UpdatedAtUtc).toISOString() : "",
+    createdAt: safeIsoDateTime(row.CreatedAtUtc),
+    updatedAt: safeIsoDateTime(row.UpdatedAtUtc),
     archived: Boolean(row.IsArchived),
-    archivedAt: row.ArchivedAtUtc ? new Date(row.ArchivedAtUtc).toISOString() : "",
+    archivedAt: safeIsoDateTime(row.ArchivedAtUtc),
     archivedBy: row.ArchivedByDisplayName || "",
     documents: [],
   };
