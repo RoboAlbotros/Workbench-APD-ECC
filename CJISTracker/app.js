@@ -501,6 +501,13 @@ const SEED_MANAGED_USERS = [
     userType: "adminStaff",
     accessCode: "mf-staff-9053",
   },
+  {
+    name: "E41718",
+    displayName: "James Gray",
+    previousNames: ["James Gray"],
+    userType: "adminGlobal",
+    accessCode: "jg-admin-9383",
+  },
 ];
 
 function findSeedManagedUserIndex(users, seed) {

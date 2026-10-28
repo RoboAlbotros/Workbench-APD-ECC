@@ -1,18 +1,19 @@
 # Sprint 007 — Wire the SQL API
 
-Status: ACTIVE — AUTHORIZED
+Status: COMPLETE — G-TEST accepted as relayed 2026-10-28
 Owner: Brett (technical owner and security/privacy authority)
 Version: 0.1.0
 Approval: Authorized 2026-10-19 — explicit owner-directed work. Sprint approval
-relayed by the project owner on behalf of joint governance authorities Jessica
-Solis and Annamarie Zambrano, consistent with prior sprints; ratification open.
+and G-TEST accepted as relayed 2026-10-28 by the project owner on behalf of
+joint governance authorities Jessica Solis and Annamarie Zambrano, consistent
+with prior sprints; ratification open.
 Date: 2026-10-19
 Controlling work ID: SPRINT-007
 
 ## Work-identity preflight
 
 1. Project: Workbench APD ECC; developmentVersion `0.1.0-dev.1`.
-2. Controlling work: SPRINT-007 (`currentAuthorizedWork`).
+2. Controlling work: SPRINT-007 (was `currentAuthorizedWork`; null as of 2026-10-28 close).
 3. Change class: C3 — prototype localhost persistence API using the SPRINT-006
    schema. Bind to `127.0.0.1` only. A deployed or non-localhost listener would
    be C4 and is excluded. Does not satisfy G-ARCH or G-SEC.
@@ -113,7 +114,10 @@ classification. G-ARCH and G-SEC remain pending. Production hosting remains TBD.
 
 - Sprint approval: Jessica Solis + Annamarie Zambrano (governance, joint) —
   relayed by project owner; ratification open.
-- G-TEST: Annamarie Zambrano (QA) — pending for SPRINT-007.
+- G-TEST: Annamarie Zambrano (QA) — accepted as relayed 2026-10-28 by
+  project owner Brett (owner statement: "Close sprint 007 as complete and
+  approved"). Ratification by Jessica Solis and Annamarie Zambrano remains
+  open. Evidence: `docs/reviews/sprint-007-test-evidence.md`.
 - G-ARCH / G-SEC: remain pending; this sprint does not satisfy them.
 
 ## Definition of done
@@ -122,3 +126,16 @@ classification. G-ARCH and G-SEC remain pending. Production hosting remains TBD.
 - `project.json` updated and schema-validated
 - No Entra login; no public bind
 - Documentation updated
+
+## Completion record (2026-10-28)
+
+- Sprint approval and G-TEST accepted as relayed by project owner Brett on
+  behalf of Jessica Solis and Annamarie Zambrano (owner statement: "Close
+  sprint 007 as complete and approved"; `project.json` history
+  2026-10-28T15:09:00-06:00).
+- Agent review does not satisfy the gate. Ratification by Jessica Solis and
+  Annamarie Zambrano remains open.
+- G-TEST evidence: `docs/reviews/sprint-007-test-evidence.md`.
+- `currentAuthorizedWork` returned to null. SPRINT-008 remains designated
+  (DRAFT — PROPOSED / NOT READY) and is not authorized. G-ARCH and G-SEC
+  remain pending. No live Entra login; prototype PIN is never production.

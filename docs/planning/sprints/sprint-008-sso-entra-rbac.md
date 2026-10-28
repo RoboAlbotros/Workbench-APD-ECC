@@ -6,7 +6,7 @@ Owner: Brett (technical owner and security/privacy authority)
 Version: 0.1.0
 Approval: Pending
 Date: 2026-10-22
-Controlling work ID: SPRINT-008 (draft). `currentAuthorizedWork` remains SPRINT-007.
+Controlling work ID: SPRINT-008 (draft). `currentAuthorizedWork` is null (SPRINT-007 complete).
 
 ## Sprint objective
 
@@ -18,9 +18,9 @@ or authorization on the API.
 ## Work-identity preflight
 
 1. Project: Workbench APD ECC; developmentVersion `0.1.0-dev.1`.
-2. Controlling authorized work today: SPRINT-007. This file is a draft only.
-   Implementation is NOT authorized until the owner records approval and
-   `project.json` `currentAuthorizedWork` is set to SPRINT-008.
+2. Controlling authorized work today: null (SPRINT-007 complete). This file is a
+   draft only. Implementation is NOT authorized until the owner records
+   approval and `project.json` `currentAuthorizedWork` is set to SPRINT-008.
 3. Change class: C4 — identity, authorization, and a live trust boundary
    (Rule 00). Requires security review, a documented threat model, and
    governance authority approval in addition to C3 requirements.
@@ -87,8 +87,8 @@ supply them:
 
 ## Explicit exclusions
 
-- Not authorized to start while SPRINT-007 remains `currentAuthorizedWork`,
-  unless the owner records an overlap.
+- Not authorized to start while `currentAuthorizedWork` is null or any other
+  sprint, unless the owner records approval and sets it to SPRINT-008.
 - No invented tenant ID, client ID, secret, redirect URI, or role-claim name.
 - No public bind, cloud deploy, or invented `deploymentTarget`.
 - No live Entra login against TBD placeholders.
@@ -156,7 +156,8 @@ classification MUST take the more controlled class.
 - G-ARCH: pending (technical owner). Live Entra is architecture work.
 - G-SEC: pending (security/privacy authority). Required for C4.
 - G-TEST: Annamarie Zambrano (QA) — pending when the sprint is executed.
-- SPRINT-007 G-TEST remains pending and is not closed by this draft.
+- SPRINT-007 G-TEST was accepted as relayed 2026-10-28 and is not reopened by
+  this draft.
 
 ## Scoped specialist gates and applicability decisions
 
@@ -198,7 +199,8 @@ Readiness: NOT READY
 Decided by: Cursor primary agent completing the DEC-015 sprint draft
   (not an approval)
 Evidence: Tenant / client / redirect / role-claim values are TBD; G-ARCH and
-G-SEC unsatisfied; SPRINT-007 still authorized; no threat model recorded.
+G-SEC unsatisfied; `currentAuthorizedWork` is null (SPRINT-007 complete);
+no threat model recorded.
 
 This sprint MUST NOT start from this file alone. Owner must say the sprint is
 approved or "go," and `currentAuthorizedWork` must be updated.
