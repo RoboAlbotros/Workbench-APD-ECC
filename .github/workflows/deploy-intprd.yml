@@ -1,0 +1,50 @@
+# Deploy Clearance Tracker to DTIAPPSINTPRD on push to main (SPRINT-009).
+# Requires a self-hosted runner on DTIAPPSINTPRD labeled [self-hosted, Windows, intprd].
+# Protect the GitHub environment "intprd" with required reviewers before first use.
+
+name: Deploy INTPRD
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-intprd
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Publish to DTIAPPSINTPRD
+    runs-on: [self-hosted, Windows, intprd]
+    environment: intprd
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Publish site and restart API
+        shell: powershell
+        env:
+          SITE_ROOT: ${{ vars.INTPRD_SITE_ROOT }}
+        run: |
+          $siteRoot = $env:SITE_ROOT
+          if ([string]::IsNullOrWhiteSpace($siteRoot)) {
+            $siteRoot = "D:\inetpub\clearancetracker"
+          }
+          & "$env:GITHUB_WORKSPACE\deploy\Publish-ClearanceTracker.ps1" `
+            -RepoRoot $env:GITHUB_WORKSPACE `
+            -SiteRoot $siteRoot `
+            -ServiceName "ClearanceTrackerApi"
+
+      - name: Smoke health (localhost API)
+        shell: powershell
+        run: |
+          $health = Invoke-RestMethod -Uri "http://127.0.0.1:8741/health" -TimeoutSec 15
+          Write-Host ($health | ConvertTo-Json -Depth 6 -Compress)
+          if ($null -eq $health.database) {
+            throw "Unexpected health payload (missing database)"
+          }

@@ -5,17 +5,17 @@
   "identity": {
     "name": "Workbench APD ECC",
     "shortId": "workbench-apd-ecc",
-    "businessPurpose": "TBD — owner decision required. Working assumption pending approval: in-house DTI tooling workbench; first capability is the CJIS Applicant Tracker.",
-    "intendedUsers": "TBD — owner decision required. Working assumption pending approval: APD/ECC staff managing CJIS applicant clearance tracking.",
+    "businessPurpose": "TBD \u2014 owner decision required. Working assumption pending approval: in-house DTI tooling workbench; first capability is the CJIS Applicant Tracker.",
+    "intendedUsers": "TBD \u2014 owner decision required. Working assumption pending approval: APD/ECC staff managing CJIS applicant clearance tracking.",
     "initialCapability": "CJIS Applicant Tracker (existing browser/local-storage prototype adopted into CJISTracker/)",
-    "deploymentTarget": null
+    "deploymentTarget": "DTIAPPSINTDEV (develop \u2192 clearancetracker.cabq.gov); DTIAPPSINTPRD (main). IIS + Node Windows Service under COA\\svc-clearancetracker. SPRINT-009."
   },
   "versioning": {
     "scheme": "semver-2.0.0",
     "developmentVersion": "0.1.0-dev.1",
     "targetReleaseVersion": "0.1.0",
     "tagConvention": "vMAJOR.MINOR.PATCH; prerelease stages -dev.N, -alpha.N, -beta.N, -rc.N; Conventional Commits 1.0.0 for retained integration commits",
-    "publicContract": "TBD — not yet defined. No public contract exists; the prototype's behavior is not a supported contract. 1.0.0 requires a documented stable public contract per Rule 60."
+    "publicContract": "TBD \u2014 not yet defined. No public contract exists; the prototype's behavior is not a supported contract. 1.0.0 requires a documented stable public contract per Rule 60."
   },
   "state": {
     "lifecycleStage": "development",
@@ -42,12 +42,12 @@
       "measurementBasis": null
     },
     "summary": {
-      "outcome": "TBD — owner decision required.",
+      "outcome": "TBD \u2014 owner decision required.",
       "accountableOwner": "Jessica Solis (product owner)",
-      "nextMilestone": "SPRINT-007 complete. SPRINT-008 (City SSO / Entra and server-side RBAC) is designated, not authorized. Entra tenant/client/redirect/role-claim values remain TBD.",
-      "nextRequiredDecision": "Decide whether to approve SPRINT-008 (C4). G-ARCH and G-SEC remain pending and are required before live Entra. Ratification of relayed sprint approvals by Jessica Solis and Annamarie Zambrano remains open. Privacy Framework / PIA revisit after DEC-020 is TBD. Do not invent Entra identifiers.",
+      "nextMilestone": "SPRINT-007 complete. Security-&-Authentication branch rebuilt onto main with SPRINT-009 IIS/ops scaffolding and Admin-Global SSO/MFA prototype. SPRINT-008 (City SSO / Entra and server-side RBAC) remains designated, not authorized. Live SAML/Entra login not connected.",
+      "nextRequiredDecision": "Decide whether to authorize SPRINT-008 (C4) and/or continue SPRINT-009 ops (svc account password, SQL .env, DNS/cert). G-ARCH and G-SEC remain pending. Ratification of relayed sprint approvals remains open. Do not invent Entra/SAML identifiers.",
       "decisionsRequired": [],
-      "lastUpdated": "2026-10-28T15:09:00-06:00"
+      "lastUpdated": "2026-10-29T09:24:00-06:00"
     }
   },
   "release": {
@@ -80,61 +80,166 @@
     ]
   },
   "authorities": {
-    "productOwner": { "role": "Product owner", "name": "Jessica Solis", "notes": "Assigned by project owner 2026-10-08 (DEC-001)" },
-    "businessOutcomeOwner": { "role": "Business/outcome owner and outcome-acceptance authority", "name": "Jessica Solis and Annamarie Zambrano (joint)", "notes": "Assigned by project owner 2026-10-08 (DEC-002)" },
-    "technicalOwner": { "role": "Technical owner", "name": "Brett (project owner)", "notes": "Assigned by project owner 2026-10-08 (DEC-003)" },
-    "governanceAuthority": { "role": "Governance and approval authority", "name": "Jessica Solis and Annamarie Zambrano (joint)", "notes": "Assigned by project owner 2026-10-08 (DEC-004)" },
-    "coordinationOwner": { "role": "Program/project coordination owner", "name": "Brett (project owner)", "notes": "Assigned by project owner 2026-10-08 (DEC-005)" },
-    "qaAuthority": { "role": "QA authority", "name": "Annamarie Zambrano", "notes": "Assigned by project owner 2026-10-08 (DEC-006)" },
-    "securityPrivacyAuthority": { "role": "Security/privacy authority", "name": "Brett (project owner)", "notes": "Assigned by project owner 2026-10-08 (DEC-007)" },
-    "uxAccessibilityAuthority": { "role": "UX/accessibility authority", "name": "Brett (project owner)", "notes": "Assigned by project owner 2026-10-08 (DEC-008)" },
-    "documentationAuthority": { "role": "Documentation authority", "name": "Brett (project owner)", "notes": "Assigned by project owner 2026-10-08 (DEC-009)" },
-    "releaseAuthority": { "role": "Release authority (candidate acceptance and final release authorization are separately recorded decisions)", "name": "Jessica Solis and Annamarie Zambrano (joint)", "notes": "Assigned by project owner 2026-10-08 (DEC-010)" },
-    "operationsAuthority": { "role": "Operations authority", "name": "Brett (project owner)", "notes": "Assigned by project owner 2026-10-08 (DEC-011)" }
+    "productOwner": {
+      "role": "Product owner",
+      "name": "Jessica Solis",
+      "notes": "Assigned by project owner 2026-10-08 (DEC-001)"
+    },
+    "businessOutcomeOwner": {
+      "role": "Business/outcome owner and outcome-acceptance authority",
+      "name": "Jessica Solis and Annamarie Zambrano (joint)",
+      "notes": "Assigned by project owner 2026-10-08 (DEC-002)"
+    },
+    "technicalOwner": {
+      "role": "Technical owner",
+      "name": "Brett (project owner)",
+      "notes": "Assigned by project owner 2026-10-08 (DEC-003)"
+    },
+    "governanceAuthority": {
+      "role": "Governance and approval authority",
+      "name": "Jessica Solis and Annamarie Zambrano (joint)",
+      "notes": "Assigned by project owner 2026-10-08 (DEC-004)"
+    },
+    "coordinationOwner": {
+      "role": "Program/project coordination owner",
+      "name": "Brett (project owner)",
+      "notes": "Assigned by project owner 2026-10-08 (DEC-005)"
+    },
+    "qaAuthority": {
+      "role": "QA authority",
+      "name": "Annamarie Zambrano",
+      "notes": "Assigned by project owner 2026-10-08 (DEC-006)"
+    },
+    "securityPrivacyAuthority": {
+      "role": "Security/privacy authority",
+      "name": "Brett (project owner)",
+      "notes": "Assigned by project owner 2026-10-08 (DEC-007)"
+    },
+    "uxAccessibilityAuthority": {
+      "role": "UX/accessibility authority",
+      "name": "Brett (project owner)",
+      "notes": "Assigned by project owner 2026-10-08 (DEC-008)"
+    },
+    "documentationAuthority": {
+      "role": "Documentation authority",
+      "name": "Brett (project owner)",
+      "notes": "Assigned by project owner 2026-10-08 (DEC-009)"
+    },
+    "releaseAuthority": {
+      "role": "Release authority (candidate acceptance and final release authorization are separately recorded decisions)",
+      "name": "Jessica Solis and Annamarie Zambrano (joint)",
+      "notes": "Assigned by project owner 2026-10-08 (DEC-010)"
+    },
+    "operationsAuthority": {
+      "role": "Operations authority",
+      "name": "Brett (project owner)",
+      "notes": "Assigned by project owner 2026-10-08 (DEC-011)"
+    }
   },
   "gates": {
-    "G-SCOPE": { "state": "satisfied", "owner": "Jessica Solis (product) + Jessica Solis/Annamarie Zambrano (outcome, joint)", "decisionDate": "2026-10-08", "evidence": "docs/product/product-definition.md 0.1.0 APPROVED; confirmation relayed by project owner in agent session (history run 9)", "scope": "project" },
-    "G-ARCH": { "state": "pending", "owner": "Technical owner (TBD)", "decisionDate": null, "evidence": null, "scope": "project" },
-    "G-SEC": { "state": "pending", "owner": "Security/privacy authority (TBD)", "decisionDate": null, "evidence": null, "scope": "project" },
-    "G-TEST": { "state": "satisfied", "owner": "Annamarie Zambrano (QA)", "decisionDate": "2026-10-28", "evidence": "SPRINT-007 G-TEST accepted as relayed 2026-10-28 by project owner Brett on behalf of QA authority Annamarie Zambrano (owner statement: 'Close sprint 007 as complete and approved'; evidence: docs/reviews/sprint-007-test-evidence.md). Prior: SPRINT-005 and SPRINT-006 accepted as relayed 2026-10-19. No current authorized sprint G-TEST is open. Ratification remains open.", "scope": "per-sprint; SPRINT-007 complete" },
-    "G-CAND": { "state": "pending", "owner": "Release authority (TBD)", "decisionDate": null, "evidence": null, "scope": "release 0.1.0" },
-    "G-REL": { "state": "pending", "owner": "Release authority (TBD)", "decisionDate": null, "evidence": null, "scope": "release 0.1.0" }
+    "G-SCOPE": {
+      "state": "satisfied",
+      "owner": "Jessica Solis (product) + Jessica Solis/Annamarie Zambrano (outcome, joint)",
+      "decisionDate": "2026-10-08",
+      "evidence": "docs/product/product-definition.md 0.1.0 APPROVED; confirmation relayed by project owner in agent session (history run 9)",
+      "scope": "project"
+    },
+    "G-ARCH": {
+      "state": "pending",
+      "owner": "Technical owner (TBD)",
+      "decisionDate": null,
+      "evidence": null,
+      "scope": "project"
+    },
+    "G-SEC": {
+      "state": "pending",
+      "owner": "Security/privacy authority (TBD)",
+      "decisionDate": null,
+      "evidence": null,
+      "scope": "project"
+    },
+    "G-TEST": {
+      "state": "satisfied",
+      "owner": "Annamarie Zambrano (QA)",
+      "decisionDate": "2026-10-28",
+      "evidence": "SPRINT-007 G-TEST accepted as relayed 2026-10-28 by project owner Brett on behalf of QA authority Annamarie Zambrano (owner statement: 'Close sprint 007 as complete and approved'; evidence: docs/reviews/sprint-007-test-evidence.md). Prior: SPRINT-005 and SPRINT-006 accepted as relayed 2026-10-19. No current authorized sprint G-TEST is open. Ratification remains open.",
+      "scope": "per-sprint; SPRINT-007 complete"
+    },
+    "G-CAND": {
+      "state": "pending",
+      "owner": "Release authority (TBD)",
+      "decisionDate": null,
+      "evidence": null,
+      "scope": "release 0.1.0"
+    },
+    "G-REL": {
+      "state": "pending",
+      "owner": "Release authority (TBD)",
+      "decisionDate": null,
+      "evidence": null,
+      "scope": "release 0.1.0"
+    }
   },
   "security": {
-    "classification": "Internal use only — DEC-012 (security/privacy authority Brett, 2026-10-08): no PII and no CJI/CJIS data will be stored in the system, interpreted per DEC-017 (2026-10-09) as excluding sensitive PII (DOB, SSN, driver's license) and CJI while accepting basic identity/contact fields needed for clearance tracking. DEC-020 (security/privacy authority and project owner Brett, 2026-10-14): Driver License Number is now an in-scope field in the format ST + 9 digits (no hyphens; example NM123456789). DOB and SSN remain excluded. Control ID is hidden from the UI.",
+    "classification": "Internal use only \u2014 DEC-012 (security/privacy authority Brett, 2026-10-08): no PII and no CJI/CJIS data will be stored in the system, interpreted per DEC-017 (2026-10-09) as excluding sensitive PII (DOB, SSN, driver's license) and CJI while accepting basic identity/contact fields needed for clearance tracking. DEC-020 (security/privacy authority and project owner Brett, 2026-10-14): Driver License Number is now an in-scope field in the format ST + 9 digits (no hyphens; example NM123456789). DOB and SSN remain excluded. Control ID is hidden from the UI.",
     "sensitiveData": "DEC-012 as interpreted by DEC-017 excluded sensitive PII (DOB, SSN, driver's license) and CJI. DEC-020 (security/privacy authority and project owner Brett, 2026-10-14): Driver License Number is now in-scope as Driver Lic Num (`driversLicense`), format two-letter state prefix + 9 digits with no hyphens or spaces, stored uppercase; empty is allowed. DOB and SSN remain excluded; app.js still deletes those keys on load. Control ID remains in the data model and import mapping but is hidden from the form and lists. Seed test applicants have no Driver Lic Num values. No real applicant PII is committed.",
     "authentication": "DEC-015 (security/privacy authority Brett, 2026-10-08): production direction is City SSO (Entra ID) with server-side role-based access mirroring the three view levels (Limited/Records/Admin), targeted at a future release. Prototype local PINs are never production controls.",
     "authorization": "TBD. Prototype has three local views (Limited, Records, Full Admin); production model undecided.",
     "secretsManagement": "No credentials, tokens, personal information, or production secrets in repository files (Rule 50).",
     "supplyChain": "SPRINT-007 prototype-only trusted-source: npm package mssql from registry.npmjs.org for the localhost SQL API. Production supply-chain policy, CI pinning, and SP 800-204D expansion remain TBD. No production host is authorized.",
-    "loggingAudit": "TBD — required for production per prototype README; no decision recorded.",
+    "loggingAudit": "TBD \u2014 required for production per prototype README; no decision recorded.",
     "testingExpectations": "Rule 40 categories; required/not-required decisions pending security/privacy authority.",
-    "environmentSeparation": "TBD — no environments exist.",
+    "environmentSeparation": "SPRINT-009: develop\u2192DTIAPPSINTDEV (intdev); main\u2192DTIAPPSINTPRD (intprd). Secrets on each host in backend\\.env; not in git.",
     "backupRecovery": "TBD.",
-    "vulnerabilityContact": "TBD — owner must designate intake path, severity method, response and disclosure expectations.",
+    "vulnerabilityContact": "TBD \u2014 owner must designate intake path, severity method, response and disclosure expectations.",
     "exceptions": [],
     "nistBaseline": {
       "appendixIntegrity": "SHA256SUMS generated 2026-10-08 from files downloaded directly from nvlpubs.nist.gov; verification procedure in docs/appendices/nist/README.md.",
       "editions": "CSF 2.0; SP 800-218 (SSDF 1.1); Privacy Framework 1.0; SP 800-218A; SP 800-204D",
-      "csf-2.0": { "applicability": "applicable", "assessor": "Brett (security/privacy authority)", "assessmentDate": "2026-10-08", "notes": "DEC-016: lightweight profile proportionate to an internal, non-PII tool. Review annually." },
-      "ssdf-1.1": { "applicability": "applicable", "assessor": "Brett (security/privacy authority)", "assessmentDate": "2026-10-08", "notes": "DEC-016: applies to development practices (reviewed change, no secrets in repo, dependency controls per Rule 50)." },
-      "privacy-framework-1.0": { "applicability": "not-applicable", "assessor": "Brett (security/privacy authority)", "assessmentDate": "2026-10-08", "notes": "DEC-016: not applicable under DEC-012 (no PII stored). MUST be revisited on any data-scope change. DEC-020 added Driver License Number as an in-scope field; Privacy Framework revisit is TBD for the security/privacy authority. No revisit has been completed." },
-      "sp-800-218a": { "applicability": "not-applicable", "assessor": "Brett (security/privacy authority)", "assessmentDate": "2026-10-08", "notes": "DEC-016: no delivered AI system; AI-assisted coding alone does not trigger the profile." },
-      "sp-800-204d": { "applicability": "applicable-minimal", "assessor": "Brett (security/privacy authority)", "assessmentDate": "2026-10-08", "notes": "DEC-016: trusted-source expectations only. SPRINT-007 recorded a prototype-only trusted-source for npm package mssql from registry.npmjs.org. Production policy, CI pinning, and profile expansion remain TBD." }
+      "csf-2.0": {
+        "applicability": "applicable",
+        "assessor": "Brett (security/privacy authority)",
+        "assessmentDate": "2026-10-08",
+        "notes": "DEC-016: lightweight profile proportionate to an internal, non-PII tool. Review annually."
+      },
+      "ssdf-1.1": {
+        "applicability": "applicable",
+        "assessor": "Brett (security/privacy authority)",
+        "assessmentDate": "2026-10-08",
+        "notes": "DEC-016: applies to development practices (reviewed change, no secrets in repo, dependency controls per Rule 50)."
+      },
+      "privacy-framework-1.0": {
+        "applicability": "not-applicable",
+        "assessor": "Brett (security/privacy authority)",
+        "assessmentDate": "2026-10-08",
+        "notes": "DEC-016: not applicable under DEC-012 (no PII stored). MUST be revisited on any data-scope change. DEC-020 added Driver License Number as an in-scope field; Privacy Framework revisit is TBD for the security/privacy authority. No revisit has been completed."
+      },
+      "sp-800-218a": {
+        "applicability": "not-applicable",
+        "assessor": "Brett (security/privacy authority)",
+        "assessmentDate": "2026-10-08",
+        "notes": "DEC-016: no delivered AI system; AI-assisted coding alone does not trigger the profile."
+      },
+      "sp-800-204d": {
+        "applicability": "applicable-minimal",
+        "assessor": "Brett (security/privacy authority)",
+        "assessmentDate": "2026-10-08",
+        "notes": "DEC-016: trusted-source expectations only. SPRINT-007 recorded a prototype-only trusted-source for npm package mssql from registry.npmjs.org. Production policy, CI pinning, and profile expansion remain TBD."
+      }
     },
     "threatModel": "Not started. Required before C4 or material C3 work (Rule 50).",
-    "privacyImpactAssessment": "Not required under DEC-012 (no PII stored) — accountable decision by security/privacy authority Brett, 2026-10-08. MUST be revisited if data scope ever changes (DEC-014). DEC-020 (2026-10-14) is a data-scope change (Driver License Number now in-scope). Privacy Framework / PIA revisit is TBD for the security/privacy authority. A PIA has not been performed.",
+    "privacyImpactAssessment": "Not required under DEC-012 (no PII stored) \u2014 accountable decision by security/privacy authority Brett, 2026-10-08. MUST be revisited if data scope ever changes (DEC-014). DEC-020 (2026-10-14) is a data-scope change (Driver License Number now in-scope). Privacy Framework / PIA revisit is TBD for the security/privacy authority. A PIA has not been performed.",
     "openFindings": []
   },
   "compliance": {
     "references": [
       {
         "name": "CJIS Security Policy",
-        "authority": "Determined not directly applicable — DEC-013 (security/privacy authority Brett, 2026-10-08): the system stores no CJI; it tracks administrative clearance-process status only. Decision MUST be revisited if data scope changes.",
+        "authority": "Determined not directly applicable \u2014 DEC-013 (security/privacy authority Brett, 2026-10-08): the system stores no CJI; it tracks administrative clearance-process status only. Decision MUST be revisited if data scope changes.",
         "classification": "external-policy-reference; not a project obligation under current data-scope decision"
       }
     ],
-    "policyObligations": "TBD — applicable law, City of Albuquerque policy, records, accessibility, procurement, licensing, funding, data-governance, and continuity obligations not yet enumerated; owner to supply."
+    "policyObligations": "TBD \u2014 applicable law, City of Albuquerque policy, records, accessibility, procurement, licensing, funding, data-governance, and continuity obligations not yet enumerated; owner to supply."
   },
   "documentation": {
     "governance": "GOVERNANCE.md",
@@ -149,75 +254,366 @@
     "ssoArchitecture": "docs/architecture/sso-entra-id.md",
     "sprint006": "docs/planning/sprints/sprint-006-sql-sso-scaffolding.md",
     "sprint007": "docs/planning/sprints/sprint-007-wire-sql-api.md",
-    "sprint008": "docs/planning/sprints/sprint-008-sso-entra-rbac.md"
+    "sprint008": "docs/planning/sprints/sprint-008-sso-entra-rbac.md",
+    "sprint009": "docs/planning/sprints/sprint-009-iis-intdev-github-actions.md",
+    "iisHosting": "docs/operations/iis-hosting.md"
   },
   "currentAuthorizedWork": null,
   "history": [
-    { "timestamp": "2026-10-05", "actor": "Codex primary agent (run 1)", "event": "Draft governing documents created in empty directory.", "basis": "User-pasted SGK initialization request" },
-    { "timestamp": "2026-10-07", "actor": "Cursor primary agent (run 2)", "event": "SGK location preflight; authoritative package not found; repo initialized and pushed to GitHub.", "basis": "User continuation request" },
-    { "timestamp": "2026-10-08T14:10:00-06:00", "actor": "Cursor primary agent", "event": "CJISTracker prototype copied into repository and pushed to main at owner direction.", "basis": "Direct user instruction" },
-    { "timestamp": "2026-10-08T14:12:00-06:00", "actor": "Cursor primary agent (run 3)", "event": "Initialization preflight re-run; 15 foundational files missing; blocked.", "basis": "User-pasted SGK initialization prompt" },
-    { "timestamp": "2026-10-08T14:55:00-06:00", "actor": "Cursor primary agent (run 4)", "event": "Project-authored governance baseline created at owner direction: schema, nine rules, project.json, NIST appendix (five official PDFs with SHA256SUMS), sprint template.", "basis": "Direct user instruction to create the foundational files" },
-    { "timestamp": "2026-10-08T15:00:00-06:00", "actor": "Project owner (via agent session, recorded by Cursor primary agent, run 5)", "event": "Governance baseline APPROVED: GOVERNANCE.md 0.2.0, rules 00-70, schema 3.0.0, project.json. BLK-001 cleared; owner assignments and first-sprint approval remain outstanding.", "basis": "Owner statement: 'I approve governance baseline'" },
-    { "timestamp": "2026-10-08T15:30:00-06:00", "actor": "Project owner (via agent session, recorded by Cursor primary agent, run 6)", "event": "Authority assignments recorded (DEC-001..011): Jessica Solis — product owner; Jessica Solis + Annamarie Zambrano (joint) — business/outcome, governance, release; Annamarie Zambrano — QA; Brett — technical, coordination, security/privacy, UX/accessibility, documentation, operations. BLK-002 cleared.", "basis": "Owner selections in agent session question form" },
-    { "timestamp": "2026-10-08T15:35:00-06:00", "actor": "Cursor primary agent (run 7)", "event": "SPRINT-001 (product definition and security baseline) prepared from template, status PROPOSED / NOT READY. Approval by Jessica Solis + Annamarie Zambrano required to clear BLK-003. currentAuthorizedWork remains null.", "basis": "Project owner instruction to proceed" },
-    { "timestamp": "2026-10-08T15:55:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 8)", "event": "SPRINT-001 approved as relayed by project owner on behalf of joint governance authorities Jessica Solis and Annamarie Zambrano (limitation: relayed, ratification open). BLK-003 cleared; currentAuthorizedWork = SPRINT-001; lifecycle definition/active. Security decisions recorded: DEC-012 no PII and no CJIS data stored (classification internal); DEC-013 CJIS Security Policy not directly applicable under that scope; DEC-014 PIA not required under that scope, revisit on scope change. FIND-001 opened: prototype PII fields conflict with DEC-012, assigned to SPRINT-002. Deliverables drafted: product-definition, product-concept, roadmap, PR template.", "basis": "Owner statements 'go' and 'B non PII and non CJIS data will be stored in the system'" },
-    { "timestamp": "2026-10-08T16:10:00-06:00", "actor": "Project owner (via agent session, recorded by Cursor primary agent, run 9)", "event": "SPRINT-001 relayed approval ratified; product-definition.md 0.1.0 and roadmap approved by Jessica Solis with joint outcome acceptance; G-SCOPE satisfied. Remaining in sprint: authentication direction and NIST applicability decisions (owner Brett).", "basis": "Owner statement: 'go review and confirmed'" },
-    { "timestamp": "2026-10-08T16:20:00-06:00", "actor": "Security/privacy authority Brett (via agent session, recorded by Cursor primary agent, run 10)", "event": "DEC-015 recorded (production auth: City SSO/Entra ID, server-side RBAC, future release) and DEC-016 recorded (NIST applicability: CSF 2.0 applicable-lightweight, SSDF 1.1 applicable, Privacy Framework 1.0 not applicable under DEC-012, SP 800-218A not applicable, SP 800-204D applicable-minimal). SPRINT-001 COMPLETE, all acceptance criteria met; FIND-001 carried to SPRINT-002. SPRINT-002 (adopt and harden prototype) PROPOSED; currentAuthorizedWork null pending its approval.", "basis": "Owner statement: 'accept both'" },
-    { "timestamp": "2026-10-08T16:25:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 11)", "event": "SPRINT-002 approved as relayed by project owner on behalf of joint governance authorities (ratification open). currentAuthorizedWork = SPRINT-002; lifecycle development/active. Implementation begins: FIND-001 PII-field removal, PIN hardening, field dictionary alignment, test data and evidence.", "basis": "Owner statement: 'go'" },
-    { "timestamp": "2026-10-08T17:10:00-06:00", "actor": "Cursor primary agent (run 12)", "event": "SPRINT-002 implementation complete. FIND-001 verification: committed prototype already excludes DOB/SSN/driver's-license everywhere; no field removal needed; remaining identity/contact fields await DEC-012 disposition. PIN hardening implemented: hardcoded defaults (1111/2222/2468) removed; operator-configured first-run setup added (min 4 chars, distinct, trivial/former-default codes rejected); README updated. Browser acceptance tests passed (setup, old-default rejection, new-code sign-in, reload persistence); evidence in docs/reviews/sprint-002-test-evidence.md. Open to close sprint: FIND-001 closure decision (Brett), G-TEST (Annamarie Zambrano), approval ratification.", "basis": "SPRINT-002 authorized scope (history run 11)" },
-    { "timestamp": "2026-10-09T01:36:00-06:00", "actor": "Security/privacy authority Brett (via agent session, recorded by Cursor primary agent, run 13)", "event": "DEC-017 recorded: applicant name, phone, email, notes, and document-upload fields are kept as-is and accepted as in-scope; DEC-012 is interpreted as excluding sensitive PII (DOB/SSN/driver's license) and CJI while permitting basic identity/contact data needed for clearance tracking. FIND-001 CLOSED (verification evidence: docs/reviews/sprint-002-test-evidence.md §1). Remaining to close SPRINT-002: G-TEST acceptance (Annamarie Zambrano) and ratification of the relayed sprint approval.", "basis": "Owner statement: 'Keep as is all fields'" },
-    { "timestamp": "2026-10-09T01:51:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 14)", "event": "SPRINT-002 COMPLETE. Sprint approval ratified and G-TEST accepted as relayed by project owner on behalf of Jessica Solis and Annamarie Zambrano (evidence: docs/reviews/sprint-002-test-evidence.md). All acceptance criteria met: no PII fields in data model/UI/exports/schema/dictionary (FIND-001 closed, DEC-017), default PINs removed with operator-configured setup documented, views function with fictitious data, test evidence recorded, project.json validated. currentAuthorizedWork = null; next: propose SPRINT-003 (release preparation toward 0.1.0).", "basis": "Owner statement: 'Sprint-002 is approved'" },
-    { "timestamp": "2026-10-09T02:55:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 15)", "event": "DEC-018 recorded and SPRINT-003 (import readiness: Source and Control ID fields) authorized as a C3 data-model change, directed explicitly by the project owner and relayed on behalf of joint governance authorities (ratification open). Implemented same session: read-only 'source' field; 'controlNumber' (Control ID) manual unique secondary key with case-insensitive duplicate rejection, table display, and search; field dictionary, SQL schema (SourceName column), and import crosswalk aligned. Scripted browser acceptance tests passed; evidence in docs/reviews/sprint-003-test-evidence.md. Open: G-TEST (Annamarie Zambrano), ratification. Background: import crosswalk for CJIS MasterSheet authored (docs/planning/import-crosswalk-mastersheet.md); DOB/SSN/DL columns excluded from any import per DEC-012/DEC-017.", "basis": "Owner statement: 'Yes Source create field called Source as read only  Yes create a Control_ID field which will be manually input for each applicant tracked treat as secondary key the is unique, which would be a C3 data-model change'" },
-    { "timestamp": "2026-10-09T02:45:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 16)", "event": "SPRINT-003 COMPLETE. G-TEST accepted for SPRINT-003 as relayed by project owner on behalf of QA authority Annamarie Zambrano (evidence: docs/reviews/sprint-003-test-evidence.md). All acceptance criteria met. Open limitation: ratification of the relayed sprint approval and G-TEST acceptance by Jessica Solis and Annamarie Zambrano. currentAuthorizedWork = null; next sprint candidates: release preparation toward 0.1.0, import tooling.", "basis": "Owner statement: 'G-Test has been approved'" },
-    { "timestamp": "2026-10-09T03:15:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 17)", "event": "SPRINT-004 (import tooling and sample-data removal) authorized as C3, directed explicitly by the project owner and relayed on behalf of joint governance authorities (ratification open). Implemented same session: sample-data seeding removed (app ships with zero records); admin-only CSV import with crosswalk header mapping, US-date conversion, replace/additive modes, per-row errors, change-log audit, and unconditional DOB/SSN/DL column exclusion (DEC-012); sanitized CSV generated from the MasterSheet via Excel COM with PII columns dropped at extraction, stored outside the repository. Scripted browser acceptance tests passed (4 records imported, mapping/normalization verified, PII exclusion verified); evidence in docs/reviews/sprint-004-test-evidence.md. Open: owner live import, G-TEST, ratification.", "basis": "Owner statement: 'next is Import tooling and I want to remove all exsisting records from tracker and import records in MasterSheet located \"C:\\\\Users\\\\E41646\\\\Documents\\\\ECC\\\\Worksheet Consolodation\\\\CJIS_MasterSheet_wPII-Test.xlsx\"'" },
-    { "timestamp": "2026-10-09T03:17:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 18)", "event": "Owner live import confirmed successful in his working environment, exercising the file-picker path untested in the scripted run. Also at owner direction: Control ID and Source columns hidden from the Full Admin records table display (fields retained in form, search, export). SPRINT-004 implementation fully verified; open: G-TEST (Annamarie Zambrano), ratification.", "basis": "Owner statements: 'import looks good' and 'From the full admin view All Applicant Records section remove column ControlID and Source from displayed list'" },
-    { "timestamp": "2026-10-09T07:53:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 19)", "event": "Import panel commented out of the main interface at owner direction; import code retained for one-time pre-go-live use (re-enable by uncommenting in index.html). Implementation completed and recorded at 2026-10-09T08:50:00-06:00 after a delegation gap.", "basis": "Owner statement: 'Comment out and retain the import fucntion from the main interface screen. This is a one time fucntion that will happen before go live.'" },
-    { "timestamp": "2026-10-09T08:43:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 20)", "event": "SPRINT-004 COMPLETE. Sprint approval ratified and G-TEST accepted as relayed by project owner on behalf of Jessica Solis and Annamarie Zambrano (evidence: docs/reviews/sprint-004-test-evidence.md). All acceptance criteria met: sample data removed, governed CSV import delivered with PII-column exclusion, owner live import verified. currentAuthorizedWork = null. Next: SPRINT-005 (UI/UX redesign) designated by owner agreement earlier this session; proposal pending direction selection.", "basis": "Owner statement: 'I have approval for sprint 004.'" },
-    { "timestamp": "2026-10-09T09:15:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 21)", "event": "C1 UI label change, no data-model impact: three field labels renamed at owner direction. (1) 'Security and Awareness Cert:' -> 'Security and Awareness Cert' (trailing colon removed; tracker-list-overrides.js). (2) 'Date of III Completion (DD/MM/YYYY)' -> 'Date of III Completion' (index.html form label, app.js label map, README.md). (3) 'Query Every Five Years' -> 'Next III Inquery Due (5 yrs)' (tracker-list-overrides.js replacement label and dependent calculated-column header matcher; owner's spelling 'Inquery' preserved verbatim). Field keys, storage keys, date input formats/placeholders, and IMPORT_HEADER_MAP unchanged.", "basis": "Owner statement: 'relable the following fields:  Security and Awareness Cert: change to Security and Awareness Cert, Date of III Completion (DD/MM/YYYY) to Date of III Completion, change field label Query Every Five Years to Next III Inquery Due (5 yrs)'" },
-    { "timestamp": "2026-10-09T09:17:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 22)", "event": "Label spelling corrected at owner direction: 'Next III Inquery Due (5 yrs)' -> 'Next III Inquiry Due (5 yrs)' (tracker-list-overrides.js label and calculated-column matcher).", "basis": "Owner statement: 'use standard spelling for Inquiry'" },
-    { "timestamp": "2026-10-09T10:23:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 23)", "event": "DEC-019 recorded: SPRINT-005 redesign direction selected — Option B 'Tabbed Workspace with Form Drawer' — with three owner answers: (1) admin table shows Actions plus seven data columns (Clearance Type, Access Type, Name, Requestor, III - Status, CJIS Security Role, NCIC Certification), all verified to map to existing field keys (Requestor = existing 'requestor' field; no new fields); (2) default grouping = the grouping users currently see, i.e. vendor grouping (today applied by tracker-list-overrides.js), carried into the base app as the default; (3) queriedEveryFiveYears becomes a calculated read-only due date = Date of III Completion + 5 years, displayed as 'Next III Inquiry Due (5 yrs)', with a one-time migration of stored records on load and the Query Due metric updated to compare that due date against today (resolving the app.js/overlay inconsistency). SPRINT-005 proposal drafted at docs/planning/sprints/sprint-005-ui-redesign.md, status PROPOSED, awaiting owner go to begin implementation; currentAuthorizedWork remains null and no implementation performed. Open question for owner: keep or restore the Export CSV button currently removed by the overlay.", "basis": "Owner statement (2026-10-09 10:23 AM -06:00): 'Yes to Option B, \n\n1. the 8 coluns that stay visable are Actions, Clearance Type, Access Type, Name, Requestor,III - Status, CJIS Security Role, NCIC Certification\n2. Default grouping - keep current grouping\n3. This field should be a calculated value of field Date of III Completion + 5 years = Next III Inquiry Due (5 yrs) date.'" },
-    { "timestamp": "2026-10-09T10:27:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 24)", "event": "SPRINT-005 authorized and implementation started. Owner go recorded for Option B (Tabbed Workspace with Form Drawer) under DEC-019. currentAuthorizedWork = SPRINT-005; workStatus active. Sprint document status set to IN PROGRESS. Implementation folds tracker-list-overrides.js behaviors into the base app (vendor grouping, Inquiry Due calculation, expired-cert highlighting, label renames, compact density), slim sticky header, sign-in collapse, form drawer, and admin column diet.", "basis": "Owner statement: 'go' (2026-10-09T10:27:00-06:00)" },
-    { "timestamp": "2026-10-09T10:52:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 25)", "event": "C1 date display/parse format change: all date UX from DD/MM/YYYY to MM/DD/YYYY. Date of III Completion remains a text field with MM/DD/YYYY placeholder/pattern/title; native type=date fields unchanged (ISO storage, browser-locale display). dateOfIiiCompletion is now stored as ISO YYYY-MM-DD and displayed as MM/DD/YYYY. Existing localStorage slash values are migrated once on load (flag cjisApplicantTracker.iiiCompletionIsoMigrated): interpreted as legacy DD/MM/YYYY and rewritten to ISO so the calendar day is preserved (example: 10/02/2026 meaning 10 Feb becomes 2026-02-10, displayed 02/10/2026). Import parsers accept MM/DD/YYYY and ISO and store ISO (ddmmDate import type removed). Field keys and PII scope unchanged; import panel stays commented out. tracker-list-overrides.js left unused/unloaded.", "basis": "Owner statement: 'Change all dates field formats from DD/MM/YYYY to MM/DD/YYYY format'" },
-    { "timestamp": "2026-10-09T11:14:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 26)", "event": "C1 UI-only: reduced admin/limited table horizontal padding so columns sit tighter (Actions padding retained so View/Edit buttons do not clip; sticky headers unchanged). Vendor group headers are bold; all data rows in a vendor group share one background color, with distinct alternating group colors (color-by-group, not zebra-per-row) and a slightly stronger header tint. Admin table column order is now Actions, Name, Clearance Type, Access Type, III - Status, CJIS Security Role, NCIC Certification, Requestor. Limited view already had Name before Clearance Type. Field keys and data model unchanged. currentAuthorizedWork remains SPRINT-005.", "basis": "Owner statement: 'Minmize whites space btween columns. Each vendor group should be bold have same row color. Move name column before Clearcne Type column and move III - Status, CJIS Security Role, NCIC Certification after access type column.'" },
-    { "timestamp": "2026-10-09T11:24:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 27)", "event": "C1 CSS-only: expired-compliance row highlighting changed from pink to gray background with black bold text. Expired style wins over vendor-group colors (higher specificity including vendor-group-0/1 + compliance-expired-row). Security-and-Awareness cert cell uses the same gray/black-bold language (red inset accent removed). Status badges unchanged. Grouping, column order, and data model unchanged. currentAuthorizedWork remains SPRINT-005.", "basis": "Owner statement: 'No pink instead make gray background w/black bold text.'" },
-    { "timestamp": "2026-10-09T11:25:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 27)", "event": "C1 CSS-only: Access Type column nowrap with smaller font (0.78rem cells / 0.72rem badges); admin/limited records tables pack left (width: max-content, table-layout: auto, left-aligned) so columns do not stretch and Access Type does not wrap to fill space. Vendor group colors, bold headers, column order, and expired gray/black-bold style unchanged. currentAuthorizedWork remains SPRINT-005.", "basis": "Owner statement: 'Make Access Type  column no wraping of text instead push all coloumns to the left and make this coluns text smaller font size.'" },
-    { "timestamp": "2026-10-09T14:25:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 28)", "event": "Export CSV hidden from the UI (id exportCsv retained with class hidden; downloadCsv and export logic remain in app.js). Four fictitious test applicants from the sanitized MasterSheet CSV (CJIS_MasterSheet_import.csv, outside the repository; headers confirmed no DOB/SSN/DL) are the empty-storage seed in CJISTracker/test-applicants.js. Cell values unchanged; existing localStorage is not replaced. Import panel remains hidden. currentAuthorizedWork remains SPRINT-005.", "basis": "Remove export button from view retain code for later use. Import samle data from C:\\Users\\E41646\\Documents\\ECC\\Worksheet Consolodation\\CJIS_MasterSheet_import.csv do not change values the records are test applicants" },
-    { "timestamp": "2026-10-13T01:24:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "C1 UI-only: compact application footer added to the CJISTracker main shell showing the canonical developmentVersion 0.1.0-dev.1 in footnote size (11px, --muted). Visible on all views, signed in or not. developmentVersion unchanged.", "basis": "add a version number in the footer of the application in footnote font size." },
-    { "timestamp": "2026-10-13T01:30:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "SPRINT-004 close confirmed COMPLETE as relayed by project owner on behalf of Jessica Solis and Annamarie Zambrano (G-TEST evidence: docs/reviews/sprint-004-test-evidence.md plus later owner confirmations: live import, hide import/export, seed, footer, admin 12345). SPRINT-005 (UI/UX redesign — compact operations layout, C2 presentation) authorized; currentAuthorizedWork = SPRINT-005; lifecycle development/active; G-TEST set pending for SPRINT-005 (004 accepted as relayed). Implementation: compact chrome, inline sign-in, collapsed session bar, unified metrics/search/filter toolbar, table-first admin editor. No data-model change; Import/Export remain hidden.", "basis": "Owner statement: 'go' after designating SPRINT-005 UI/UX redesign to eliminate whitespace and provide an easier experience." },
-    { "timestamp": "2026-10-13T11:03:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "SPRINT-006 (SQL backend + future Entra SSO scaffolding, Class C3) authorized and scaffolding implemented. currentAuthorizedWork = SPRINT-006; frameworkPhase SPRINT-006; workStatus active. Extended CJISTracker/database-schema.sql (idempotent creatable T-SQL aligned to app.js: ControlNumber unique secondary key, SourceName, all current applicant fields, access types, documents, change log, Limited/Records/Admin; no DOB/SSN/DL per DEC-012/017). Added backend/ stubs (README, .env.example with TBD placeholders only, db/health/applicants repository stubs; no npm install). Added docs/architecture/sso-entra-id.md and backend/sso.config.example.json (DEC-015 City SSO / Entra ID, server-side RBAC, prototype PINs never production; all tenant/client IDs TBD). Browser app remains localStorage. No live API, no live Entra login, no secrets committed. Deployment target remains null.", "basis": "Create scafolding for a SQL DB backend and provide SQL schema so database can be created for this application. Create scafolding for future SSO connection." },
-    { "timestamp": "2026-10-13T13:49:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "C3 behavior/data-model follow-on under currentAuthorizedWork SPRINT-006 (SPRINT-005 remains UI-only): user-facing Delete replaced with Full Admin Archive. Archive sets archived/archivedAt/archivedBy and does not remove the record from localStorage. Default lists, metrics, and search (Limited, Records, Admin All Applicant Records) exclude archived records. Full Admin reviews archived applicants in the Admin Archived records panel (View and Restore). Change log actions are Archived/Restored. Import/CSV and seed test applicants stay active (not imported as deleted). SQL Applicants.IsArchived added; IsDeleted kept unused. Field dictionary and README note archive-not-delete and Full Admin review only.", "basis": "Replace delete function with a archive function to be reviewed by FullAdmin users only" },
-    { "timestamp": "2026-10-14T10:24:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "C3 data-model follow-on under currentAuthorizedWork SPRINT-006: added applicant Passport yes/no checkbox (field key passport, stored Y/N). Full Admin All Applicant Records shows a Passport column; Limited/Records lists unchanged (they do not show similar flags). Access Type column text/badges on the admin list made smaller (CSS on .admin-records-table .field-accessType and .badge only). Included in save, normalize, change log, field dictionary, import header map, and database-schema.sql Applicants.Passport CHAR(1) nullable Y/N. Not treated as PII beyond a yes/no flag. Control ID/Source stay off the admin table. Fingerprint Outcome kept. Archive/delete behavior unchanged.", "basis": "In the full admin all applicant records make Access type font smaller, add a Passport check box to the applicant and display in records list." },
-    { "timestamp": "2026-10-14T10:31:00-06:00", "actor": "Security/privacy authority and project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "DEC-020 recorded: Driver License Number is now an in-scope field (UI: Driver Lic Num; field key driversLicense) in the format two-letter state prefix + 9 digits with no hyphens or spaces (example: NM123456789); empty is allowed; stored uppercase. Control ID remains in the data model and import mapping so existing imported values are not destroyed, but is hidden from the applicant form, Limited/Records/Admin lists, and search placeholder. normalizeRecords no longer deletes driversLicense; it still deletes dateOfBirth and socialSecurityNumber. Raw MasterSheet State / Driver's License headers stay blocked; a Driver Lic Num header is accepted only when the value matches the format. Seed test applicants remain without DL values. SQL Applicants.DriverLicenseNumber NVARCHAR(11) added. Privacy Framework / PIA must be revisited per DEC-014/016; that revisit is TBD for the authority and a PIA has not been performed. Passport work retained. currentAuthorizedWork remains SPRINT-006.", "basis": "Owner statement: hide control number field replace with Driver Lic Num that accepts with no hyphens two letter state prefix and 9 digit number (example: NM123456789)" },
-    { "timestamp": "2026-10-14T10:43:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "SPRINT-006 C2 behavior: entering a Driver Lic Num that already exists (uppercase compare; current record id ignored when editing; archived records included; empty DL skipped) shows \"applicant is already on file\" and lists matching records (name, DL, phone, email, vendor, clearance). Save is blocked until the user chooses Create new applicant, which opens create mode with a new empty id and copies only Name, Driver Lic Num, Applicant Phone Number, and Applicant Email from the selected match. Multiple matches can be picked from. currentAuthorizedWork remains SPRINT-006.", "basis": "Owner statement: add validation if same driver lic is entered display message applicant is already on file, show duplicate records, option to create new applicant and copy Name, Driver Lic Num, Applicant Phone Number, and Applicant Email" },
-    { "timestamp": "2026-10-14T11:31:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "SPRINT-006 C2: new applicants require Name, Driver Lic Num, Vendor, Requestor, and Source. Create-only validation in saveApplicant; HTML required toggled so incomplete seed/import records remain editable. Source editable on create and copy-new; read-only when editing existing records. Copy-new leaves vendor/requestor/source empty. DL still must be ST+9 digits when present. Field dictionary updated. currentAuthorizedWork remains SPRINT-006.", "basis": "Make the following fields required for new entries. Name (Last, First, MI, Suffix) Driver Lic Num Vendor Requestor Source" },
-    { "timestamp": "2026-10-19T15:43:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "SPRINT-006 COMPLETE. G-TEST accepted as relayed by project owner on behalf of QA authority Annamarie Zambrano (owner statement: 'approve gate for next sprint'). currentAuthorizedWork = null; workStatus complete; frameworkPhase SPRINT-006 complete. Agent review does not satisfy the gate; this is a recorded owner-relayed acceptance. Ratification by Jessica Solis and Annamarie Zambrano remains open. SPRINT-005 G-TEST remains pending. G-ARCH and G-SEC remain pending and are not satisfied. No live API or Entra login. Next sprint is not authorized until the owner designates scope (SPRINT-007 candidate, TBD).", "basis": "Owner statement: 'approve gate for next sprint'" },
-    { "timestamp": "2026-10-19T23:13:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "SPRINT-005 COMPLETE. Sprint approval ratified and G-TEST accepted as relayed by project owner on behalf of Jessica Solis and Annamarie Zambrano (owner statement: 'Close SPRINT-005 approved'; evidence: docs/reviews/sprint-005-test-evidence.md). Agent review does not satisfy the gate. Ratification remains open. currentAuthorizedWork remains null. SPRINT-006 was already complete. G-ARCH and G-SEC remain pending. Next sprint is not authorized until the owner designates scope (SPRINT-007 candidate, TBD).", "basis": "Owner statement: 'Close SPRINT-005 approved'" },
-    { "timestamp": "2026-10-19T23:15:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "SPRINT-007 (Wire the SQL API) authorized as C3 localhost prototype. currentAuthorizedWork = SPRINT-007; workStatus active; frameworkPhase SPRINT-007. G-TEST pending. G-ARCH and G-SEC remain pending and are not satisfied. Bind 127.0.0.1 only; no Entra; no production host. Prototype trusted-source for npm package mssql (named in SPRINT-006 backend README) recorded for this sprint only. Browser uses SQL when the API reports connected, otherwise localStorage.", "basis": "Owner statement: 'SPRINT-007 Wire the SQL API'" },
-    { "timestamp": "2026-10-19T23:45:00-06:00", "actor": "Cursor primary agent", "event": "SPRINT-007 implementation: localhost HTTP API on 127.0.0.1:8741 (GET /health, GET/PUT /api/applicants) using mssql from registry.npmjs.org (prototype trusted-source only). CJISTracker loads SQL when health.database.connected is true and otherwise keeps localStorage. Documents and change log stay in the browser. No Entra; no public bind. G-TEST pending. G-ARCH and G-SEC remain unsatisfied.", "basis": "Authorized SPRINT-007 (history 2026-10-19T23:15:00-06:00)" },
-    { "timestamp": "2026-10-20T12:20:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "SPRINT-007 schema refresh: CJISTracker/database-schema.sql retitled and aligned to the current app.js model. Re-run is additive (no drop of applicant rows). SecurityRoles.RoleName for RoleCode limited refreshes Limited View to Read Only. Department check constraint refresh includes APD. Status/activityStatus remains derived from SecurityAwarenessExpiration and NcicCertificationExpiration (not a column). No DOB/SSN. G-ARCH and G-SEC remain pending.", "basis": "Owner statement: 'Update and refresh the db scheme for sprint-007'" },
-    { "timestamp": "2026-10-20T13:20:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "SPRINT-007 C3: delete added on Archived Records for Admin-Full, Admin-Global, and Admin-Staff only. Delete is limited to already-archived applicants; Read Only and Records cannot delete. Browser removes the record; SQL PUT marks omitted ApplicantId rows as IsDeleted. Restore remains Admin-Full and Admin-Global only. No undelete. G-ARCH and G-SEC remain pending.", "basis": "Owner statement: 'Add delete function in the archive screen for the Admin Full, Admin Global, Admin Staff only users.'" },
-    { "timestamp": "2026-10-20T14:30:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "SPRINT-007: existing test records replaced with the Anna workbook import (Anna_CJIS-Tracker_noPII-BJ.xlsx, LAN Import folder, 770 named rows). Workbook stays outside the repository. Raw State / Driver's License Number excluded (DEC-020). No DOB/SSN columns in the source. Seed batch anna-cjis-2026-10-20 replaces localStorage once. G-ARCH and G-SEC remain pending.", "basis": "Owner statement: 'Delete exsisting test records, import this file based\\\\coa.cabq.lcl\\dfsroot\\PD USERS\\E41646\\My Workbench (LAN)\\ECC-911\\Development\\CJISTracker\\Import\\Anna_CJIS-Tracker_noPII-BJ.xlsx'" },
-    { "timestamp": "2026-10-21T09:10:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "SPRINT-007 C2: Active/InActive now depends on NCIC Certification. When NCIC is N, Active requires only Security and Awareness Cert Expiration current. When NCIC is Y or blank, Active still requires both cert dates current. Status remains calculated, not stored. G-ARCH and G-SEC remain pending.", "basis": "Owner statement updating Active/InActive: NCIC yes requires both cert dates; NCIC no requires only Security and Awareness cert date." },
-    { "timestamp": "2026-10-21T10:51:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "SPRINT-007 C1/C2: Export CSV removed from the tracker UI and app.js (downloadCsv / exportFieldValue). The localhost API had no export route. Driver Lic Num empty-field placeholder is NM/XXXXXXXX; the input title still explains the ST/ + 1–15 alphanumeric format. G-ARCH and G-SEC remain pending.", "basis": "Owner statement: remove export function from application and API; replace Driver Lic Num example NM/A23456H8X0H23H5 with NM/XXXXXXXX before the user enters values; keep popup help text explaining the format." },
-    { "timestamp": "2026-10-21T14:55:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "SPRINT-007 C2: Active/InActive treats Clearance Type One Time Visit as Active without Security and Awareness or NCIC certification. Other clearance types keep the NCIC Y/N plus cert-date rule. Status remains calculated, not stored. G-ARCH and G-SEC remain pending.", "basis": "Owner statement: when One Time Visit is selected do not require security and awareness or NCIC certification; status will be Active." },
-    { "timestamp": "2026-10-21T15:10:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "SPRINT-007 C2: Read Only listing excludes Clearance Type One Time Visit and shows the other non-archived clearance types. The Read Only clearance filter omits One Time Visit and is no longer locked. Records and Admin listings are unchanged. G-ARCH and G-SEC remain pending.", "basis": "Owner statement: in the read only view filter out One Time Visit and only show other clearance types." },
-    { "timestamp": "2026-10-21T15:30:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "SPRINT-008 designated (not authorized): City SSO / Entra ID and server-side RBAC per DEC-015. Class C4. currentAuthorizedWork remains SPRINT-007. Tenant ID, client ID, redirect URI, and role-claim names remain TBD. Prototype PINs never production. G-ARCH and G-SEC remain pending. Implementation must not start until the owner approves the sprint and currentAuthorizedWork is updated.", "basis": "Owner statement: 'Sprint 008 will be SS/Entra and server-side RBAC.'" },
-    { "timestamp": "2026-10-21T16:56:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "SPRINT-007 C2: Settings Console gained a Data protection status check (Admin-Full / Admin-Global). It reports plaintext localStorage, no application-level encryption, HTTP not TLS to the localhost API, the SQL driver encrypt flag, unverified SQL TDE, and CJIS Security Policy not claimed (DEC-013). The check does not enable encryption and does not satisfy G-SEC or certify CJIS. UI messaging suggestions recorded in the session canvas.", "basis": "Owner statement: review the application and offer suggestions for user messaging in the UI; add to settings a way to check if data is encryption at rest and within the application as it is being updated meeting the CJIS requirements." },
-    { "timestamp": "2026-10-22T08:19:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "SPRINT-008 draft completed to the sprint template for DEC-015 City SSO / Entra and server-side RBAC. Status DRAFT — PROPOSED / NOT READY. Class C4. currentAuthorizedWork remains SPRINT-007. Tenant/client/redirect/role-claim values remain TBD. Admin-Full/Global/Staff mapping TBD. No implementation. G-ARCH and G-SEC remain pending.", "basis": "Owner statement: create sprint draft for DEC-015 City SSO / Entra and server-side RBAC." },
-    { "timestamp": "2026-10-28T15:09:00-06:00", "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)", "event": "SPRINT-007 COMPLETE. Sprint approval and G-TEST accepted as relayed by project owner on behalf of Jessica Solis and Annamarie Zambrano (owner statement: 'Close sprint 007 as complete and approved'; evidence: docs/reviews/sprint-007-test-evidence.md). currentAuthorizedWork = null; workStatus complete; frameworkPhase SPRINT-007 complete. Agent review does not satisfy the gate. Ratification remains open. G-ARCH and G-SEC remain pending and are not satisfied. No live Entra login. SPRINT-008 remains designated (DRAFT — PROPOSED / NOT READY) and is not authorized until the owner approves it and currentAuthorizedWork is updated.", "basis": "Owner statement: 'Close sprint 007 as complete and approved'" }
+    {
+      "timestamp": "2026-10-05",
+      "actor": "Codex primary agent (run 1)",
+      "event": "Draft governing documents created in empty directory.",
+      "basis": "User-pasted SGK initialization request"
+    },
+    {
+      "timestamp": "2026-10-07",
+      "actor": "Cursor primary agent (run 2)",
+      "event": "SGK location preflight; authoritative package not found; repo initialized and pushed to GitHub.",
+      "basis": "User continuation request"
+    },
+    {
+      "timestamp": "2026-10-08T14:10:00-06:00",
+      "actor": "Cursor primary agent",
+      "event": "CJISTracker prototype copied into repository and pushed to main at owner direction.",
+      "basis": "Direct user instruction"
+    },
+    {
+      "timestamp": "2026-10-08T14:12:00-06:00",
+      "actor": "Cursor primary agent (run 3)",
+      "event": "Initialization preflight re-run; 15 foundational files missing; blocked.",
+      "basis": "User-pasted SGK initialization prompt"
+    },
+    {
+      "timestamp": "2026-10-08T14:55:00-06:00",
+      "actor": "Cursor primary agent (run 4)",
+      "event": "Project-authored governance baseline created at owner direction: schema, nine rules, project.json, NIST appendix (five official PDFs with SHA256SUMS), sprint template.",
+      "basis": "Direct user instruction to create the foundational files"
+    },
+    {
+      "timestamp": "2026-10-08T15:00:00-06:00",
+      "actor": "Project owner (via agent session, recorded by Cursor primary agent, run 5)",
+      "event": "Governance baseline APPROVED: GOVERNANCE.md 0.2.0, rules 00-70, schema 3.0.0, project.json. BLK-001 cleared; owner assignments and first-sprint approval remain outstanding.",
+      "basis": "Owner statement: 'I approve governance baseline'"
+    },
+    {
+      "timestamp": "2026-10-08T15:30:00-06:00",
+      "actor": "Project owner (via agent session, recorded by Cursor primary agent, run 6)",
+      "event": "Authority assignments recorded (DEC-001..011): Jessica Solis \u2014 product owner; Jessica Solis + Annamarie Zambrano (joint) \u2014 business/outcome, governance, release; Annamarie Zambrano \u2014 QA; Brett \u2014 technical, coordination, security/privacy, UX/accessibility, documentation, operations. BLK-002 cleared.",
+      "basis": "Owner selections in agent session question form"
+    },
+    {
+      "timestamp": "2026-10-08T15:35:00-06:00",
+      "actor": "Cursor primary agent (run 7)",
+      "event": "SPRINT-001 (product definition and security baseline) prepared from template, status PROPOSED / NOT READY. Approval by Jessica Solis + Annamarie Zambrano required to clear BLK-003. currentAuthorizedWork remains null.",
+      "basis": "Project owner instruction to proceed"
+    },
+    {
+      "timestamp": "2026-10-08T15:55:00-06:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 8)",
+      "event": "SPRINT-001 approved as relayed by project owner on behalf of joint governance authorities Jessica Solis and Annamarie Zambrano (limitation: relayed, ratification open). BLK-003 cleared; currentAuthorizedWork = SPRINT-001; lifecycle definition/active. Security decisions recorded: DEC-012 no PII and no CJIS data stored (classification internal); DEC-013 CJIS Security Policy not directly applicable under that scope; DEC-014 PIA not required under that scope, revisit on scope change. FIND-001 opened: prototype PII fields conflict with DEC-012, assigned to SPRINT-002. Deliverables drafted: product-definition, product-concept, roadmap, PR template.",
+      "basis": "Owner statements 'go' and 'B non PII and non CJIS data will be stored in the system'"
+    },
+    {
+      "timestamp": "2026-10-08T16:10:00-06:00",
+      "actor": "Project owner (via agent session, recorded by Cursor primary agent, run 9)",
+      "event": "SPRINT-001 relayed approval ratified; product-definition.md 0.1.0 and roadmap approved by Jessica Solis with joint outcome acceptance; G-SCOPE satisfied. Remaining in sprint: authentication direction and NIST applicability decisions (owner Brett).",
+      "basis": "Owner statement: 'go review and confirmed'"
+    },
+    {
+      "timestamp": "2026-10-08T16:20:00-06:00",
+      "actor": "Security/privacy authority Brett (via agent session, recorded by Cursor primary agent, run 10)",
+      "event": "DEC-015 recorded (production auth: City SSO/Entra ID, server-side RBAC, future release) and DEC-016 recorded (NIST applicability: CSF 2.0 applicable-lightweight, SSDF 1.1 applicable, Privacy Framework 1.0 not applicable under DEC-012, SP 800-218A not applicable, SP 800-204D applicable-minimal). SPRINT-001 COMPLETE, all acceptance criteria met; FIND-001 carried to SPRINT-002. SPRINT-002 (adopt and harden prototype) PROPOSED; currentAuthorizedWork null pending its approval.",
+      "basis": "Owner statement: 'accept both'"
+    },
+    {
+      "timestamp": "2026-10-08T16:25:00-06:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 11)",
+      "event": "SPRINT-002 approved as relayed by project owner on behalf of joint governance authorities (ratification open). currentAuthorizedWork = SPRINT-002; lifecycle development/active. Implementation begins: FIND-001 PII-field removal, PIN hardening, field dictionary alignment, test data and evidence.",
+      "basis": "Owner statement: 'go'"
+    },
+    {
+      "timestamp": "2026-10-08T17:10:00-06:00",
+      "actor": "Cursor primary agent (run 12)",
+      "event": "SPRINT-002 implementation complete. FIND-001 verification: committed prototype already excludes DOB/SSN/driver's-license everywhere; no field removal needed; remaining identity/contact fields await DEC-012 disposition. PIN hardening implemented: hardcoded defaults (1111/2222/2468) removed; operator-configured first-run setup added (min 4 chars, distinct, trivial/former-default codes rejected); README updated. Browser acceptance tests passed (setup, old-default rejection, new-code sign-in, reload persistence); evidence in docs/reviews/sprint-002-test-evidence.md. Open to close sprint: FIND-001 closure decision (Brett), G-TEST (Annamarie Zambrano), approval ratification.",
+      "basis": "SPRINT-002 authorized scope (history run 11)"
+    },
+    {
+      "timestamp": "2026-10-09T01:36:00-06:00",
+      "actor": "Security/privacy authority Brett (via agent session, recorded by Cursor primary agent, run 13)",
+      "event": "DEC-017 recorded: applicant name, phone, email, notes, and document-upload fields are kept as-is and accepted as in-scope; DEC-012 is interpreted as excluding sensitive PII (DOB/SSN/driver's license) and CJI while permitting basic identity/contact data needed for clearance tracking. FIND-001 CLOSED (verification evidence: docs/reviews/sprint-002-test-evidence.md \u00a71). Remaining to close SPRINT-002: G-TEST acceptance (Annamarie Zambrano) and ratification of the relayed sprint approval.",
+      "basis": "Owner statement: 'Keep as is all fields'"
+    },
+    {
+      "timestamp": "2026-10-09T01:51:00-06:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 14)",
+      "event": "SPRINT-002 COMPLETE. Sprint approval ratified and G-TEST accepted as relayed by project owner on behalf of Jessica Solis and Annamarie Zambrano (evidence: docs/reviews/sprint-002-test-evidence.md). All acceptance criteria met: no PII fields in data model/UI/exports/schema/dictionary (FIND-001 closed, DEC-017), default PINs removed with operator-configured setup documented, views function with fictitious data, test evidence recorded, project.json validated. currentAuthorizedWork = null; next: propose SPRINT-003 (release preparation toward 0.1.0).",
+      "basis": "Owner statement: 'Sprint-002 is approved'"
+    },
+    {
+      "timestamp": "2026-10-09T02:55:00-06:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 15)",
+      "event": "DEC-018 recorded and SPRINT-003 (import readiness: Source and Control ID fields) authorized as a C3 data-model change, directed explicitly by the project owner and relayed on behalf of joint governance authorities (ratification open). Implemented same session: read-only 'source' field; 'controlNumber' (Control ID) manual unique secondary key with case-insensitive duplicate rejection, table display, and search; field dictionary, SQL schema (SourceName column), and import crosswalk aligned. Scripted browser acceptance tests passed; evidence in docs/reviews/sprint-003-test-evidence.md. Open: G-TEST (Annamarie Zambrano), ratification. Background: import crosswalk for CJIS MasterSheet authored (docs/planning/import-crosswalk-mastersheet.md); DOB/SSN/DL columns excluded from any import per DEC-012/DEC-017.",
+      "basis": "Owner statement: 'Yes Source create field called Source as read only  Yes create a Control_ID field which will be manually input for each applicant tracked treat as secondary key the is unique, which would be a C3 data-model change'"
+    },
+    {
+      "timestamp": "2026-10-09T02:45:00-06:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 16)",
+      "event": "SPRINT-003 COMPLETE. G-TEST accepted for SPRINT-003 as relayed by project owner on behalf of QA authority Annamarie Zambrano (evidence: docs/reviews/sprint-003-test-evidence.md). All acceptance criteria met. Open limitation: ratification of the relayed sprint approval and G-TEST acceptance by Jessica Solis and Annamarie Zambrano. currentAuthorizedWork = null; next sprint candidates: release preparation toward 0.1.0, import tooling.",
+      "basis": "Owner statement: 'G-Test has been approved'"
+    },
+    {
+      "timestamp": "2026-10-09T03:15:00-06:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 17)",
+      "event": "SPRINT-004 (import tooling and sample-data removal) authorized as C3, directed explicitly by the project owner and relayed on behalf of joint governance authorities (ratification open). Implemented same session: sample-data seeding removed (app ships with zero records); admin-only CSV import with crosswalk header mapping, US-date conversion, replace/additive modes, per-row errors, change-log audit, and unconditional DOB/SSN/DL column exclusion (DEC-012); sanitized CSV generated from the MasterSheet via Excel COM with PII columns dropped at extraction, stored outside the repository. Scripted browser acceptance tests passed (4 records imported, mapping/normalization verified, PII exclusion verified); evidence in docs/reviews/sprint-004-test-evidence.md. Open: owner live import, G-TEST, ratification.",
+      "basis": "Owner statement: 'next is Import tooling and I want to remove all exsisting records from tracker and import records in MasterSheet located \"C:\\\\Users\\\\E41646\\\\Documents\\\\ECC\\\\Worksheet Consolodation\\\\CJIS_MasterSheet_wPII-Test.xlsx\"'"
+    },
+    {
+      "timestamp": "2026-10-09T03:17:00-06:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 18)",
+      "event": "Owner live import confirmed successful in his working environment, exercising the file-picker path untested in the scripted run. Also at owner direction: Control ID and Source columns hidden from the Full Admin records table display (fields retained in form, search, export). SPRINT-004 implementation fully verified; open: G-TEST (Annamarie Zambrano), ratification.",
+      "basis": "Owner statements: 'import looks good' and 'From the full admin view All Applicant Records section remove column ControlID and Source from displayed list'"
+    },
+    {
+      "timestamp": "2026-10-09T07:53:00-06:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 19)",
+      "event": "Import panel commented out of the main interface at owner direction; import code retained for one-time pre-go-live use (re-enable by uncommenting in index.html). Implementation completed and recorded at 2026-10-09T08:50:00-06:00 after a delegation gap.",
+      "basis": "Owner statement: 'Comment out and retain the import fucntion from the main interface screen. This is a one time fucntion that will happen before go live.'"
+    },
+    {
+      "timestamp": "2026-10-09T08:43:00-06:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 20)",
+      "event": "SPRINT-004 COMPLETE. Sprint approval ratified and G-TEST accepted as relayed by project owner on behalf of Jessica Solis and Annamarie Zambrano (evidence: docs/reviews/sprint-004-test-evidence.md). All acceptance criteria met: sample data removed, governed CSV import delivered with PII-column exclusion, owner live import verified. currentAuthorizedWork = null. Next: SPRINT-005 (UI/UX redesign) designated by owner agreement earlier this session; proposal pending direction selection.",
+      "basis": "Owner statement: 'I have approval for sprint 004.'"
+    },
+    {
+      "timestamp": "2026-10-09T09:15:00-06:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 21)",
+      "event": "C1 UI label change, no data-model impact: three field labels renamed at owner direction. (1) 'Security and Awareness Cert:' -> 'Security and Awareness Cert' (trailing colon removed; tracker-list-overrides.js). (2) 'Date of III Completion (DD/MM/YYYY)' -> 'Date of III Completion' (index.html form label, app.js label map, README.md). (3) 'Query Every Five Years' -> 'Next III Inquery Due (5 yrs)' (tracker-list-overrides.js replacement label and dependent calculated-column header matcher; owner's spelling 'Inquery' preserved verbatim). Field keys, storage keys, date input formats/placeholders, and IMPORT_HEADER_MAP unchanged.",
+      "basis": "Owner statement: 'relable the following fields:  Security and Awareness Cert: change to Security and Awareness Cert, Date of III Completion (DD/MM/YYYY) to Date of III Completion, change field label Query Every Five Years to Next III Inquery Due (5 yrs)'"
+    },
+    {
+      "timestamp": "2026-10-09T09:17:00-06:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 22)",
+      "event": "Label spelling corrected at owner direction: 'Next III Inquery Due (5 yrs)' -> 'Next III Inquiry Due (5 yrs)' (tracker-list-overrides.js label and calculated-column matcher).",
+      "basis": "Owner statement: 'use standard spelling for Inquiry'"
+    },
+    {
+      "timestamp": "2026-10-09T10:23:00-06:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 23)",
+      "event": "DEC-019 recorded: SPRINT-005 redesign direction selected \u2014 Option B 'Tabbed Workspace with Form Drawer' \u2014 with three owner answers: (1) admin table shows Actions plus seven data columns (Clearance Type, Access Type, Name, Requestor, III - Status, CJIS Security Role, NCIC Certification), all verified to map to existing field keys (Requestor = existing 'requestor' field; no new fields); (2) default grouping = the grouping users currently see, i.e. vendor grouping (today applied by tracker-list-overrides.js), carried into the base app as the default; (3) queriedEveryFiveYears becomes a calculated read-only due date = Date of III Completion + 5 years, displayed as 'Next III Inquiry Due (5 yrs)', with a one-time migration of stored records on load and the Query Due metric updated to compare that due date against today (resolving the app.js/overlay inconsistency). SPRINT-005 proposal drafted at docs/planning/sprints/sprint-005-ui-redesign.md, status PROPOSED, awaiting owner go to begin implementation; currentAuthorizedWork remains null and no implementation performed. Open question for owner: keep or restore the Export CSV button currently removed by the overlay.",
+      "basis": "Owner statement (2026-10-09 10:23 AM -06:00): 'Yes to Option B, \n\n1. the 8 coluns that stay visable are Actions, Clearance Type, Access Type, Name, Requestor,III - Status, CJIS Security Role, NCIC Certification\n2. Default grouping - keep current grouping\n3. This field should be a calculated value of field Date of III Completion + 5 years = Next III Inquiry Due (5 yrs) date.'"
+    },
+    {
+      "timestamp": "2026-10-09T10:27:00-06:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 24)",
+      "event": "SPRINT-005 authorized and implementation started. Owner go recorded for Option B (Tabbed Workspace with Form Drawer) under DEC-019. currentAuthorizedWork = SPRINT-005; workStatus active. Sprint document status set to IN PROGRESS. Implementation folds tracker-list-overrides.js behaviors into the base app (vendor grouping, Inquiry Due calculation, expired-cert highlighting, label renames, compact density), slim sticky header, sign-in collapse, form drawer, and admin column diet.",
+      "basis": "Owner statement: 'go' (2026-10-09T10:27:00-06:00)"
+    },
+    {
+      "timestamp": "2026-10-09T10:52:00-06:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 25)",
+      "event": "C1 date display/parse format change: all date UX from DD/MM/YYYY to MM/DD/YYYY. Date of III Completion remains a text field with MM/DD/YYYY placeholder/pattern/title; native type=date fields unchanged (ISO storage, browser-locale display). dateOfIiiCompletion is now stored as ISO YYYY-MM-DD and displayed as MM/DD/YYYY. Existing localStorage slash values are migrated once on load (flag cjisApplicantTracker.iiiCompletionIsoMigrated): interpreted as legacy DD/MM/YYYY and rewritten to ISO so the calendar day is preserved (example: 10/02/2026 meaning 10 Feb becomes 2026-02-10, displayed 02/10/2026). Import parsers accept MM/DD/YYYY and ISO and store ISO (ddmmDate import type removed). Field keys and PII scope unchanged; import panel stays commented out. tracker-list-overrides.js left unused/unloaded.",
+      "basis": "Owner statement: 'Change all dates field formats from DD/MM/YYYY to MM/DD/YYYY format'"
+    },
+    {
+      "timestamp": "2026-10-09T11:14:00-06:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 26)",
+      "event": "C1 UI-only: reduced admin/limited table horizontal padding so columns sit tighter (Actions padding retained so View/Edit buttons do not clip; sticky headers unchanged). Vendor group headers are bold; all data rows in a vendor group share one background color, with distinct alternating group colors (color-by-group, not zebra-per-row) and a slightly stronger header tint. Admin table column order is now Actions, Name, Clearance Type, Access Type, III - Status, CJIS Security Role, NCIC Certification, Requestor. Limited view already had Name before Clearance Type. Field keys and data model unchanged. currentAuthorizedWork remains SPRINT-005.",
+      "basis": "Owner statement: 'Minmize whites space btween columns. Each vendor group should be bold have same row color. Move name column before Clearcne Type column and move III - Status, CJIS Security Role, NCIC Certification after access type column.'"
+    },
+    {
+      "timestamp": "2026-10-09T11:24:00-06:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 27)",
+      "event": "C1 CSS-only: expired-compliance row highlighting changed from pink to gray background with black bold text. Expired style wins over vendor-group colors (higher specificity including vendor-group-0/1 + compliance-expired-row). Security-and-Awareness cert cell uses the same gray/black-bold language (red inset accent removed). Status badges unchanged. Grouping, column order, and data model unchanged. currentAuthorizedWork remains SPRINT-005.",
+      "basis": "Owner statement: 'No pink instead make gray background w/black bold text.'"
+    },
+    {
+      "timestamp": "2026-10-09T11:25:00-06:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 27)",
+      "event": "C1 CSS-only: Access Type column nowrap with smaller font (0.78rem cells / 0.72rem badges); admin/limited records tables pack left (width: max-content, table-layout: auto, left-aligned) so columns do not stretch and Access Type does not wrap to fill space. Vendor group colors, bold headers, column order, and expired gray/black-bold style unchanged. currentAuthorizedWork remains SPRINT-005.",
+      "basis": "Owner statement: 'Make Access Type  column no wraping of text instead push all coloumns to the left and make this coluns text smaller font size.'"
+    },
+    {
+      "timestamp": "2026-10-09T14:25:00-06:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent, run 28)",
+      "event": "Export CSV hidden from the UI (id exportCsv retained with class hidden; downloadCsv and export logic remain in app.js). Four fictitious test applicants from the sanitized MasterSheet CSV (CJIS_MasterSheet_import.csv, outside the repository; headers confirmed no DOB/SSN/DL) are the empty-storage seed in CJISTracker/test-applicants.js. Cell values unchanged; existing localStorage is not replaced. Import panel remains hidden. currentAuthorizedWork remains SPRINT-005.",
+      "basis": "Remove export button from view retain code for later use. Import samle data from C:\\Users\\E41646\\Documents\\ECC\\Worksheet Consolodation\\CJIS_MasterSheet_import.csv do not change values the records are test applicants"
+    },
+    {
+      "timestamp": "2026-10-13T01:24:00-06:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)",
+      "event": "C1 UI-only: compact application footer added to the CJISTracker main shell showing the canonical developmentVersion 0.1.0-dev.1 in footnote size (11px, --muted). Visible on all views, signed in or not. developmentVersion unchanged.",
+      "basis": "add a version number in the footer of the application in footnote font size."
+    },
+    {
+      "timestamp": "2026-10-13T01:30:00-06:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)",
+      "event": "SPRINT-004 close confirmed COMPLETE as relayed by project owner on behalf of Jessica Solis and Annamarie Zambrano (G-TEST evidence: docs/reviews/sprint-004-test-evidence.md plus later owner confirmations: live import, hide import/export, seed, footer, admin 12345). SPRINT-005 (UI/UX redesign \u2014 compact operations layout, C2 presentation) authorized; currentAuthorizedWork = SPRINT-005; lifecycle development/active; G-TEST set pending for SPRINT-005 (004 accepted as relayed). Implementation: compact chrome, inline sign-in, collapsed session bar, unified metrics/search/filter toolbar, table-first admin editor. No data-model change; Import/Export remain hidden.",
+      "basis": "Owner statement: 'go' after designating SPRINT-005 UI/UX redesign to eliminate whitespace and provide an easier experience."
+    },
+    {
+      "timestamp": "2026-10-13T11:03:00-06:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)",
+      "event": "SPRINT-006 (SQL backend + future Entra SSO scaffolding, Class C3) authorized and scaffolding implemented. currentAuthorizedWork = SPRINT-006; frameworkPhase SPRINT-006; workStatus active. Extended CJISTracker/database-schema.sql (idempotent creatable T-SQL aligned to app.js: ControlNumber unique secondary key, SourceName, all current applicant fields, access types, documents, change log, Limited/Records/Admin; no DOB/SSN/DL per DEC-012/017). Added backend/ stubs (README, .env.example with TBD placeholders only, db/health/applicants repository stubs; no npm install). Added docs/architecture/sso-entra-id.md and backend/sso.config.example.json (DEC-015 City SSO / Entra ID, server-side RBAC, prototype PINs never production; all tenant/client IDs TBD). Browser app remains localStorage. No live API, no live Entra login, no secrets committed. Deployment target remains null.",
+      "basis": "Create scafolding for a SQL DB backend and provide SQL schema so database can be created for this application. Create scafolding for future SSO connection."
+    },
+    {
+      "timestamp": "2026-10-13T13:49:00-06:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)",
+      "event": "C3 behavior/data-model follow-on under currentAuthorizedWork SPRINT-006 (SPRINT-005 remains UI-only): user-facing Delete replaced with Full Admin Archive. Archive sets archived/archivedAt/archivedBy and does not remove the record from localStorage. Default lists, metrics, and search (Limited, Records, Admin All Applicant Records) exclude archived records. Full Admin reviews archived applicants in the Admin Archived records panel (View and Restore). Change log actions are Archived/Restored. Import/CSV and seed test applicants stay active (not imported as deleted). SQL Applicants.IsArchived added; IsDeleted kept unused. Field dictionary and README note archive-not-delete and Full Admin review only.",
+      "basis": "Replace delete function with a archive function to be reviewed by FullAdmin users only"
+    },
+    {
+      "timestamp": "2026-10-14T10:24:00-06:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)",
+      "event": "C3 data-model follow-on under currentAuthorizedWork SPRINT-006: added applicant Passport yes/no checkbox (field key passport, stored Y/N). Full Admin All Applicant Records shows a Passport column; Limited/Records lists unchanged (they do not show similar flags). Access Type column text/badges on the admin list made smaller (CSS on .admin-records-table .field-accessType and .badge only). Included in save, normalize, change log, field dictionary, import header map, and database-schema.sql Applicants.Passport CHAR(1) nullable Y/N. Not treated as PII beyond a yes/no flag. Control ID/Source stay off the admin table. Fingerprint Outcome kept. Archive/delete behavior unchanged.",
+      "basis": "In the full admin all applicant records make Access type font smaller, add a Passport check box to the applicant and display in records list."
+    },
+    {
+      "timestamp": "2026-10-14T10:31:00-06:00",
+      "actor": "Security/privacy authority and project owner Brett (via agent session, recorded by Cursor primary agent)",
+      "event": "DEC-020 recorded: Driver License Number is now an in-scope field (UI: Driver Lic Num; field key driversLicense) in the format two-letter state prefix + 9 digits with no hyphens or spaces (example: NM123456789); empty is allowed; stored uppercase. Control ID remains in the data model and import mapping so existing imported values are not destroyed, but is hidden from the applicant form, Limited/Records/Admin lists, and search placeholder. normalizeRecords no longer deletes driversLicense; it still deletes dateOfBirth and socialSecurityNumber. Raw MasterSheet State / Driver's License headers stay blocked; a Driver Lic Num header is accepted only when the value matches the format. Seed test applicants remain without DL values. SQL Applicants.DriverLicenseNumber NVARCHAR(11) added. Privacy Framework / PIA must be revisited per DEC-014/016; that revisit is TBD for the authority and a PIA has not been performed. Passport work retained. currentAuthorizedWork remains SPRINT-006.",
+      "basis": "Owner statement: hide control number field replace with Driver Lic Num that accepts with no hyphens two letter state prefix and 9 digit number (example: NM123456789)"
+    },
+    {
+      "timestamp": "2026-10-14T10:43:00-06:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)",
+      "event": "SPRINT-006 C2 behavior: entering a Driver Lic Num that already exists (uppercase compare; current record id ignored when editing; archived records included; empty DL skipped) shows \"applicant is already on file\" and lists matching records (name, DL, phone, email, vendor, clearance). Save is blocked until the user chooses Create new applicant, which opens create mode with a new empty id and copies only Name, Driver Lic Num, Applicant Phone Number, and Applicant Email from the selected match. Multiple matches can be picked from. currentAuthorizedWork remains SPRINT-006.",
+      "basis": "Owner statement: add validation if same driver lic is entered display message applicant is already on file, show duplicate records, option to create new applicant and copy Name, Driver Lic Num, Applicant Phone Number, and Applicant Email"
+    },
+    {
+      "timestamp": "2026-10-14T11:31:00-06:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)",
+      "event": "SPRINT-006 C2: new applicants require Name, Driver Lic Num, Vendor, Requestor, and Source. Create-only validation in saveApplicant; HTML required toggled so incomplete seed/import records remain editable. Source editable on create and copy-new; read-only when editing existing records. Copy-new leaves vendor/requestor/source empty. DL still must be ST+9 digits when present. Field dictionary updated. currentAuthorizedWork remains SPRINT-006.",
+      "basis": "Make the following fields required for new entries. Name (Last, First, MI, Suffix) Driver Lic Num Vendor Requestor Source"
+    },
+    {
+      "timestamp": "2026-10-19T15:43:00-06:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)",
+      "event": "SPRINT-006 COMPLETE. G-TEST accepted as relayed by project owner on behalf of QA authority Annamarie Zambrano (owner statement: 'approve gate for next sprint'). currentAuthorizedWork = null; workStatus complete; frameworkPhase SPRINT-006 complete. Agent review does not satisfy the gate; this is a recorded owner-relayed acceptance. Ratification by Jessica Solis and Annamarie Zambrano remains open. SPRINT-005 G-TEST remains pending. G-ARCH and G-SEC remain pending and are not satisfied. No live API or Entra login. Next sprint is not authorized until the owner designates scope (SPRINT-007 candidate, TBD).",
+      "basis": "Owner statement: 'approve gate for next sprint'"
+    },
+    {
+      "timestamp": "2026-10-19T23:13:00-06:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)",
+      "event": "SPRINT-005 COMPLETE. Sprint approval ratified and G-TEST accepted as relayed by project owner on behalf of Jessica Solis and Annamarie Zambrano (owner statement: 'Close SPRINT-005 approved'; evidence: docs/reviews/sprint-005-test-evidence.md). Agent review does not satisfy the gate. Ratification remains open. currentAuthorizedWork remains null. SPRINT-006 was already complete. G-ARCH and G-SEC remain pending. Next sprint is not authorized until the owner designates scope (SPRINT-007 candidate, TBD).",
+      "basis": "Owner statement: 'Close SPRINT-005 approved'"
+    },
+    {
+      "timestamp": "2026-10-19T23:15:00-06:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)",
+      "event": "SPRINT-007 (Wire the SQL API) authorized as C3 localhost prototype. currentAuthorizedWork = SPRINT-007; workStatus active; frameworkPhase SPRINT-007. G-TEST pending. G-ARCH and G-SEC remain pending and are not satisfied. Bind 127.0.0.1 only; no Entra; no production host. Prototype trusted-source for npm package mssql (named in SPRINT-006 backend README) recorded for this sprint only. Browser uses SQL when the API reports connected, otherwise localStorage.",
+      "basis": "Owner statement: 'SPRINT-007 Wire the SQL API'"
+    },
+    {
+      "timestamp": "2026-10-19T23:45:00-06:00",
+      "actor": "Cursor primary agent",
+      "event": "SPRINT-007 implementation: localhost HTTP API on 127.0.0.1:8741 (GET /health, GET/PUT /api/applicants) using mssql from registry.npmjs.org (prototype trusted-source only). CJISTracker loads SQL when health.database.connected is true and otherwise keeps localStorage. Documents and change log stay in the browser. No Entra; no public bind. G-TEST pending. G-ARCH and G-SEC remain unsatisfied.",
+      "basis": "Authorized SPRINT-007 (history 2026-10-19T23:15:00-06:00)"
+    },
+    {
+      "timestamp": "2026-10-20T12:20:00-06:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)",
+      "event": "SPRINT-007 schema refresh: CJISTracker/database-schema.sql retitled and aligned to the current app.js model. Re-run is additive (no drop of applicant rows). SecurityRoles.RoleName for RoleCode limited refreshes Limited View to Read Only. Department check constraint refresh includes APD. Status/activityStatus remains derived from SecurityAwarenessExpiration and NcicCertificationExpiration (not a column). No DOB/SSN. G-ARCH and G-SEC remain pending.",
+      "basis": "Owner statement: 'Update and refresh the db scheme for sprint-007'"
+    },
+    {
+      "timestamp": "2026-10-20T13:20:00-06:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)",
+      "event": "SPRINT-007 C3: delete added on Archived Records for Admin-Full, Admin-Global, and Admin-Staff only. Delete is limited to already-archived applicants; Read Only and Records cannot delete. Browser removes the record; SQL PUT marks omitted ApplicantId rows as IsDeleted. Restore remains Admin-Full and Admin-Global only. No undelete. G-ARCH and G-SEC remain pending.",
+      "basis": "Owner statement: 'Add delete function in the archive screen for the Admin Full, Admin Global, Admin Staff only users.'"
+    },
+    {
+      "timestamp": "2026-10-20T14:30:00-06:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)",
+      "event": "SPRINT-007: existing test records replaced with the Anna workbook import (Anna_CJIS-Tracker_noPII-BJ.xlsx, LAN Import folder, 770 named rows). Workbook stays outside the repository. Raw State / Driver's License Number excluded (DEC-020). No DOB/SSN columns in the source. Seed batch anna-cjis-2026-10-20 replaces localStorage once. G-ARCH and G-SEC remain pending.",
+      "basis": "Owner statement: 'Delete exsisting test records, import this file based\\\\coa.cabq.lcl\\dfsroot\\PD USERS\\E41646\\My Workbench (LAN)\\ECC-911\\Development\\CJISTracker\\Import\\Anna_CJIS-Tracker_noPII-BJ.xlsx'"
+    },
+    {
+      "timestamp": "2026-10-21T09:10:00-06:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)",
+      "event": "SPRINT-007 C2: Active/InActive now depends on NCIC Certification. When NCIC is N, Active requires only Security and Awareness Cert Expiration current. When NCIC is Y or blank, Active still requires both cert dates current. Status remains calculated, not stored. G-ARCH and G-SEC remain pending.",
+      "basis": "Owner statement updating Active/InActive: NCIC yes requires both cert dates; NCIC no requires only Security and Awareness cert date."
+    },
+    {
+      "timestamp": "2026-10-21T10:51:00-06:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)",
+      "event": "SPRINT-007 C1/C2: Export CSV removed from the tracker UI and app.js (downloadCsv / exportFieldValue). The localhost API had no export route. Driver Lic Num empty-field placeholder is NM/XXXXXXXX; the input title still explains the ST/ + 1\u201315 alphanumeric format. G-ARCH and G-SEC remain pending.",
+      "basis": "Owner statement: remove export function from application and API; replace Driver Lic Num example NM/A23456H8X0H23H5 with NM/XXXXXXXX before the user enters values; keep popup help text explaining the format."
+    },
+    {
+      "timestamp": "2026-10-21T14:55:00-06:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)",
+      "event": "SPRINT-007 C2: Active/InActive treats Clearance Type One Time Visit as Active without Security and Awareness or NCIC certification. Other clearance types keep the NCIC Y/N plus cert-date rule. Status remains calculated, not stored. G-ARCH and G-SEC remain pending.",
+      "basis": "Owner statement: when One Time Visit is selected do not require security and awareness or NCIC certification; status will be Active."
+    },
+    {
+      "timestamp": "2026-10-21T15:10:00-06:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)",
+      "event": "SPRINT-007 C2: Read Only listing excludes Clearance Type One Time Visit and shows the other non-archived clearance types. The Read Only clearance filter omits One Time Visit and is no longer locked. Records and Admin listings are unchanged. G-ARCH and G-SEC remain pending.",
+      "basis": "Owner statement: in the read only view filter out One Time Visit and only show other clearance types."
+    },
+    {
+      "timestamp": "2026-10-21T15:30:00-06:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)",
+      "event": "SPRINT-008 designated (not authorized): City SSO / Entra ID and server-side RBAC per DEC-015. Class C4. currentAuthorizedWork remains SPRINT-007. Tenant ID, client ID, redirect URI, and role-claim names remain TBD. Prototype PINs never production. G-ARCH and G-SEC remain pending. Implementation must not start until the owner approves the sprint and currentAuthorizedWork is updated.",
+      "basis": "Owner statement: 'Sprint 008 will be SS/Entra and server-side RBAC.'"
+    },
+    {
+      "timestamp": "2026-10-21T16:56:00-06:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)",
+      "event": "SPRINT-007 C2: Settings Console gained a Data protection status check (Admin-Full / Admin-Global). It reports plaintext localStorage, no application-level encryption, HTTP not TLS to the localhost API, the SQL driver encrypt flag, unverified SQL TDE, and CJIS Security Policy not claimed (DEC-013). The check does not enable encryption and does not satisfy G-SEC or certify CJIS. UI messaging suggestions recorded in the session canvas.",
+      "basis": "Owner statement: review the application and offer suggestions for user messaging in the UI; add to settings a way to check if data is encryption at rest and within the application as it is being updated meeting the CJIS requirements."
+    },
+    {
+      "timestamp": "2026-10-22T08:19:00-06:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)",
+      "event": "SPRINT-008 draft completed to the sprint template for DEC-015 City SSO / Entra and server-side RBAC. Status DRAFT \u2014 PROPOSED / NOT READY. Class C4. currentAuthorizedWork remains SPRINT-007. Tenant/client/redirect/role-claim values remain TBD. Admin-Full/Global/Staff mapping TBD. No implementation. G-ARCH and G-SEC remain pending.",
+      "basis": "Owner statement: create sprint draft for DEC-015 City SSO / Entra and server-side RBAC."
+    },
+    {
+      "timestamp": "2026-10-28T15:09:00-06:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)",
+      "event": "SPRINT-007 COMPLETE. Sprint approval and G-TEST accepted as relayed by project owner on behalf of Jessica Solis and Annamarie Zambrano (owner statement: 'Close sprint 007 as complete and approved'; evidence: docs/reviews/sprint-007-test-evidence.md). currentAuthorizedWork = null; workStatus complete; frameworkPhase SPRINT-007 complete. Agent review does not satisfy the gate. Ratification remains open. G-ARCH and G-SEC remain pending and are not satisfied. No live Entra login. SPRINT-008 remains designated (DRAFT \u2014 PROPOSED / NOT READY) and is not authorized until the owner approves it and currentAuthorizedWork is updated.",
+      "basis": "Owner statement: 'Close sprint 007 as complete and approved'"
+    },
+    {
+      "timestamp": "2026-10-22T10:45:00-06:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)",
+      "event": "SPRINT-009 authorized (C4): IIS hosting on DTIAPPSINTDEV at clearancetracker.cabq.gov; Node API Windows Service under COA\\svc-clearancetracker (Automatic); GitHub Actions develop\u2192INTDEV and main\u2192INTPRD via self-hosted runners. Repo scaffolding delivered (deploy scripts, workflows, operations runbook, same-origin API base, optional SQL NTLM). Live server apply awaits admin remote access and passwords. currentAuthorizedWork = SPRINT-009. G-ARCH and G-SEC remain pending. Prototype PINs never production.",
+      "basis": "Owner statement: Implement the IIS INTDEV + GitHub Actions deploy plan."
+    },
+    {
+      "timestamp": "2026-10-22T12:10:00-06:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)",
+      "event": "SPRINT-009 INTDEV host apply on DTIAPPSINTDEV. Site ClearanceTracker at D:\\inetpub\\clearancetracker, HTTP binding *:80:clearancetracker.cabq.gov, app pool ClearanceTrackerAppPool as ApplicationPoolIdentity. ARR proxy serves / and /health (HTTP 200 from the workstation with that Host header). Windows service ClearanceTrackerApi is Automatic and Running as LocalSystem via NSSM at C:\\Tools\\nssm\\nssm.exe; node.exe is C:\\Program Files\\nodejs\\node.exe (v22.23.2); API listens on 127.0.0.1:8741. backend\\.env is the example file with SQL still unset, so /health is degraded and database.connected is false. COA\\svc-clearancetracker exists and has Modify on the site root, but the service and app pool were not switched to that account because its password was not supplied. clearancetracker.cabq.gov does not resolve and no HTTPS certificate was bound. GitHub self-hosted runner was not installed (gh is not logged in). G-ARCH, G-SEC, and G-TEST remain pending. No secrets committed.",
+      "basis": "Owner statement: complete all setup on DTIAPPSINTDEV."
+    },
+    {
+      "timestamp": "2026-10-22T12:15:00-06:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)",
+      "event": "GitHub self-hosted runner DTIAPPSINTDEV registered for RoboAlbotros/Workbench-APD-ECC. Status online. Labels self-hosted, Windows, X64, intdev. Windows service actions.runner.RoboAlbotros-Workbench-APD-ECC.DTIAPPSINTDEV runs as NT AUTHORITY\\SYSTEM from D:\\actions-runner\\intdev. Environment intdev created. Repository variable INTDEV_SITE_ROOT set to D:\\inetpub\\clearancetracker. gh authenticated as RoboAlbotros. INTPRD runner not installed.",
+      "basis": "Owner statement: do this for me, after the GitHub runner commands."
+    },
+    {
+      "timestamp": "2026-10-29T09:24:00-06:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)",
+      "event": "Security-&-Authentication branch rebuilt from current main (c1c0642). Prior Security tip preserved as Security-&-Authentication-pre-rebuild. Merged SPRINT-009 IIS/GitHub Actions scaffolding and Admin-Global Security & Authentication / SAML prototype onto main line. currentAuthorizedWork remains null; SPRINT-007 remains complete. Live SAML/Entra login not connected. G-ARCH and G-SEC remain pending.",
+      "basis": "Owner statement: Rebuild Security from current main"
+    }
   ],
   "validation": {
     "validator": "python-jsonschema (Draft202012Validator), Python 3.14.0",
     "validatorVersion": "4.26.0",
     "schemaVersion": "3.0.0",
     "result": "pass",
-    "timestamp": "2026-10-28T15:09:00-06:00",
+    "timestamp": "2026-10-29T09:24:00-06:00",
     "limitations": "Structural conformance only; proves canonical values and shape, not factual accuracy, evidence sufficiency, approvals, gate satisfaction, or policy compliance. Schema is the project-authored profile, not an official SGK schema."
   },
   "extensions": {
     "aiBoundaries": {
-      "approvedServices": "TBD — operator currently uses Cursor with Claude models; formal approval decision pending governance authority.",
+      "approvedServices": "TBD \u2014 operator currently uses Cursor with Claude models; formal approval decision pending governance authority.",
       "transmissionBoundaries": "TBD. No applicant records or production secrets may be transmitted to AI services.",
       "prohibited": "Committing or transmitting real applicant PII; production credential handling by AI agents."
     },

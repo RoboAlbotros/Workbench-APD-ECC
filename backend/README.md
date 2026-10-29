@@ -1,17 +1,20 @@
-# CJIS Applicant Tracker — localhost SQL API
+# CJIS Applicant Tracker — SQL API (loopback)
 
-Status: SPRINT-007 prototype. Not a production API.
-Owner: Brett (technical owner). Deployment target, hosting, and City policy remain TBD.
+Status: SPRINT-007 localhost prototype; SPRINT-009 IIS edge on INTDEV/INTPRD.
+Owner: Brett (technical owner). See `docs/operations/iis-hosting.md`.
 
 This folder serves a **127.0.0.1-only** HTTP API that persists applicant records
-to SQL Server (`CjisApplicantTracker`). Prototype PIN login stays in the browser.
-City SSO / Entra ID (DEC-015) is **not** implemented here.
+to SQL Server. IIS reverse-proxies `/api` and `/health` on the public host.
+Prototype PIN login stays in the browser. City SSO / Entra ID (DEC-015) is
+**not** implemented here (SPRINT-008).
 
 ## What is true today
 
 - Bind host is `127.0.0.1` (default port `8741`). A public bind is excluded.
 - `GET /health` reports whether SQL is configured and connected.
 - `GET /api/applicants` and `PUT /api/applicants` round-trip current `app.js` fields.
+- `SQL_AUTHENTICATION=sql` (default), `windows` (NTLM for `DOMAIN\user`), or `integrated` (Windows integrated, no SQL password).
+- `GET /api/sql-settings`, `POST /api/sql-settings/test`, and `PUT /api/sql-settings` configure Windows integrated from the Admin-Global Security page. The response never includes a password.
 - Documents and the change log stay in browser storage this sprint.
 - If SQL is not configured or the API is down, `CJISTracker/` keeps using localStorage.
 - Prototype PINs are never production controls (DEC-015).
@@ -29,8 +32,11 @@ sqlcmd -S <server> -E -i "CJISTracker\database-schema.sql"
 SSMS: open `CJISTracker/database-schema.sql` and Execute (F5).
 
 Do not put credentials, tenant IDs, or applicant records in this repository.
-Copy `.env.example` to `.env` locally and replace `TBD` with a SQL login.
-`.env` is gitignored. This prototype driver uses SQL authentication, not Windows Integrated.
+Copy `.env.example` to `.env` locally or on the app server and replace `TBD`.
+`.env` is gitignored. Use Windows integrated (`SQL_AUTHENTICATION=integrated`) from
+Security & Authentication when the API process identity can sign in to SQL.
+`SQL_AUTHENTICATION=windows` remains the NTLM fallback for
+`COA\svc-clearancetracker` when a trusted connection is not available.
 
 ## Prototype trusted-source (this sprint only)
 
@@ -62,6 +68,8 @@ backend/
     index.js                   127.0.0.1 listener; /health and /api/applicants
     env.js                     reads local .env (does not print secrets)
     db.js                      mssql connection from environment
+    sql-settings.js            Windows integrated settings (no password in the response)
+    sso-settings.js            Entra and SAML field record (no live login)
     health.js                  health payload
     sso.js                     role-claim map stub (no live Entra login)
     repositories/
@@ -71,9 +79,14 @@ backend/
 SSO outline (authorize URL, claim → Limited/Records/Admin, server-side enforcement):
 `docs/architecture/sso-entra-id.md`.
 
-## Explicit non-goals (this sprint)
+## Hosting
 
-- No Entra / City SSO login, no client secret, no tenant configuration.
-- No bind to `0.0.0.0`, no cloud deploy, no invented hosting target.
-- No production API authentication (localhost prototype only).
-- G-ARCH and G-SEC remain pending; this sprint does not satisfy them.
+IIS + Windows Service install and GitHub Actions: `docs/operations/iis-hosting.md`
+and `deploy/`.
+
+## Explicit non-goals
+
+- No Entra / City SSO login, no client secret, no tenant configuration (SPRINT-008).
+- No bind to `0.0.0.0` — IIS is the public edge; API stays on loopback.
+- No production API authentication until Entra is wired.
+- G-ARCH and G-SEC remain pending.

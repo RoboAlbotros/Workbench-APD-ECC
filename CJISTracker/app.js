@@ -6,6 +6,7 @@ const STORAGE_KEYS = {
   optionLists: "cjisApplicantTracker.optionLists",
   managedUsers: "cjisApplicantTracker.managedUsers",
   seedBatch: "cjisApplicantTracker.seedBatch",
+  securitySettings: "cjisApplicantTracker.securitySettings",
 };
 
 /** UUID helper that works on HTTP intranet hosts (crypto.randomUUID needs a secure context). */
@@ -34,9 +35,9 @@ function createId() {
 
 function resolveSqlApiBase() {
   try {
-    const host = String(window.location.hostname || "");
-    // IIS hosts (e.g. clearancetracker.coa.cabq.lcl) reverse-proxy /api and /health.
-    // Direct 127.0.0.1 in the browser hits the user's PC, not the app server.
+    const host = String(window.location.hostname || "").toLowerCase();
+    // IIS ARR proxies /api and /health on the same origin (SPRINT-009).
+    // Direct 127.0.0.1 in the browser hits the user PC, not the app server.
     if (host && host !== "127.0.0.1" && host !== "localhost") {
       return "";
     }
@@ -446,6 +447,9 @@ function loadManagedUsers() {
         name: String(user.name || "").trim(),
         userType: normalizeManagedUserType(user.userType),
         accessCode: String(user.accessCode || ""),
+        mfaSecret: normalizeAuthenticatorSecret(user.mfaSecret),
+        mfaPendingSecret: normalizeAuthenticatorSecret(user.mfaPendingSecret),
+        mfaEnrolled: Boolean(user.mfaEnrolled) && Boolean(normalizeAuthenticatorSecret(user.mfaSecret)),
       }))
       .filter((user) => user.name && user.accessCode.length >= 4);
   } catch {
@@ -980,6 +984,61 @@ const optionListMessage = document.querySelector("#optionListMessage");
 const addManagedUserForm = document.querySelector("#addManagedUserForm");
 const managedUserMessage = document.querySelector("#managedUserMessage");
 const managedUserTable = document.querySelector("#managedUserTable");
+const securityAuthPanel = document.querySelector("#securityAuthPanel");
+const securityAuthMessage = document.querySelector("#securityAuthMessage");
+const mfaEnrollmentMetric = document.querySelector("#mfaEnrollmentMetric");
+const mfaRequired = document.querySelector("#mfaRequired");
+const mfaEnrollmentList = document.querySelector("#mfaEnrollmentList");
+const mfaSetup = document.querySelector("#mfaSetup");
+const mfaSetupUser = document.querySelector("#mfaSetupUser");
+const mfaQr = document.querySelector("#mfaQr");
+const mfaManualKey = document.querySelector("#mfaManualKey");
+const mfaConfirmCode = document.querySelector("#mfaConfirmCode");
+const mfaConfirmSetup = document.querySelector("#mfaConfirmSetup");
+const mfaChallenge = document.querySelector("#mfaChallenge");
+const mfaChallengeCode = document.querySelector("#mfaChallengeCode");
+const mfaChallengeCancel = document.querySelector("#mfaChallengeCancel");
+const saveMfaSettings = document.querySelector("#saveMfaSettings");
+let pendingMfaSignIn = null;
+const ssoEnabledInput = document.querySelector("#ssoEnabled");
+const ssoEnabledStatus = document.querySelector("#ssoEnabledStatus");
+const ssoEnabledHint = document.querySelector("#ssoEnabledHint");
+const ssoMode = document.querySelector("#ssoMode");
+const saveSsoSettings = document.querySelector("#saveSsoSettings");
+const samlSettingsPanel = document.querySelector("#samlSettingsPanel");
+const entraSettingsPanel = document.querySelector("#entraSettingsPanel");
+const entraTenantIdInput = document.querySelector("#entraTenantId");
+const entraClientIdInput = document.querySelector("#entraClientId");
+const entraClientSecretInput = document.querySelector("#entraClientSecret");
+const entraRedirectUriInput = document.querySelector("#entraRedirectUri");
+const entraAuthorizeUrlInput = document.querySelector("#entraAuthorizeUrl");
+const entraTokenUrlInput = document.querySelector("#entraTokenUrl");
+const entraRoleClaimInput = document.querySelector("#entraRoleClaim");
+const samlEntityIdInput = document.querySelector("#samlEntityId");
+const samlReplyUrlInput = document.querySelector("#samlReplyUrl");
+const samlSignOnUrlInput = document.querySelector("#samlSignOnUrl");
+const samlRelayStateInput = document.querySelector("#samlRelayState");
+const samlLogoutUrlInput = document.querySelector("#samlLogoutUrl");
+const samlIdpMetadataUrlInput = document.querySelector("#samlIdpMetadataUrl");
+const ssoSettingsMessage = document.querySelector("#ssoSettingsMessage");
+const idleTimeoutMinutes = document.querySelector("#idleTimeoutMinutes");
+const concurrentLoginLimit = document.querySelector("#concurrentLoginLimit");
+const ipAllowlist = document.querySelector("#ipAllowlist");
+const saveSessionSettings = document.querySelector("#saveSessionSettings");
+const apiTokenLabel = document.querySelector("#apiTokenLabel");
+const generateApiToken = document.querySelector("#generateApiToken");
+const apiTokenList = document.querySelector("#apiTokenList");
+const sqlSettingsStatus = document.querySelector("#sqlSettingsStatus");
+const sqlWindowsIdentity = document.querySelector("#sqlWindowsIdentity");
+const sqlServerInput = document.querySelector("#sqlServer");
+const sqlDatabaseInput = document.querySelector("#sqlDatabase");
+const sqlUserInput = document.querySelector("#sqlUser");
+const sqlPortInput = document.querySelector("#sqlPort");
+const sqlEncryptInput = document.querySelector("#sqlEncrypt");
+const sqlTrustServerCertificateInput = document.querySelector("#sqlTrustServerCertificate");
+const testSqlSettingsButton = document.querySelector("#testSqlSettings");
+const saveSqlSettingsButton = document.querySelector("#saveSqlSettings");
+const sqlSettingsMessage = document.querySelector("#sqlSettingsMessage");
 const accessMessage = document.querySelector("#accessMessage");
 const headerMetrics = document.querySelector("#headerMetrics");
 const viewSwitch = document.querySelector("#viewSwitch");
@@ -1063,7 +1122,8 @@ if (importForm) importForm.addEventListener("submit", handleCsvImport);
 function updateSetupVisibility() {
   const needsSetup = !accessCodes;
   accessSetupForm.classList.toggle("hidden", !needsSetup);
-  accessForm.classList.toggle("hidden", needsSetup || Boolean(currentUser));
+  accessForm.classList.toggle("hidden", needsSetup || Boolean(currentUser) || Boolean(pendingMfaSignIn));
+  if (mfaChallenge) mfaChallenge.classList.toggle("hidden", needsSetup || Boolean(currentUser) || !pendingMfaSignIn);
 }
 
 function completeAccessSetup(event) {
@@ -1107,6 +1167,24 @@ if (optionListEditors) {
   optionListEditors.addEventListener("click", handleOptionListClick);
 }
 if (addManagedUserForm) addManagedUserForm.addEventListener("submit", addManagedUser);
+if (saveMfaSettings) saveMfaSettings.addEventListener("click", saveMfaFromPanel);
+if (mfaConfirmSetup) mfaConfirmSetup.addEventListener("click", confirmAuthenticatorSetup);
+if (mfaEnrollmentList) mfaEnrollmentList.addEventListener("click", handleMfaEnrollmentClick);
+if (mfaChallenge) mfaChallenge.addEventListener("submit", submitMfaChallenge);
+if (mfaChallengeCancel) mfaChallengeCancel.addEventListener("click", cancelMfaChallenge);
+if (saveSsoSettings) saveSsoSettings.addEventListener("click", saveSsoFromPanel);
+if (ssoEnabledInput) ssoEnabledInput.addEventListener("change", syncSsoConfigPanels);
+if (ssoMode) ssoMode.addEventListener("change", syncSsoConfigPanels);
+if (saveSessionSettings) saveSessionSettings.addEventListener("click", saveSessionFromPanel);
+if (testSqlSettingsButton) testSqlSettingsButton.addEventListener("click", () => submitSqlSettings(true));
+if (saveSqlSettingsButton) saveSqlSettingsButton.addEventListener("click", () => submitSqlSettings(false));
+if (generateApiToken) generateApiToken.addEventListener("click", generateApiTokenFromPanel);
+if (apiTokenList) {
+  apiTokenList.addEventListener("click", (event) => {
+    const revokeButton = event.target.closest("[data-revoke-token]");
+    if (revokeButton) revokeApiToken(revokeButton.dataset.revokeToken);
+  });
+}
 if (managedUserTable) managedUserTable.addEventListener("click", handleManagedUserTableClick);
 if (auditActivitySearch) auditActivitySearch.addEventListener("input", renderAuditActivityStream);
 if (auditActivityTable) {
@@ -1899,11 +1977,30 @@ function signInManagementUser(event) {
       );
       return;
     }
-    currentUser = { name: managed.name, role: mappedRole, userType: managed.userType };
-    managementAccessCode.value = "";
-    showMessage(accessMessage, "");
-    updateAccessControls();
-    setView(mappedRole);
+    if (!canSignInWithMfa(managed)) {
+      showMessage(
+        accessMessage,
+        "MFA is required and this account is not connected to Microsoft Authenticator. An Admin-Global user must set it up under Settings, Security & Authentication.",
+        true,
+      );
+      return;
+    }
+    if (loadSecuritySettings().mfaRequired) {
+      pendingMfaSignIn = {
+        name: managed.name,
+        role: mappedRole,
+        userType: managed.userType,
+        secret: managed.mfaSecret,
+      };
+      managementAccessCode.value = "";
+      if (mfaChallengeCode) mfaChallengeCode.value = "";
+      showMessage(accessMessage, "Enter the 6-digit code from Microsoft Authenticator.");
+      updateSetupVisibility();
+      updateAccessControls();
+      if (mfaChallengeCode) mfaChallengeCode.focus();
+      return;
+    }
+    finishManagedSignIn(managed.name, mappedRole, managed.userType);
     return;
   }
 
@@ -1922,20 +2019,55 @@ function signInManagementUser(event) {
     return;
   }
 
-  currentUser = { name, role };
+  if (loadSecuritySettings().mfaRequired) {
+    showMessage(accessMessage, "MFA is required. Sign in with a named user connected to Microsoft Authenticator.", true);
+    return;
+  }
+
+  finishManagedSignIn(name, role, "");
+}
+
+function finishManagedSignIn(name, role, userType) {
+  pendingMfaSignIn = null;
+  currentUser = userType ? { name, role, userType } : { name, role };
   managementAccessCode.value = "";
+  if (mfaChallengeCode) mfaChallengeCode.value = "";
   showMessage(accessMessage, "");
+  noteSignInSession();
+  updateSetupVisibility();
   updateAccessControls();
   setView(role);
 }
 
-function signOutManagementUser() {
+function submitMfaChallenge(event) {
+  event.preventDefault();
+  if (!pendingMfaSignIn || !window.authenticatorVerifyCode) return;
+  const accepted = window.authenticatorVerifyCode(pendingMfaSignIn.secret, mfaChallengeCode.value);
+  if (!accepted) {
+    showMessage(accessMessage, "That Microsoft Authenticator code is not valid. Enter the current 6-digit code.", true);
+    return;
+  }
+  const pending = pendingMfaSignIn;
+  finishManagedSignIn(pending.name, pending.role, pending.userType);
+}
+
+function cancelMfaChallenge() {
+  pendingMfaSignIn = null;
+  if (mfaChallengeCode) mfaChallengeCode.value = "";
+  showMessage(accessMessage, "Sign-in canceled.");
+  updateSetupVisibility();
+  updateAccessControls();
+}
+
+function signOutManagementUser(reason) {
+  pendingMfaSignIn = null;
   currentUser = null;
   currentFormMode = "edit";
   fullScreenView = null;
   closeApplicantDrawer({ restoreFocus: false });
   closeLimitedPopup({ restoreFocus: false });
-  showMessage(accessMessage, "Signed out.");
+  const message = typeof reason === "string" && reason ? reason : "Signed out.";
+  showMessage(accessMessage, message);
   updateAccessControls();
   setView("limited");
 }
@@ -1959,7 +2091,8 @@ function updateAccessControls() {
   document.body.classList.toggle("admin-console-open", showFullPage);
   accessPanel.classList.toggle("session-bar", signedIn);
   accessPanel.classList.remove("hidden");
-  accessForm.classList.toggle("hidden", signedIn || !accessCodes);
+  accessForm.classList.toggle("hidden", signedIn || Boolean(pendingMfaSignIn) || !accessCodes);
+  if (mfaChallenge) mfaChallenge.classList.toggle("hidden", signedIn || !pendingMfaSignIn);
   headerMetrics.classList.toggle("hidden", !signedIn);
   viewSwitch.classList.toggle("hidden", !signedIn || showFullPage);
   sessionControls.classList.toggle("hidden", !signedIn);
@@ -2026,6 +2159,9 @@ function openFullScreenView(page) {
 
 function openAdminConsole() {
   openFullScreenView("admin");
+  renderSecurityAuthPanel();
+  loadSqlSettings();
+  loadSsoSettings();
 }
 
 function openArchivedRecordsPage() {
@@ -2396,6 +2532,578 @@ function syncAdminGlobalOnlySections() {
   document.querySelectorAll(".admin-global-only").forEach((section) => {
     section.classList.toggle("hidden", !isAdminGlobalUser());
   });
+}
+
+const SESSION_GENERATION_KEY = "cjisApplicantTracker.sessionGeneration";
+let lastActivityAt = Date.now();
+
+function clampSecurityInt(value, min, max, fallback) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return fallback;
+  return Math.min(max, Math.max(min, Math.trunc(number)));
+}
+
+function defaultSecuritySettings() {
+  return {
+    mfaRequired: false,
+    ssoEnabled: false,
+    ssoMode: "prototype",
+    idleTimeoutMinutes: 0,
+    concurrentLoginLimit: 1,
+    ipAllowlist: "",
+    sessionGeneration: 0,
+    tokens: [],
+  };
+}
+
+function normalizeSsoMode(value) {
+  if (value === "entra" || value === "saml" || value === "prototype") return value;
+  return "prototype";
+}
+
+function loadSecuritySettings() {
+  const defaults = defaultSecuritySettings();
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.securitySettings);
+    const parsed = raw ? JSON.parse(raw) : {};
+    if (!parsed || typeof parsed !== "object") return defaults;
+    return {
+      ...defaults,
+      mfaRequired: Boolean(parsed.mfaRequired),
+      ssoEnabled: Boolean(parsed.ssoEnabled),
+      ssoMode: normalizeSsoMode(parsed.ssoMode),
+      idleTimeoutMinutes: clampSecurityInt(parsed.idleTimeoutMinutes, 0, 480, 0),
+      concurrentLoginLimit: clampSecurityInt(parsed.concurrentLoginLimit, 1, 10, 1),
+      ipAllowlist: String(parsed.ipAllowlist || ""),
+      sessionGeneration: Number(parsed.sessionGeneration) || 0,
+      tokens: Array.isArray(parsed.tokens)
+        ? parsed.tokens
+            .filter((token) => token && token.id && token.last4)
+            .map((token) => ({
+              id: String(token.id),
+              label: String(token.label || "Token"),
+              last4: String(token.last4),
+              createdAt: String(token.createdAt || ""),
+            }))
+        : [],
+    };
+  } catch {
+    return defaults;
+  }
+}
+
+function saveSecuritySettings(settings) {
+  localStorage.setItem(STORAGE_KEYS.securitySettings, JSON.stringify(settings));
+}
+
+function normalizeAuthenticatorSecret(value) {
+  const secret = String(value || "").replace(/\s/g, "").toUpperCase();
+  return /^[A-Z2-7]{16,}$/.test(secret) ? secret : "";
+}
+
+function canSignInWithMfa(managedUser) {
+  if (!loadSecuritySettings().mfaRequired) return true;
+  return Boolean(managedUser && managedUser.mfaEnrolled && managedUser.mfaSecret);
+}
+
+function normalizeAuthenticatorRequirement() {
+  const settings = loadSecuritySettings();
+  if (!settings.mfaRequired) return;
+  if (managedUsers.some((user) => user.mfaSecret)) return;
+  settings.mfaRequired = false;
+  saveSecuritySettings(settings);
+}
+
+function noteSignInSession() {
+  const settings = loadSecuritySettings();
+  lastActivityAt = Date.now();
+  if (settings.concurrentLoginLimit !== 1) {
+    sessionStorage.removeItem(SESSION_GENERATION_KEY);
+    return;
+  }
+  settings.sessionGeneration += 1;
+  saveSecuritySettings(settings);
+  sessionStorage.setItem(SESSION_GENERATION_KEY, String(settings.sessionGeneration));
+}
+
+function enforceSessionGeneration() {
+  const settings = loadSecuritySettings();
+  if (!currentUser || settings.concurrentLoginLimit !== 1) return;
+  const mine = sessionStorage.getItem(SESSION_GENERATION_KEY);
+  if (mine && String(settings.sessionGeneration) !== mine) {
+    signOutManagementUser("Signed out because a newer sign-in started.");
+  }
+}
+
+function renderSecurityAuthPanel() {
+  if (!securityAuthPanel || !isAdminGlobalUser()) return;
+  const settings = loadSecuritySettings();
+  const enrolled = managedUsers.filter((user) => user.mfaEnrolled).length;
+  const total = managedUsers.length;
+  const percent = total ? Math.round((enrolled / total) * 100) : 0;
+  if (mfaEnrollmentMetric) {
+    mfaEnrollmentMetric.textContent = `Enrollment: ${percent}% (${enrolled} of ${total})`;
+  }
+  if (mfaRequired) mfaRequired.checked = settings.mfaRequired;
+  if (ssoEnabledInput) ssoEnabledInput.checked = settings.ssoEnabled;
+  if (ssoMode) ssoMode.value = settings.ssoMode;
+  syncSsoConfigPanels();
+  if (idleTimeoutMinutes) idleTimeoutMinutes.value = String(settings.idleTimeoutMinutes);
+  if (concurrentLoginLimit) concurrentLoginLimit.value = String(settings.concurrentLoginLimit);
+  if (ipAllowlist) ipAllowlist.value = settings.ipAllowlist;
+  if (mfaEnrollmentList) {
+    mfaEnrollmentList.innerHTML = managedUsers.length
+      ? managedUsers
+          .map((user) => {
+            const enrolled = Boolean(user.mfaEnrolled && user.mfaSecret);
+            const pending = Boolean(user.mfaPendingSecret);
+            const status = enrolled ? "Enrolled" : pending ? "Waiting for code" : "Not enrolled";
+            const removeButton = enrolled || pending
+              ? `<button class="secondary-action" type="button" data-mfa-reset="${escapeHtml(user.id)}">Remove</button>`
+              : "";
+            return `<div class="mfa-user-row">
+              <span>${escapeHtml(user.name)} (${escapeHtml(USER_TYPE_LABELS[user.userType] || user.userType)})</span>
+              <span class="status-pill">${status}</span>
+              <button class="secondary-action" type="button" data-mfa-setup="${escapeHtml(user.id)}">${enrolled ? "Set up again" : "Set up Microsoft Authenticator"}</button>
+              ${removeButton}
+            </div>`;
+          })
+          .join("")
+      : `<p class="empty-state">No named users yet.</p>`;
+  }
+  renderAuthenticatorSetup();
+  if (apiTokenList) {
+    apiTokenList.innerHTML = settings.tokens.length
+      ? settings.tokens
+          .map(
+            (token) => `<div class="token-row">
+              <span>${escapeHtml(token.label)} ····${escapeHtml(token.last4)}</span>
+              <button class="secondary-action" type="button" data-revoke-token="${escapeHtml(token.id)}">Revoke</button>
+            </div>`,
+          )
+          .join("")
+      : `<p class="empty-state">No tokens.</p>`;
+  }
+}
+
+function renderAuthenticatorSetup() {
+  const user = managedUsers.find((entry) => entry.mfaPendingSecret);
+  if (!mfaSetup) return;
+  if (!user || !window.authenticatorReady || !window.authenticatorQrSvg) {
+    mfaSetup.classList.add("hidden");
+    if (mfaQr) mfaQr.innerHTML = "";
+    if (mfaManualKey) mfaManualKey.textContent = "";
+    if (mfaSetupUser) mfaSetupUser.textContent = "";
+    return;
+  }
+  mfaSetup.classList.remove("hidden");
+  if (mfaSetupUser) mfaSetupUser.textContent = `Microsoft Authenticator setup for ${user.name}`;
+  if (mfaManualKey && window.authenticatorFormatSecret) {
+    mfaManualKey.textContent = window.authenticatorFormatSecret(user.mfaPendingSecret);
+  }
+  if (mfaQr) {
+    mfaQr.innerHTML = window.authenticatorQrSvg(
+      window.authenticatorOtpauthUri(user.name, user.mfaPendingSecret),
+    );
+  }
+}
+
+function handleMfaEnrollmentClick(event) {
+  const setupButton = event.target.closest("[data-mfa-setup]");
+  if (setupButton) {
+    startAuthenticatorSetup(setupButton.dataset.mfaSetup);
+    return;
+  }
+  const resetButton = event.target.closest("[data-mfa-reset]");
+  if (resetButton) resetAuthenticator(resetButton.dataset.mfaReset);
+}
+
+function startAuthenticatorSetup(userId) {
+  if (!isAdminGlobalUser()) return;
+  if (!window.authenticatorReady || !window.authenticatorGenerateSecret) {
+    showMessage(securityAuthMessage, "Microsoft Authenticator setup is not available in this browser.", true);
+    return;
+  }
+  const secret = window.authenticatorGenerateSecret();
+  managedUsers = managedUsers.map((user) => ({
+    ...user,
+    mfaPendingSecret: user.id === userId ? secret : "",
+  }));
+  saveManagedUsers();
+  if (mfaConfirmCode) mfaConfirmCode.value = "";
+  renderSecurityAuthPanel();
+  showMessage(
+    securityAuthMessage,
+    "Scan the QR code with Microsoft Authenticator, or enter the key manually, then confirm the 6-digit code.",
+  );
+  if (mfaConfirmCode) mfaConfirmCode.focus();
+}
+
+function confirmAuthenticatorSetup() {
+  if (!isAdminGlobalUser()) return;
+  const user = managedUsers.find((entry) => entry.mfaPendingSecret);
+  if (!user || !window.authenticatorVerifyCode) return;
+  const accepted = window.authenticatorVerifyCode(user.mfaPendingSecret, mfaConfirmCode ? mfaConfirmCode.value : "");
+  if (!accepted) {
+    showMessage(
+      securityAuthMessage,
+      "That Microsoft Authenticator code does not match. Enter the current 6-digit code.",
+      true,
+    );
+    return;
+  }
+  managedUsers = managedUsers.map((entry) => (
+    entry.id === user.id
+      ? { ...entry, mfaSecret: entry.mfaPendingSecret, mfaPendingSecret: "", mfaEnrolled: true }
+      : entry
+  ));
+  saveManagedUsers();
+  if (mfaConfirmCode) mfaConfirmCode.value = "";
+  renderSecurityAuthPanel();
+  showMessage(securityAuthMessage, `${user.name} is connected to Microsoft Authenticator.`);
+}
+
+function resetAuthenticator(userId) {
+  if (!isAdminGlobalUser()) return;
+  const user = managedUsers.find((entry) => entry.id === userId);
+  const settings = loadSecuritySettings();
+  const removingCurrentAdmin = Boolean(
+    settings.mfaRequired
+    && user
+    && user.mfaEnrolled
+    && currentUser
+    && user.name === currentUser.name
+    && user.userType === "adminGlobal",
+  );
+  if (removingCurrentAdmin) {
+    showMessage(
+      securityAuthMessage,
+      "Turn off Require Microsoft Authenticator before removing it from this Admin-Global account.",
+      true,
+    );
+    return;
+  }
+  managedUsers = managedUsers.map((entry) => (
+    entry.id === userId
+      ? { ...entry, mfaSecret: "", mfaPendingSecret: "", mfaEnrolled: false }
+      : entry
+  ));
+  saveManagedUsers();
+  renderSecurityAuthPanel();
+  showMessage(securityAuthMessage, `${user ? user.name : "User"} was removed from Microsoft Authenticator.`);
+}
+
+function saveMfaFromPanel() {
+  if (!isAdminGlobalUser()) return;
+  const settings = loadSecuritySettings();
+  const self = managedUsers.find((user) => user.name === currentUser.name && user.userType === "adminGlobal");
+  if (mfaRequired.checked && !(self && self.mfaEnrolled && self.mfaSecret)) {
+    showMessage(
+      securityAuthMessage,
+      "Set up Microsoft Authenticator on this Admin-Global account before requiring MFA.",
+      true,
+    );
+    mfaRequired.checked = false;
+    return;
+  }
+  settings.mfaRequired = mfaRequired.checked;
+  saveSecuritySettings(settings);
+  renderSecurityAuthPanel();
+  showMessage(
+    securityAuthMessage,
+    settings.mfaRequired
+      ? "MFA is required. Named users must enter a Microsoft Authenticator code."
+      : "MFA is not required.",
+  );
+}
+
+function syncSsoConfigPanels() {
+  const enabled = Boolean(ssoEnabledInput && ssoEnabledInput.checked);
+  const mode = normalizeSsoMode(ssoMode ? ssoMode.value : "prototype");
+  if (ssoEnabledStatus) {
+    ssoEnabledStatus.textContent = enabled
+      ? mode === "saml"
+        ? "SSO on · SAML"
+        : mode === "entra"
+          ? "SSO on · Entra"
+          : "SSO on · path unset"
+      : "SSO off";
+  }
+  if (ssoEnabledHint) {
+    if (!enabled) {
+      ssoEnabledHint.textContent = "SSO is off. Prototype access codes remain the sign-in path.";
+    } else if (mode === "saml") {
+      ssoEnabledHint.textContent =
+        "SSO is marked enabled for SAML. Values are recorded on the API host; live SAML login is not active yet.";
+    } else if (mode === "entra") {
+      ssoEnabledHint.textContent =
+        "SSO is marked enabled for Entra ID. Owner direction for this app is SAML; live Entra login is not active.";
+    } else {
+      ssoEnabledHint.textContent = "Enable SSO is on, but the protocol is still prototype access code only.";
+    }
+  }
+  if (samlSettingsPanel) {
+    samlSettingsPanel.classList.toggle("hidden", mode === "entra");
+  }
+  if (entraSettingsPanel) {
+    entraSettingsPanel.classList.toggle("hidden", mode !== "entra");
+  }
+}
+
+function ssoSettingsPayload() {
+  return {
+    ssoEnabled: Boolean(ssoEnabledInput && ssoEnabledInput.checked),
+    ssoMode: normalizeSsoMode(ssoMode ? ssoMode.value : "prototype"),
+    tenantId: entraTenantIdInput ? entraTenantIdInput.value.trim() : "",
+    clientId: entraClientIdInput ? entraClientIdInput.value.trim() : "",
+    clientSecret: entraClientSecretInput ? entraClientSecretInput.value.trim() : "",
+    redirectUri: entraRedirectUriInput ? entraRedirectUriInput.value.trim() : "",
+    authorizeUrl: entraAuthorizeUrlInput ? entraAuthorizeUrlInput.value.trim() : "",
+    tokenUrl: entraTokenUrlInput ? entraTokenUrlInput.value.trim() : "",
+    roleClaim: entraRoleClaimInput ? entraRoleClaimInput.value.trim() : "",
+    entityId: samlEntityIdInput ? samlEntityIdInput.value.trim() : "",
+    replyUrl: samlReplyUrlInput ? samlReplyUrlInput.value.trim() : "",
+    signOnUrl: samlSignOnUrlInput ? samlSignOnUrlInput.value.trim() : "",
+    relayState: samlRelayStateInput ? samlRelayStateInput.value.trim() : "",
+    logoutUrl: samlLogoutUrlInput ? samlLogoutUrlInput.value.trim() : "",
+    idpMetadataUrl: samlIdpMetadataUrlInput ? samlIdpMetadataUrlInput.value.trim() : "",
+  };
+}
+
+function applySsoSettingsForm(settings) {
+  if (!settings) return;
+  if (typeof settings.ssoEnabled === "boolean" && ssoEnabledInput) {
+    ssoEnabledInput.checked = settings.ssoEnabled;
+  }
+  if (settings.ssoMode && ssoMode) {
+    ssoMode.value = normalizeSsoMode(settings.ssoMode);
+  }
+  if (entraTenantIdInput) entraTenantIdInput.value = settings.tenantId || "Needs to be Generated";
+  if (entraClientIdInput) entraClientIdInput.value = settings.clientId || "Needs to be Generated";
+  if (entraClientSecretInput) {
+    entraClientSecretInput.value = settings.clientSecretSet ? "" : (settings.clientSecret || "TBD");
+    entraClientSecretInput.placeholder = settings.clientSecretSet ? "Saved on the API host" : "TBD";
+  }
+  if (entraRedirectUriInput) entraRedirectUriInput.value = settings.redirectUri || "TBD";
+  if (entraAuthorizeUrlInput) entraAuthorizeUrlInput.value = settings.authorizeUrl || "";
+  if (entraTokenUrlInput) entraTokenUrlInput.value = settings.tokenUrl || "";
+  if (entraRoleClaimInput) entraRoleClaimInput.value = settings.roleClaim || "TBD";
+  if (samlEntityIdInput) samlEntityIdInput.value = settings.entityId || "TBD";
+  if (samlReplyUrlInput) samlReplyUrlInput.value = settings.replyUrl || "TBD";
+  if (samlSignOnUrlInput) samlSignOnUrlInput.value = settings.signOnUrl || "";
+  if (samlRelayStateInput) samlRelayStateInput.value = settings.relayState || "";
+  if (samlLogoutUrlInput) samlLogoutUrlInput.value = settings.logoutUrl || "";
+  if (samlIdpMetadataUrlInput) samlIdpMetadataUrlInput.value = settings.idpMetadataUrl || "";
+  syncSsoConfigPanels();
+}
+
+function ssoPathNote(enabled, mode) {
+  if (!enabled) return "SSO is off.";
+  if (mode === "entra") return "SSO is enabled for City SSO / Entra ID (recorded only).";
+  if (mode === "saml") return "SSO is enabled for SAML (recorded only).";
+  return "SSO is enabled, but the protocol is still prototype access code only.";
+}
+
+async function loadSsoSettings() {
+  if (!isAdminGlobalUser() || !samlEntityIdInput) return;
+  try {
+    const response = await fetch(`${SQL_API_BASE}/api/sso-settings`);
+    if (!response.ok) throw new Error("status");
+    applySsoSettingsForm(await response.json());
+  } catch {
+    syncSsoConfigPanels();
+  }
+}
+
+async function saveSsoFromPanel() {
+  if (!isAdminGlobalUser()) return;
+  const settings = loadSecuritySettings();
+  settings.ssoEnabled = Boolean(ssoEnabledInput && ssoEnabledInput.checked);
+  settings.ssoMode = normalizeSsoMode(ssoMode ? ssoMode.value : "prototype");
+  if (settings.ssoEnabled && settings.ssoMode === "prototype") {
+    showMessage(
+      ssoSettingsMessage,
+      "Choose SAML (or Entra) before enabling SSO, or leave Enable SSO off for prototype access codes.",
+      true,
+    );
+    syncSsoConfigPanels();
+    return;
+  }
+  saveSecuritySettings(settings);
+  const pathNote = ssoPathNote(settings.ssoEnabled, settings.ssoMode);
+  if (saveSsoSettings) saveSsoSettings.disabled = true;
+  try {
+    const response = await fetch(`${SQL_API_BASE}/api/sso-settings`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(ssoSettingsPayload()),
+    });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      showMessage(ssoSettingsMessage, body.reason || "The API rejected the SSO fields.", true);
+      return;
+    }
+    applySsoSettingsForm(body);
+    showMessage(
+      ssoSettingsMessage,
+      `${pathNote} SAML / SSO fields were saved on the API host. Live SSO login is not active yet.`,
+    );
+  } catch {
+    showMessage(
+      ssoSettingsMessage,
+      `${pathNote} The API did not answer, so the SAML / SSO fields were not written to the API host.`,
+      true,
+    );
+  } finally {
+    if (saveSsoSettings) saveSsoSettings.disabled = false;
+    syncSsoConfigPanels();
+  }
+}
+
+function sqlAuthenticationLabel(mode) {
+  if (mode === "integrated") return "Windows integrated";
+  if (mode === "windows") return "Windows (NTLM)";
+  if (mode === "sql") return "SQL login";
+  return "not set";
+}
+
+function sqlSettingsPayload() {
+  return {
+    authentication: "integrated",
+    server: sqlServerInput ? sqlServerInput.value.trim() : "",
+    database: sqlDatabaseInput ? sqlDatabaseInput.value.trim() : "",
+    user: sqlUserInput ? sqlUserInput.value.trim() : "",
+    port: sqlPortInput ? sqlPortInput.value.trim() : "",
+    encrypt: Boolean(sqlEncryptInput && sqlEncryptInput.checked),
+    trustServerCertificate: Boolean(sqlTrustServerCertificateInput && sqlTrustServerCertificateInput.checked),
+  };
+}
+
+function applySqlSettingsForm(settings) {
+  if (!settings) return;
+  if (sqlServerInput) sqlServerInput.value = settings.server || "";
+  if (sqlDatabaseInput) sqlDatabaseInput.value = settings.database || "";
+  if (sqlUserInput) sqlUserInput.value = settings.user || "";
+  if (sqlPortInput) sqlPortInput.value = settings.port ? String(settings.port) : "";
+  if (sqlEncryptInput) sqlEncryptInput.checked = settings.encrypt !== false;
+  if (sqlTrustServerCertificateInput) sqlTrustServerCertificateInput.checked = Boolean(settings.trustServerCertificate);
+  if (sqlWindowsIdentity) {
+    const identity = settings.windowsIdentity ? `Windows account for this API: ${settings.windowsIdentity}.` : "";
+    const note = settings.windowsIdentityNote || "";
+    sqlWindowsIdentity.textContent = [identity, note].filter(Boolean).join(" ");
+  }
+  if (sqlSettingsStatus) {
+    const state = settings.connected ? "Connected" : settings.configured ? "Not connected" : "Not configured";
+    sqlSettingsStatus.textContent = `${state}. Authentication on the API: ${sqlAuthenticationLabel(settings.authentication)}.`;
+  }
+}
+
+function setSqlSettingsBusy(busy) {
+  if (testSqlSettingsButton) testSqlSettingsButton.disabled = busy;
+  if (saveSqlSettingsButton) saveSqlSettingsButton.disabled = busy;
+}
+
+async function loadSqlSettings() {
+  if (!isAdminGlobalUser() || !sqlServerInput) return;
+  try {
+    const response = await fetch(`${SQL_API_BASE}/api/sql-settings`);
+    if (!response.ok) throw new Error("status");
+    applySqlSettingsForm(await response.json());
+  } catch {
+    if (sqlSettingsStatus) {
+      sqlSettingsStatus.textContent = "The API did not answer. Database settings stay on the API host.";
+    }
+  }
+}
+
+async function submitSqlSettings(testOnly) {
+  if (!isAdminGlobalUser()) return;
+  const payload = sqlSettingsPayload();
+  if (!payload.server || !payload.database || !payload.user) {
+    showMessage(sqlSettingsMessage, "Enter the SQL Server, database, and user.", true);
+    return;
+  }
+  setSqlSettingsBusy(true);
+  showMessage(
+    sqlSettingsMessage,
+    testOnly ? "Testing Windows integrated connection…" : "Saving database settings…",
+  );
+  try {
+    const response = await fetch(`${SQL_API_BASE}/api/sql-settings${testOnly ? "/test" : ""}`, {
+      method: testOnly ? "POST" : "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      showMessage(sqlSettingsMessage, body.reason || "The API rejected those settings.", true);
+      return;
+    }
+    applySqlSettingsForm(body);
+    const saved = testOnly ? "" : "Settings saved on the API host. ";
+    showMessage(
+      sqlSettingsMessage,
+      body.connected
+        ? `${saved}Windows integrated connection succeeded.`
+        : `${saved}${body.reason || "SQL is not connected."}`,
+      !body.connected,
+    );
+  } catch {
+    showMessage(
+      sqlSettingsMessage,
+      "The API did not answer. Start the tracker API on this machine, then try again.",
+      true,
+    );
+  } finally {
+    setSqlSettingsBusy(false);
+  }
+}
+
+function saveSessionFromPanel() {
+  if (!isAdminGlobalUser()) return;
+  const settings = loadSecuritySettings();
+  settings.idleTimeoutMinutes = clampSecurityInt(idleTimeoutMinutes.value, 0, 480, 0);
+  settings.concurrentLoginLimit = clampSecurityInt(concurrentLoginLimit.value, 1, 10, 1);
+  settings.ipAllowlist = ipAllowlist.value.trim();
+  saveSecuritySettings(settings);
+  lastActivityAt = Date.now();
+  renderSecurityAuthPanel();
+  const ipNote = settings.ipAllowlist ? " IP allowlist is recorded and is not enforced in the browser." : "";
+  showMessage(
+    securityAuthMessage,
+    `Session rules saved. Idle timeout is ${settings.idleTimeoutMinutes} minutes.${ipNote}`,
+  );
+}
+
+function generateApiTokenFromPanel() {
+  if (!isAdminGlobalUser()) return;
+  const settings = loadSecuritySettings();
+  const bytes = new Uint8Array(18);
+  crypto.getRandomValues(bytes);
+  const secret = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+  const token = `ctk_${secret}`;
+  settings.tokens = [
+    {
+      id: crypto.randomUUID(),
+      label: apiTokenLabel.value.trim() || "Token",
+      last4: token.slice(-4),
+      createdAt: new Date().toISOString(),
+    },
+    ...settings.tokens,
+  ].slice(0, 20);
+  saveSecuritySettings(settings);
+  apiTokenLabel.value = "";
+  renderSecurityAuthPanel();
+  showMessage(securityAuthMessage, `Token created. Copy it now. The API does not accept it: ${token}`);
+}
+
+function revokeApiToken(tokenId) {
+  if (!isAdminGlobalUser()) return;
+  const settings = loadSecuritySettings();
+  settings.tokens = settings.tokens.filter((token) => token.id !== tokenId);
+  saveSecuritySettings(settings);
+  renderSecurityAuthPanel();
+  showMessage(securityAuthMessage, "Token revoked.");
 }
 
 function canAccessAdminConsole() {
@@ -3367,6 +4075,9 @@ function addManagedUser(event) {
       name,
       userType,
       accessCode,
+      mfaSecret: "",
+      mfaPendingSecret: "",
+      mfaEnrolled: false,
     },
   ];
   saveManagedUsers();
@@ -3374,6 +4085,7 @@ function addManagedUser(event) {
   document.querySelector("#newManagedUserType").value = "admin";
   showMessage(managedUserMessage, `Added ${USER_TYPE_LABELS[userType]} user ${name}.`);
   renderManagedUserTable();
+  renderSecurityAuthPanel();
 }
 
 function handleManagedUserTableClick(event) {
@@ -4326,6 +5038,25 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
+document.addEventListener("pointerdown", () => {
+  lastActivityAt = Date.now();
+});
+document.addEventListener("keydown", () => {
+  lastActivityAt = Date.now();
+});
+window.addEventListener("storage", (event) => {
+  if (event.key === STORAGE_KEYS.securitySettings) enforceSessionGeneration();
+});
+window.setInterval(() => {
+  enforceSessionGeneration();
+  const minutes = loadSecuritySettings().idleTimeoutMinutes;
+  if (!currentUser || minutes <= 0) return;
+  if (Date.now() - lastActivityAt >= minutes * 60 * 1000) {
+    signOutManagementUser(`Signed out after ${minutes} minutes of inactivity.`);
+  }
+}, 15000);
+
+normalizeAuthenticatorRequirement();
 renderManagedDropdowns();
 updateSetupVisibility();
 updateAccessControls();

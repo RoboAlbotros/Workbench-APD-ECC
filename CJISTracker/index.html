@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>CJIS Applicant Tracker</title>
-    <link rel="stylesheet" href="styles.css?v=audit-activity-stream-2" />
+    <link rel="stylesheet" href="styles.css?v=security-rebuild-main" />
   </head>
   <body class="signed-out">
     <header class="app-header" aria-label="Application header">
@@ -68,6 +68,17 @@
             </label>
             <div class="form-actions">
               <button class="primary-action" type="submit">Sign In</button>
+            </div>
+          </form>
+          <form id="mfaChallenge" class="signin-inline mfa-challenge hidden">
+            <p class="field-caption">Enter the 6-digit code from the Microsoft Authenticator app.</p>
+            <label>
+              Authenticator code
+              <input id="mfaChallengeCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" required />
+            </label>
+            <div class="form-actions">
+              <button class="primary-action" type="submit">Verify</button>
+              <button id="mfaChallengeCancel" class="secondary-action" type="button">Cancel</button>
             </div>
           </form>
           <div id="sessionControls" class="session-controls hidden">
@@ -324,47 +335,232 @@
           <div id="dataProtectionResults" class="table-wrap"></div>
         </section>
 
-        <section class="panel future-admin-panel admin-global-only hidden" aria-labelledby="futureSecurityHeading">
+        <section id="securityAuthPanel" class="panel security-auth-panel admin-global-only hidden" aria-labelledby="futureSecurityHeading">
           <div class="panel-heading">
             <div>
+              <p class="eyebrow">Admin-Global</p>
               <h2 id="futureSecurityHeading">Security &amp; Authentication</h2>
             </div>
-            <span class="status-pill">Not implemented</span>
+            <span id="securityAuthStatus" class="status-pill">Active</span>
           </div>
           <p class="field-caption">
-            Reserved for a later authorized sprint. These controls are not active and do not change
-            login. Production authentication remains City SSO / Entra ID (DEC-015) when that work is
-            authorized. Provider names below are examples only.
+            Active for named Admin-Global users only. Sign-in settings are stored in this browser.
+            Database credentials are saved on the API host. Microsoft Authenticator uses a time-based
+            code from a QR setup in this browser. SAML / SSO settings can be recorded below; live SSO
+            login is not connected, and these controls do not satisfy G-SEC.
           </p>
+          <p id="securityAuthMessage" class="form-message" role="status"></p>
           <div class="future-admin-grid">
+            <article class="future-admin-card future-admin-card-wide">
+              <h3>Database credentials</h3>
+              <p>
+                Windows integrated connects as the Windows account running the API. Enter the SQL
+                Server, database, and user here. No SQL password is entered or stored in this browser.
+              </p>
+              <p id="sqlSettingsStatus" class="future-metric">Connection: not checked</p>
+              <p id="sqlWindowsIdentity" class="field-caption"></p>
+              <div class="sql-settings-grid">
+                <label>
+                  Authentication
+                  <input id="sqlAuthentication" type="text" value="Windows integrated" readonly />
+                </label>
+                <label>
+                  SQL Server
+                  <input id="sqlServer" type="text" autocomplete="off" spellcheck="false" placeholder="host or host\instance" />
+                </label>
+                <label>
+                  Database
+                  <input id="sqlDatabase" type="text" autocomplete="off" spellcheck="false" />
+                </label>
+                <label>
+                  User
+                  <input id="sqlUser" type="text" autocomplete="off" spellcheck="false" placeholder="DOMAIN\user" />
+                </label>
+                <label>
+                  Port
+                  <input id="sqlPort" type="text" inputmode="numeric" autocomplete="off" placeholder="Blank for a named instance" />
+                </label>
+              </div>
+              <label class="security-check">
+                <input id="sqlEncrypt" type="checkbox" checked />
+                Encrypt the SQL connection
+              </label>
+              <label class="security-check">
+                <input id="sqlTrustServerCertificate" type="checkbox" />
+                Trust server certificate
+              </label>
+              <p class="field-caption">
+                Leave the port blank when the server name includes an instance. Trust server certificate
+                is for an internal SQL Server that does not present a certificate this machine already trusts.
+              </p>
+              <div class="form-actions">
+                <button id="testSqlSettings" class="secondary-action" type="button">Test connection</button>
+                <button id="saveSqlSettings" class="secondary-action" type="button">Save database settings</button>
+              </div>
+              <p id="sqlSettingsMessage" class="form-message" role="status"></p>
+            </article>
             <article class="future-admin-card">
               <h3>Multi-Factor Authentication (MFA)</h3>
               <p>
-                Enforce mandatory MFA for all accounts and display live compliance percentages
-                (example: 98% of users enrolled).
+                Connect a named user to the Microsoft Authenticator app. When MFA is required,
+                sign-in asks for the current 6-digit code. Set up this Admin-Global account
+                before turning the requirement on.
               </p>
-              <p class="future-metric">Enrollment: not available</p>
-              <button class="secondary-action" type="button" disabled>Enforce MFA</button>
+              <p id="mfaEnrollmentMetric" class="future-metric">Enrollment: 0%</p>
+              <label class="security-check">
+                <input id="mfaRequired" type="checkbox" />
+                Require Microsoft Authenticator for sign-in
+              </label>
+              <div id="mfaEnrollmentList" class="mfa-enrollment-list"></div>
+              <div id="mfaSetup" class="mfa-setup hidden">
+                <p id="mfaSetupUser"></p>
+                <div id="mfaQr"></div>
+                <p class="field-caption">In Microsoft Authenticator, add a work or personal account, then scan this code. If the camera cannot scan it, choose enter a key manually and type the key below. Account: CJIS Tracker.</p>
+                <p>Manual key: <code id="mfaManualKey" class="mfa-manual-key"></code></p>
+                <label>
+                  Code from Microsoft Authenticator
+                  <input id="mfaConfirmCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" />
+                </label>
+                <button id="mfaConfirmSetup" class="secondary-action" type="button">Confirm Authenticator</button>
+              </div>
+              <button id="saveMfaSettings" class="secondary-action" type="button">Save MFA requirement</button>
             </article>
-            <article class="future-admin-card">
-              <h3>Single Sign-On (SSO)</h3>
+            <article class="future-admin-card future-admin-card-wide" id="samlSsoConfigCard">
+              <div class="panel-heading sso-config-heading">
+                <div>
+                  <p class="eyebrow">Admin-Global</p>
+                  <h3>SAML Configuration &amp; SSO</h3>
+                </div>
+                <span id="ssoEnabledStatus" class="status-pill">SSO off</span>
+              </div>
               <p>
-                Configure SAML 2.5 or OIDC providers (examples: Okta, Google Workspace, Auth0).
-                Recorded production direction is City SSO / Entra ID.
+                Record SAML settings for this application and turn SSO on when the IdP values are
+                ready. Live SAML sign-in is not wired yet; prototype access codes remain the active
+                login until a later authorized SSO sprint.
               </p>
-              <button class="secondary-action" type="button" disabled>Configure SSO</button>
+              <label class="security-check">
+                <input id="ssoEnabled" type="checkbox" />
+                Enable SSO
+              </label>
+              <label>
+                SSO protocol
+                <select id="ssoMode">
+                  <option value="prototype">Prototype access code only</option>
+                  <option value="saml">SAML</option>
+                  <option value="entra">City SSO / Entra ID (optional / not selected)</option>
+                </select>
+              </label>
+              <p id="ssoEnabledHint" class="field-caption">
+                Turn Enable SSO on and choose SAML to save the service-provider addresses below.
+              </p>
+
+              <div id="samlSettingsPanel">
+                <h4>SAML</h4>
+                <p class="field-caption">
+                  Service provider values for the City identity provider. Leave optional fields blank
+                  until the IdP supplies them. Do not invent Entity ID or Reply URL values.
+                </p>
+                <div class="sql-settings-grid">
+                  <label>
+                    Identifier (Entity ID)
+                    <input id="samlEntityId" type="text" value="TBD" autocomplete="off" spellcheck="false" />
+                  </label>
+                  <label>
+                    Reply URL (Assertion Consumer Service URL)
+                    <input id="samlReplyUrl" type="text" value="TBD" autocomplete="off" spellcheck="false" />
+                  </label>
+                  <label>
+                    Sign on URL (Optional)
+                    <input id="samlSignOnUrl" type="text" value="" placeholder="Optional" autocomplete="off" spellcheck="false" />
+                  </label>
+                  <label>
+                    Relay State (Optional)
+                    <input id="samlRelayState" type="text" value="" placeholder="Optional" autocomplete="off" spellcheck="false" />
+                  </label>
+                  <label>
+                    Logout URL (Optional)
+                    <input id="samlLogoutUrl" type="text" value="" placeholder="Optional" autocomplete="off" spellcheck="false" />
+                  </label>
+                  <label>
+                    IdP Metadata URL (Optional)
+                    <input id="samlIdpMetadataUrl" type="text" value="" placeholder="Optional" autocomplete="off" spellcheck="false" />
+                  </label>
+                </div>
+              </div>
+
+              <div id="entraSettingsPanel" class="hidden">
+                <h4>Entra ID (optional)</h4>
+                <p class="field-caption">
+                  Kept for reference if City identity later requires OIDC. Owner direction for this
+                  application is SAML. Client secret is saved on the API host and is not shown again
+                  after a real secret is stored.
+                </p>
+                <div class="sql-settings-grid">
+                  <label>
+                    Tenant ID
+                    <input id="entraTenantId" type="text" value="Needs to be Generated" autocomplete="off" spellcheck="false" />
+                  </label>
+                  <label>
+                    Client ID
+                    <input id="entraClientId" type="text" value="Needs to be Generated" autocomplete="off" spellcheck="false" />
+                  </label>
+                  <label>
+                    Client secret
+                    <input id="entraClientSecret" type="text" value="TBD" autocomplete="off" spellcheck="false" />
+                  </label>
+                  <label>
+                    Redirect URI
+                    <input id="entraRedirectUri" type="text" value="TBD" autocomplete="off" spellcheck="false" />
+                  </label>
+                  <label>
+                    Authorize URL
+                    <input id="entraAuthorizeUrl" type="text" value="" autocomplete="off" spellcheck="false" />
+                  </label>
+                  <label>
+                    Token URL
+                    <input id="entraTokenUrl" type="text" value="" autocomplete="off" spellcheck="false" />
+                  </label>
+                  <label>
+                    Role claim
+                    <input id="entraRoleClaim" type="text" value="TBD" autocomplete="off" spellcheck="false" />
+                  </label>
+                </div>
+              </div>
+
+              <div class="form-actions">
+                <button id="saveSsoSettings" class="secondary-action" type="button">Save SAML / SSO settings</button>
+              </div>
+              <p id="ssoSettingsMessage" class="form-message" role="status"></p>
             </article>
             <article class="future-admin-card">
               <h3>Session Management</h3>
-              <p>Set idle timeout durations, concurrent login limits, and IP allowlists.</p>
-              <button class="secondary-action" type="button" disabled>Edit Session Rules</button>
+              <p>Idle timeout signs out this open session. Use 0 to leave the session open.</p>
+              <label>
+                Idle timeout (minutes)
+                <input id="idleTimeoutMinutes" type="number" min="0" max="480" step="1" value="0" />
+              </label>
+              <label>
+                Concurrent login limit
+                <input id="concurrentLoginLimit" type="number" min="1" max="10" step="1" value="1" />
+              </label>
+              <p class="field-caption">Recorded for this browser. A limit of 1 signs out an older tab when a new sign-in starts.</p>
+              <label>
+                IP allowlist
+                <textarea id="ipAllowlist" rows="2" placeholder="Not enforced in the browser"></textarea>
+              </label>
+              <button id="saveSessionSettings" class="secondary-action" type="button">Save Session Rules</button>
             </article>
             <article class="future-admin-card">
               <h3>API Keys &amp; Webhooks</h3>
               <p>
-                Generate, rotate, and scope service tokens with granular read/write permissions.
+                Tokens are stored in this browser and shown once. The API does not accept them.
               </p>
-              <button class="secondary-action" type="button" disabled>Generate Token</button>
+              <label>
+                Token label
+                <input id="apiTokenLabel" type="text" maxlength="40" autocomplete="off" />
+              </label>
+              <button id="generateApiToken" class="secondary-action" type="button">Generate Token</button>
+              <div id="apiTokenList" class="mfa-enrollment-list"></div>
             </article>
           </div>
         </section>
@@ -764,7 +960,8 @@
     </aside>
 
     <script src="test-applicants.js?v=sprint-007-anna-import"></script>
-    <script src="app.js?v=fix-new-applicant-sql-save"></script>
+    <script src="mfa-authenticator.js?v=security-rebuild-main"></script>
+    <script src="app.js?v=security-rebuild-main"></script>
     <!-- tracker-list-overrides.js retired in SPRINT-005; behaviors folded into app.js and styles.css. -->
   </body>
 </html>
