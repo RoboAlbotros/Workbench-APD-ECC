@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  IIS site root web.config for Clearance Tracker INTDEV PROD stack.
+  Serves static files and reverse-proxies /api and /health
+  to the Node API on 127.0.0.1:8742 (ARR + URL Rewrite required).
+  Do not put secrets in this file.
+-->
+<configuration>
+  <system.webServer>
+    <defaultDocument>
+      <files>
+        <clear />
+        <add value="index.html" />
+      </files>
+    </defaultDocument>
+    <directoryBrowse enabled="false" />
+    <httpProtocol>
+      <customHeaders>
+        <remove name="X-Powered-By" />
+      </customHeaders>
+    </httpProtocol>
+    <rewrite>
+      <rules>
+        <rule name="ClearanceTrackerProd Health Proxy" stopProcessing="true">
+          <match url="^health$" />
+          <action type="Rewrite" url="http://127.0.0.1:8742/health" />
+        </rule>
+        <rule name="ClearanceTrackerProd Api Proxy" stopProcessing="true">
+          <match url="^api/(.*)" />
+          <action type="Rewrite" url="http://127.0.0.1:8742/api/{R:1}" />
+        </rule>
+      </rules>
+    </rewrite>
+  </system.webServer>
+</configuration>

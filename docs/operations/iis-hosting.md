@@ -21,13 +21,32 @@ Applied on `DTIAPPSINTDEV` (`10.5.16.108`):
 ## Architecture
 
 - **IIS** serves `CJISTracker/` static files and reverse-proxies `/api/*` and `/health` to the Node API via ARR + URL Rewrite ([deploy/iis/web.config](../../deploy/iis/web.config)).
-- **Node API** (`backend/`) listens on `127.0.0.1:8741` only and runs as Windows Service `ClearanceTrackerApi` (Automatic) under `COA\svc-clearancetracker`.
+- **Node API** (`backend/`) listens on loopback only and runs as a Windows Service (Automatic).
 - **Secrets** live only in `backend\.env` on the server (never in git or workflow YAML).
 
+### Dual INTDEV stacks (TEST vs PROD)
+
+INTDEV hosts two independent stacks so TEST and PROD work do not overwrite each other:
+
+| Stack | Site root | IIS site | Host header | API service | Port | SQL database | Deploy branch |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| TEST | `D:\inetpub\clearancetracker` | `ClearanceTracker` | `clearancetracker.cabq.gov` | `ClearanceTrackerApi` | 8741 | `TRACKERAPP_TEST` | `develop` / manual |
+| PROD | `D:\inetpub\clearancetracker-prod` | `ClearanceTrackerProd` | `clearancetracker-prod.cabq.gov` | `ClearanceTrackerApiProd` | 8742 | `TRACKERAPP_PROD` | `Security-&-Authentication` |
+
+One-time PROD stack create (admin on `DTIAPPSINTDEV`):
+
+```powershell
+.\deploy\iis\Install-ClearanceTrackerProdStack.ps1
+```
+
+Optional GitHub variable: `INTDEV_PROD_SITE_ROOT` = `D:\inetpub\clearancetracker-prod`. Add a hosts-file (or DNS) entry for `clearancetracker-prod.cabq.gov` → `10.5.16.108` the same way as the TEST hostname.
+
 ```text
-Browser → https://clearancetracker.cabq.gov
-       → IIS static (index.html, app.js, …)
-       → IIS ARR /api,/health → 127.0.0.1:8741 → SQL
+Browser → http://clearancetracker.cabq.gov
+       → IIS static + ARR → 127.0.0.1:8741 → TRACKERAPP_TEST
+
+Browser → http://clearancetracker-prod.cabq.gov
+       → IIS static + ARR → 127.0.0.1:8742 → TRACKERAPP_PROD
 ```
 
 ## One-time server setup (run as admin on the host)
@@ -63,7 +82,8 @@ $pw = Read-Host -AsSecureString "Password for COA\svc-clearancetracker"
 
 | Branch | Workflow | Runner labels | GitHub environment |
 | --- | --- | --- | --- |
-| `develop` | [.github/workflows/deploy-intdev.yml](../../.github/workflows/deploy-intdev.yml) | `self-hosted`, `Windows`, `intdev` | `intdev` |
+| `develop` | [.github/workflows/deploy-intdev.yml](../../.github/workflows/deploy-intdev.yml) | `self-hosted`, `Windows`, `intdev` | `intdev` (TEST stack) |
+| `Security-&-Authentication` | [.github/workflows/deploy-intdev-prod.yml](../../.github/workflows/deploy-intdev-prod.yml) | `self-hosted`, `Windows`, `intdev` | `intdev` (PROD stack) |
 | `main` | [.github/workflows/deploy-intprd.yml](../../.github/workflows/deploy-intprd.yml) | `self-hosted`, `Windows`, `intprd` | `intprd` |
 
 ### Runner install (each app server)

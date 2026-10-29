@@ -15,6 +15,8 @@ param(
   [Parameter(Mandatory = $true)]
   [string]$SiteRoot,
   [string]$ServiceName = "ClearanceTrackerApi",
+  [int]$ApiPort = 8741,
+  [string]$WebConfigRelativePath = "deploy\iis\web.config",
   [switch]$SkipNpmCi,
   [switch]$SkipServiceRestart
 )
@@ -24,7 +26,7 @@ $ErrorActionPreference = "Stop"
 $repoRoot = (Resolve-Path -LiteralPath $RepoRoot).Path
 $staticSrc = Join-Path $repoRoot "CJISTracker"
 $backendSrc = Join-Path $repoRoot "backend"
-$webConfigSrc = Join-Path $repoRoot "deploy\iis\web.config"
+$webConfigSrc = Join-Path $repoRoot $WebConfigRelativePath
 
 if (-not (Test-Path -LiteralPath $staticSrc)) { throw "Missing $staticSrc" }
 if (-not (Test-Path -LiteralPath $backendSrc)) { throw "Missing $backendSrc" }
@@ -103,7 +105,7 @@ if (-not $SkipServiceRestart) {
 }
 
 try {
-  $health = Invoke-RestMethod -Uri "http://127.0.0.1:8741/health" -TimeoutSec 10
+  $health = Invoke-RestMethod -Uri "http://127.0.0.1:$ApiPort/health" -TimeoutSec 10
   Write-Host ("health listen={0} sql.configured={1} sql.connected={2}" -f `
     $health.listen, $health.database.configured, $health.database.connected)
 } catch {

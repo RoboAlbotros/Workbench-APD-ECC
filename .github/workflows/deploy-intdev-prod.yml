@@ -1,0 +1,55 @@
+# Deploy Clearance Tracker PROD stack on DTIAPPSINTDEV (separate from TEST).
+# Site: D:\inetpub\clearancetracker-prod → API :8742 → TRACKERAPP_PROD
+# Does not touch the TEST stack (clearancetracker / :8741 / TRACKERAPP_TEST).
+
+name: Deploy INTDEV PROD stack
+
+on:
+  push:
+    branches:
+      - Security-&-Authentication
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-intdev-prod
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Publish PROD stack on DTIAPPSINTDEV
+    runs-on: [self-hosted, Windows, intdev]
+    environment: intdev
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Publish site and restart PROD API
+        shell: powershell
+        env:
+          SITE_ROOT: ${{ vars.INTDEV_PROD_SITE_ROOT }}
+        run: |
+          $siteRoot = $env:SITE_ROOT
+          if ([string]::IsNullOrWhiteSpace($siteRoot)) {
+            $siteRoot = "D:\inetpub\clearancetracker-prod"
+          }
+          if (-not (Test-Path -LiteralPath $siteRoot)) {
+            throw "PROD site root missing: $siteRoot. Run deploy\iis\Install-ClearanceTrackerProdStack.ps1 once on the host."
+          }
+          & "$env:GITHUB_WORKSPACE\deploy\Publish-ClearanceTracker.ps1" `
+            -RepoRoot $env:GITHUB_WORKSPACE `
+            -SiteRoot $siteRoot `
+            -ServiceName "ClearanceTrackerApiProd" `
+            -ApiPort 8742 `
+            -WebConfigRelativePath "deploy\iis\web.config.prod"
+
+      - name: Smoke health (PROD localhost API)
+        shell: powershell
+        run: |
+          $health = Invoke-RestMethod -Uri "http://127.0.0.1:8742/health" -TimeoutSec 15
+          Write-Host ($health | ConvertTo-Json -Depth 6 -Compress)
+          if ($null -eq $health.database) {
+            throw "Unexpected health payload (missing database)"
+          }
