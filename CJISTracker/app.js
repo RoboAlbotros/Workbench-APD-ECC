@@ -121,6 +121,7 @@ const CREATE_REQUIRED_FIELDS = [
   { field: "firstName", label: "First Name" },
   { field: "driversLicense", label: "Driver Lic Num" },
   { field: "requestor", label: "Requestor" },
+  { field: "clearanceType", label: "Clearance Type" },
 ];
 const NAME_SUFFIX_VALUES = new Set(["JR", "SR", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "ESQ", "PHD", "MD", "DDS"]);
 const DEFAULT_DEPARTMENT_OPTIONS = [
@@ -1308,14 +1309,15 @@ if (adminTable) {
 }
 
 function saveRecords() {
-  saveRecordSet(records);
+  return saveRecordSet(records);
 }
 
 function saveRecordSet(recordSet) {
   localStorage.setItem(STORAGE_KEYS.records, JSON.stringify(recordSet));
   if (persistenceMode === "sql") {
-    void persistRecordsToSql(recordSet);
+    return persistRecordsToSql(recordSet);
   }
+  return Promise.resolve(true);
 }
 
 function recordsForSql(recordSet) {
@@ -1340,15 +1342,17 @@ async function persistRecordsToSql(recordSet) {
       const body = await response.json().catch(() => ({}));
       sqlPersistError = body.reason || body.error || `HTTP ${response.status}`;
       updatePersistenceStatus();
-      return;
+      return false;
     }
     sqlPersistError = "";
     sqlRecordsFingerprint = recordsFingerprint(recordSet);
     sqlLastRefreshAt = new Date();
     updatePersistenceStatus();
+    return true;
   } catch (error) {
     sqlPersistError = error.message || String(error);
     updatePersistenceStatus();
+    return false;
   } finally {
     sqlPersistInFlight = false;
   }
@@ -1832,10 +1836,28 @@ function normalizeYesNo(value) {
   return "";
 }
 
+function seedLoginAliases(seed) {
+  return [seed.name, seed.displayName, ...(Array.isArray(seed.previousNames) ? seed.previousNames : [])]
+    .map((value) => String(value || "").trim().toLowerCase())
+    .filter(Boolean);
+}
+
 function findManagedUserByCredentials(name, code) {
   const needle = String(name || "").trim().toLowerCase();
   if (!needle || !code) return null;
-  return managedUsers.find((user) => user.name.toLowerCase() === needle && user.accessCode === code) || null;
+  const direct = managedUsers.find(
+    (user) => user.name.toLowerCase() === needle && user.accessCode === code,
+  );
+  if (direct) return direct;
+  const seed = SEED_MANAGED_USERS.find(
+    (entry) => entry.accessCode === code && seedLoginAliases(entry).includes(needle),
+  );
+  if (!seed) return null;
+  return (
+    managedUsers.find(
+      (user) => user.name.toLowerCase() === String(seed.name).toLowerCase() && user.accessCode === code,
+    ) || null
+  );
 }
 
 function managedUserRole(user) {
@@ -2143,7 +2165,7 @@ function setFormFieldValue(field, value) {
   document.querySelector(`#${field}`).value = nextValue;
 }
 
-function saveApplicant(event) {
+async function saveApplicant(event) {
   event.preventDefault();
   if (currentFormMode === "view") {
     showMessage(formMessage, "Applicant record is open in read-only view mode.", true);
@@ -2231,21 +2253,46 @@ function saveApplicant(event) {
 
   const existingIndex = records.findIndex((record) => record.id === id);
   const previousRecord = existingIndex >= 0 ? records[existingIndex] : null;
+  const wasCreate = existingIndex < 0;
   nextRecord.archived = Boolean(previousRecord?.archived);
   nextRecord.archivedAt = previousRecord?.archived ? String(previousRecord.archivedAt || "") : "";
   nextRecord.archivedBy = previousRecord?.archived ? String(previousRecord.archivedBy || "") : "";
   if (existingIndex >= 0) {
     records[existingIndex] = nextRecord;
-    logRecordChange("Updated", nextRecord, getChangedFields(previousRecord, nextRecord));
   } else {
     records.unshift(nextRecord);
-    logRecordChange("Created", nextRecord, ["Record created"]);
   }
 
-  saveRecords();
+  if (saveApplicantButton) saveApplicantButton.disabled = true;
+  showMessage(formMessage, persistenceMode === "sql" ? "Saving to SQL…" : "Saving…");
+  const persisted = await saveRecordSet(records);
+  if (saveApplicantButton) saveApplicantButton.disabled = false;
+
+  if (!persisted) {
+    if (wasCreate) {
+      records = records.filter((record) => record.id !== id);
+    } else if (previousRecord) {
+      records[existingIndex] = previousRecord;
+    }
+    renderAll();
+    showMessage(
+      formMessage,
+      `Save failed: ${sqlPersistError || "SQL could not store the applicant"}. Your form is still open — try again.`,
+      true,
+    );
+    return;
+  }
+
+  if (wasCreate) {
+    logRecordChange("Created", nextRecord, ["Record created"]);
+  } else {
+    logRecordChange("Updated", nextRecord, getChangedFields(previousRecord, nextRecord));
+  }
+
   resetApplicantForm();
   renderAll();
-  showMessage(formMessage, "Applicant record saved.");
+  showMessage(accessMessage, wasCreate ? "Applicant record created." : "Applicant record saved.");
+  showMessage(formMessage, "");
 }
 
 function resetApplicantForm() {

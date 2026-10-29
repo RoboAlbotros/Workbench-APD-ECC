@@ -532,7 +532,7 @@
         <p id="applicantActivityStatus" class="applicant-activity-status badge inactive" aria-live="polite">InActive</p>
       </div>
 
-      <form id="applicantForm" class="record-form drawer-form">
+      <form id="applicantForm" class="record-form drawer-form" novalidate>
         <input id="recordId" type="hidden" />
 
         <fieldset class="form-section">
@@ -604,7 +604,6 @@
               inputmode="numeric"
               maxlength="12"
               placeholder="XXX-XXX-XXXX"
-              pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"
               title="10-digit phone number as XXX-XXX-XXXX"
             />
           </label>
@@ -625,8 +624,8 @@
         <fieldset class="form-section">
           <legend>Clearance &amp; Access</legend>
           <label>
-            Clearance Type
-            <select id="clearanceType" required>
+            Clearance Type*
+            <select id="clearanceType">
               <option value="">Select type</option>
               <option>Full Clearance</option>
               <option>One Time Visit</option>
@@ -765,7 +764,7 @@
     </aside>
 
     <script src="test-applicants.js?v=sprint-007-anna-import"></script>
-    <script src="app.js?v=seed-james-gray-global"></script>
+    <script src="app.js?v=fix-new-applicant-sql-save"></script>
     <!-- tracker-list-overrides.js retired in SPRINT-005; behaviors folded into app.js and styles.css. -->
   </body>
 </html>
