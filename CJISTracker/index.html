@@ -273,7 +273,8 @@
             review archived records, and can open Settings, but cannot restore applicants.
             Admin-Full, Admin-Global, and Admin-Staff can delete from Archived Records. Read Only
             users sign in as Read Only. Shared Read Only and Admin-Full access codes still work.
-            Prototype codes stay in this browser only.
+            Email Address is stored for future City SSO / Entra matching and may be entered only by
+            Admin-Global. Prototype codes stay in this browser only.
           </p>
           <form id="addManagedUserForm" class="signin-inline managed-user-form">
             <label>
@@ -288,6 +289,15 @@
                 <option value="adminStaff">Admin-Staff</option>
                 <option value="readOnly">Read Only</option>
               </select>
+            </label>
+            <label id="newManagedUserEmailField" class="admin-global-only hidden">
+              Email Address
+              <input
+                id="newManagedUserEmail"
+                type="email"
+                autocomplete="email"
+                placeholder="name@example.com"
+              />
             </label>
             <label>
               Access Code
@@ -764,7 +774,7 @@
     </aside>
 
     <script src="test-applicants.js?v=sprint-007-anna-import"></script>
-    <script src="app.js?v=fix-new-applicant-sql-save"></script>
+    <script src="app.js?v=fix-user-email-entra-prep"></script>
     <!-- tracker-list-overrides.js retired in SPRINT-005; behaviors folded into app.js and styles.css. -->
   </body>
 </html>

@@ -434,6 +434,26 @@ function matchClosedOption(value, options, aliases = {}) {
   return raw;
 }
 
+function normalizeManagedUserEmail(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function isValidManagedUserEmail(value) {
+  const email = normalizeManagedUserEmail(value);
+  if (!email) return true;
+  // Prototype format check only — not Entra directory validation.
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function managedUserDisplayName(user) {
+  const stored = String(user?.displayName || "").trim();
+  if (stored) return stored;
+  const seed = SEED_MANAGED_USERS.find(
+    (entry) => String(entry.name || "").trim().toLowerCase() === String(user?.name || "").trim().toLowerCase(),
+  );
+  return String(seed?.displayName || "").trim();
+}
+
 function loadManagedUsers() {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.managedUsers);
@@ -444,6 +464,8 @@ function loadManagedUsers() {
       .map((user) => ({
         id: String(user.id || createId()),
         name: String(user.name || "").trim(),
+        displayName: String(user.displayName || "").trim(),
+        email: normalizeManagedUserEmail(user.email),
         userType: normalizeManagedUserType(user.userType),
         accessCode: String(user.accessCode || ""),
       }))
@@ -528,14 +550,18 @@ function ensureSeedManagedUsers(existingUsers) {
     const index = findSeedManagedUserIndex(next, seed);
     if (index >= 0) {
       const current = next[index];
+      const nextDisplayName = String(current.displayName || seed.displayName || "").trim();
       if (
         current.name !== seed.name ||
         current.userType !== seed.userType ||
-        current.accessCode !== seed.accessCode
+        current.accessCode !== seed.accessCode ||
+        String(current.displayName || "").trim() !== nextDisplayName
       ) {
         next[index] = {
           ...current,
           name: seed.name,
+          displayName: nextDisplayName,
+          email: normalizeManagedUserEmail(current.email),
           userType: seed.userType,
           accessCode: seed.accessCode,
         };
@@ -548,6 +574,8 @@ function ensureSeedManagedUsers(existingUsers) {
     next.push({
       id: createId(),
       name: seed.name,
+      displayName: String(seed.displayName || "").trim(),
+      email: "",
       userType: seed.userType,
       accessCode: seed.accessCode,
     });
@@ -932,21 +960,25 @@ function loadRecords() {
 }
 
 let records = ensureLimitedViewSeedRecords(loadRecords());
-let changeLog = seedBatchReplaced ? [] : loadChangeLog();
+// Keep prior audit events across seed-batch swaps. Defer the import log until after
+// DOM bindings exist — calling logRecordChange here hits a TDZ on changeLogPanel /
+// fullScreenView and can abort the rest of app.js (no further logging).
+let changeLog = loadChangeLog();
+let pendingSeedImportLog = null;
 if (seedBatchReplaced) {
-  logRecordChange(
-    "Imported (replaced all)",
-    { id: "import", name: `${records.length} records from Anna workbook` },
-    [`${records.length} records imported`, "Existing test records replaced", "Excluded raw Driver's License column"],
-  );
+  pendingSeedImportLog = {
+    action: "Imported (replaced all)",
+    record: { id: "import", name: `${records.length} records from Anna workbook` },
+    changes: [
+      `${records.length} records imported`,
+      "Existing test records replaced",
+      "Excluded raw Driver's License column",
+    ],
+  };
   saveRecordSet(records);
 }
-if (inquiryDueMigrationCount) {
-  logInquiryDueMigration(inquiryDueMigrationCount);
-}
-if (iiiCompletionMigrationCount) {
-  logIiiCompletionIsoMigration(iiiCompletionMigrationCount);
-}
+let pendingInquiryDueMigrationCount = inquiryDueMigrationCount;
+let pendingIiiCompletionMigrationCount = iiiCompletionMigrationCount;
 let currentUser = null;
 let currentView = "limited";
 let fullScreenView = null;
@@ -2289,10 +2321,11 @@ async function saveApplicant(event) {
     logRecordChange("Updated", nextRecord, getChangedFields(previousRecord, nextRecord));
   }
 
-  resetApplicantForm();
+  // Stay on the saved record so the drawer Change Log shows the new event.
   renderAll();
+  loadApplicantForm(id, "edit");
   showMessage(accessMessage, wasCreate ? "Applicant record created." : "Applicant record saved.");
-  showMessage(formMessage, "");
+  showMessage(formMessage, wasCreate ? "Applicant record created." : "Applicant record saved.");
 }
 
 function resetApplicantForm() {
@@ -3336,6 +3369,9 @@ function addManagedUser(event) {
   const name = document.querySelector("#newManagedUserName").value.trim();
   const userType = normalizeManagedUserType(document.querySelector("#newManagedUserType").value);
   const accessCode = document.querySelector("#newManagedUserCode").value;
+  const emailInput = document.querySelector("#newManagedUserEmail");
+  const emailRaw = isAdminGlobalUser() ? String(emailInput?.value || "") : "";
+  const email = normalizeManagedUserEmail(emailRaw);
   if (!name) {
     showMessage(managedUserMessage, "User Name is required.", true);
     return;
@@ -3352,6 +3388,21 @@ function addManagedUser(event) {
     showMessage(managedUserMessage, "Choose an access code that is not a former default or trivial sequence.", true);
     return;
   }
+  if (email && !isAdminGlobalUser()) {
+    showMessage(managedUserMessage, "Only Admin-Global can enter Email Address.", true);
+    return;
+  }
+  if (!isValidManagedUserEmail(email)) {
+    showMessage(managedUserMessage, "Enter a valid Email Address (example: name@cabq.gov).", true);
+    return;
+  }
+  if (
+    email &&
+    managedUsers.some((user) => normalizeManagedUserEmail(user.email) === email)
+  ) {
+    showMessage(managedUserMessage, "That Email Address is already assigned to another user.", true);
+    return;
+  }
   if (managedUsers.some((user) => user.name.toLowerCase() === name.toLowerCase())) {
     showMessage(managedUserMessage, "A user with that name already exists.", true);
     return;
@@ -3365,6 +3416,8 @@ function addManagedUser(event) {
     {
       id: createId(),
       name,
+      displayName: "",
+      email,
       userType,
       accessCode,
     },
@@ -3380,6 +3433,11 @@ function handleManagedUserTableClick(event) {
   const removeButton = event.target.closest("[data-remove-user]");
   if (removeButton) {
     removeManagedUser(removeButton.dataset.removeUser);
+    return;
+  }
+  const emailButton = event.target.closest("[data-change-user-email]");
+  if (emailButton) {
+    changeManagedUserEmail(emailButton.dataset.changeUserEmail);
     return;
   }
   const changeButton = event.target.closest("[data-change-user-code]");
@@ -3426,31 +3484,83 @@ function changeManagedUserCode(id) {
   renderManagedUserTable();
 }
 
+function changeManagedUserEmail(id) {
+  if (!canAccessAdminConsole()) return;
+  if (!isAdminGlobalUser()) {
+    showMessage(managedUserMessage, "Only Admin-Global can enter Email Address.", true);
+    return;
+  }
+  const user = managedUsers.find((entry) => entry.id === id);
+  if (!user) return;
+  const person = managedUserDisplayName(user) || user.name;
+  const nextEmail = window.prompt(
+    `Email Address for ${person} (for future Entra / SSO matching). Leave blank to clear.`,
+    user.email || "",
+  );
+  if (nextEmail === null) return;
+  const email = normalizeManagedUserEmail(nextEmail);
+  if (!isValidManagedUserEmail(email)) {
+    showMessage(managedUserMessage, "Enter a valid Email Address (example: name@cabq.gov).", true);
+    return;
+  }
+  if (
+    email &&
+    managedUsers.some(
+      (entry) => entry.id !== user.id && normalizeManagedUserEmail(entry.email) === email,
+    )
+  ) {
+    showMessage(managedUserMessage, "That Email Address is already assigned to another user.", true);
+    return;
+  }
+  user.email = email;
+  saveManagedUsers();
+  showMessage(
+    managedUserMessage,
+    email ? `Updated Email Address for ${person}.` : `Cleared Email Address for ${person}.`,
+  );
+  renderManagedUserTable();
+}
+
 function renderManagedUserTable() {
   if (!managedUserTable) return;
   if (!managedUsers.length) {
     managedUserTable.innerHTML = `<p class="empty-state">No named users yet. Shared view access codes still work. Add an Admin-Full, Admin-Global, Admin-Staff, or Read Only user above.</p>`;
     return;
   }
+  const canEditEmail = isAdminGlobalUser();
   managedUserTable.innerHTML = `<table class="admin-records-table managed-user-table">
     <thead>
       <tr>
+        <th>Person</th>
         <th>User Name</th>
-        <th>User Type</th>
-        <th>Signs In As</th>
+        <th>Email Address</th>
+        <th>Access Level</th>
+        <th>Access Code</th>
         <th class="field-admin">Actions</th>
       </tr>
     </thead>
     <tbody>
       ${managedUsers
         .map((user) => {
-          const signsInAs = ACCESS_LABELS[managedUserSignInLevel(user)];
+          const person = managedUserDisplayName(user) || "—";
+          const email = normalizeManagedUserEmail(user.email);
+          const emailCell = email
+            ? `<span class="status-pill">${escapeHtml(email)}</span>`
+            : `<span class="field-caption">${canEditEmail ? "Not set" : "—"}</span>`;
+          const emailAction = canEditEmail
+            ? `<button class="admin-action" type="button" data-change-user-email="${escapeHtml(user.id)}">${
+                email ? "Edit Email" : "Set Email"
+              }</button>`
+            : "";
           return `<tr>
-            <td>${escapeHtml(user.name)}</td>
+            <td>${escapeHtml(person)}</td>
+            <td><span class="status-pill">${escapeHtml(user.name)}</span></td>
+            <td>${emailCell}</td>
             <td>${escapeHtml(USER_TYPE_LABELS[user.userType])}</td>
-            <td>${escapeHtml(signsInAs)}</td>
+            <td><span class="status-pill">${escapeHtml(user.accessCode)}</span></td>
             <td class="field-admin">
               <div class="record-actions">
+                ${emailAction}
                 <button class="admin-action" type="button" data-change-user-code="${escapeHtml(user.id)}">Change Code</button>
                 <button class="admin-action" type="button" data-remove-user="${escapeHtml(user.id)}">Remove</button>
               </div>
@@ -3610,24 +3720,35 @@ function handleAuditActivityTableClick(event) {
 
 function logRecordChange(action, record, changes) {
   const user = currentUser || { name: "Unknown", role: "limited" };
+  const roleLabel =
+    (user.userType && USER_TYPE_LABELS[user.userType]) ||
+    ACCESS_LABELS[user.role] ||
+    user.role;
   changeLog.unshift({
     id: createId(),
     recordId: record.id,
     applicantName: record.name || "Unnamed applicant",
     vendor: record.vendor || "",
     action,
-    changes,
+    changes: Array.isArray(changes) ? changes : [String(changes || "")],
     changedBy: user.name,
     role: user.role,
-    roleLabel: ACCESS_LABELS[user.role] || user.role,
+    roleLabel,
     changedAt: new Date().toISOString(),
   });
   changeLog = changeLog.slice(0, 500);
-  saveChangeLog();
-  if (fullScreenView === "admin" && canAccessAdminConsole()) {
+  try {
+    saveChangeLog();
+  } catch (error) {
+    console.error("Unable to persist change log", error);
+  }
+  // Refresh whenever the Settings stream exists — not only while that page is open.
+  if (auditActivityTable) {
     renderAuditActivityStream();
   }
-  updateChangeLogVisibility();
+  if (changeLogPanel) {
+    updateChangeLogVisibility();
+  }
 }
 
 function getChangedFields(previousRecord, nextRecord) {
@@ -4326,12 +4447,30 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
+if (pendingSeedImportLog) {
+  logRecordChange(
+    pendingSeedImportLog.action,
+    pendingSeedImportLog.record,
+    pendingSeedImportLog.changes,
+  );
+  pendingSeedImportLog = null;
+}
+if (pendingInquiryDueMigrationCount) {
+  logInquiryDueMigration(pendingInquiryDueMigrationCount);
+  pendingInquiryDueMigrationCount = 0;
+}
+if (pendingIiiCompletionMigrationCount) {
+  logIiiCompletionIsoMigration(pendingIiiCompletionMigrationCount);
+  pendingIiiCompletionMigrationCount = 0;
+}
+
 renderManagedDropdowns();
 updateSetupVisibility();
 updateAccessControls();
 updateFullScreenVisibility();
 setView("limited");
 updatePersistenceStatus();
+renderAuditActivityStream();
 window.addEventListener("focus", handleSqlSilentRefreshSignal);
 document.addEventListener("visibilitychange", handleSqlSilentRefreshSignal);
 void startSqlPersistence();
