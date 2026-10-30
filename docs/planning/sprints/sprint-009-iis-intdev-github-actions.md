@@ -94,7 +94,7 @@ Reason: public hostname, service account identity, CI deploy to app servers.
 
 ## Definition of done
 
-- Scripts and Actions in repo; `develop` branch exists.
+- Scripts and Actions in repo; branch `develop` was later deleted (TEST deploy is workflow_dispatch; PROD INTDEV uses `dev`).
 - INTDEV host configured when access is provided.
 - Documentation and `project.json` updated.
 - No secrets in git.
