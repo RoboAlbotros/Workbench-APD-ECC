@@ -7,7 +7,7 @@ name: Deploy INTDEV PROD stack
 on:
   push:
     branches:
-      - Security-&-Authentication
+      - dev
   workflow_dispatch:
 
 permissions:

@@ -31,7 +31,7 @@ INTDEV hosts two independent stacks so TEST and PROD work do not overwrite each 
 | Stack | Site root | IIS site | Host header | API service | Port | SQL database | Deploy branch |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | TEST | `D:\inetpub\clearancetracker` | `ClearanceTracker` | `clearancetracker.cabq.gov` | `ClearanceTrackerApi` | 8741 | `TRACKERAPP_TEST` | `develop` / manual |
-| PROD | `D:\inetpub\clearancetracker-prod` | `ClearanceTrackerProd` | `clearancetracker-prod.cabq.gov` | `ClearanceTrackerApiProd` | 8742 | `TRACKERAPP_PROD` | `Security-&-Authentication` |
+| PROD | `D:\inetpub\clearancetracker-prod` | `ClearanceTrackerProd` | `clearancetracker-prod.cabq.gov` | `ClearanceTrackerApiProd` | 8742 | `TRACKERAPP_PROD` | `dev` |
 
 One-time PROD stack create (admin on `DTIAPPSINTDEV`):
 
@@ -83,7 +83,7 @@ $pw = Read-Host -AsSecureString "Password for COA\svc-clearancetracker"
 | Branch | Workflow | Runner labels | GitHub environment |
 | --- | --- | --- | --- |
 | `develop` | [.github/workflows/deploy-intdev.yml](../../.github/workflows/deploy-intdev.yml) | `self-hosted`, `Windows`, `intdev` | `intdev` (TEST stack) |
-| `Security-&-Authentication` | [.github/workflows/deploy-intdev-prod.yml](../../.github/workflows/deploy-intdev-prod.yml) | `self-hosted`, `Windows`, `intdev` | `intdev` (PROD stack) |
+| `dev` | [.github/workflows/deploy-intdev-prod.yml](../../.github/workflows/deploy-intdev-prod.yml) | `self-hosted`, `Windows`, `intdev` | `intdev` (PROD stack) |
 | `main` | [.github/workflows/deploy-intprd.yml](../../.github/workflows/deploy-intprd.yml) | `self-hosted`, `Windows`, `intprd` | `intprd` |
 
 ### Runner install (each app server)
