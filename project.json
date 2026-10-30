@@ -44,10 +44,10 @@
     "summary": {
       "outcome": "TBD \u2014 owner decision required.",
       "accountableOwner": "Jessica Solis (product owner)",
-      "nextMilestone": "SPRINT-007 complete. Security-&-Authentication branch rebuilt onto main with SPRINT-009 IIS/ops scaffolding and Admin-Global SSO/MFA prototype. SPRINT-008 (City SSO / Entra and server-side RBAC) remains designated, not authorized. Live SAML/Entra login not connected.",
-      "nextRequiredDecision": "Decide whether to authorize SPRINT-008 (C4) and/or continue SPRINT-009 ops (svc account password, SQL .env, DNS/cert). G-ARCH and G-SEC remain pending. Ratification of relayed sprint approvals remains open. Do not invent Entra/SAML identifiers.",
+      "nextMilestone": "SPRINT-007 complete. G-ARCH satisfied 2026-10-30. SPRINT-009 IIS/ops and dual INTDEV stacks in place; branch renamed to dev. SPRINT-008 (City SSO / Entra and server-side RBAC) remains designated, not authorized. G-SEC pending. Live SAML/Entra login not connected.",
+      "nextRequiredDecision": "G-ARCH satisfied 2026-10-30. Decide whether to authorize SPRINT-008 (C4) and/or continue SPRINT-009 ops (svc account password, SQL .env, DNS/cert). G-SEC remains pending. Ratification of relayed sprint approvals remains open. Do not invent Entra/SAML identifiers.",
       "decisionsRequired": [],
-      "lastUpdated": "2026-10-29T09:24:00-06:00"
+      "lastUpdated": "2026-10-30T17:04:00-06:00"
     }
   },
   "release": {
@@ -145,10 +145,10 @@
       "scope": "project"
     },
     "G-ARCH": {
-      "state": "pending",
-      "owner": "Technical owner (TBD)",
-      "decisionDate": null,
-      "evidence": null,
+      "state": "satisfied",
+      "owner": "Brett (technical owner)",
+      "decisionDate": "2026-10-30",
+      "evidence": "G-ARCH closed by technical owner Brett (owner statement: 'Close G-ARCH — architecture gate (technical owner)'). Evidence: docs/reviews/g-arch-evidence.md; docs/architecture/system-boundaries.md; docs/architecture/threat-and-privacy-risk.md; ADR-0001, ADR-0002, ADR-0003. Does not satisfy G-SEC. Live SAML/Entra not connected.",
       "scope": "project"
     },
     "G-SEC": {
@@ -227,7 +227,7 @@
         "notes": "DEC-016: trusted-source expectations only. SPRINT-007 recorded a prototype-only trusted-source for npm package mssql from registry.npmjs.org. Production policy, CI pinning, and profile expansion remain TBD."
       }
     },
-    "threatModel": "Not started. Required before C4 or material C3 work (Rule 50).",
+    "threatModel": "Proportionate analysis recorded for current prototype/INTDEV architecture in docs/architecture/threat-and-privacy-risk.md (2026-10-30, technical owner Brett). Supports G-ARCH only. Production SSO / C4 live auth still requires refreshed threat modeling under G-SEC and SPRINT-008 (or successor).",
     "privacyImpactAssessment": "Not required under DEC-012 (no PII stored) \u2014 accountable decision by security/privacy authority Brett, 2026-10-08. MUST be revisited if data scope ever changes (DEC-014). DEC-020 (2026-10-14) is a data-scope change (Driver License Number now in-scope). Privacy Framework / PIA revisit is TBD for the security/privacy authority. A PIA has not been performed.",
     "openFindings": []
   },
@@ -601,6 +601,12 @@
       "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)",
       "event": "Security-&-Authentication branch rebuilt from current main (c1c0642). Prior Security tip preserved as Security-&-Authentication-pre-rebuild. Merged SPRINT-009 IIS/GitHub Actions scaffolding and Admin-Global Security & Authentication / SAML prototype onto main line. currentAuthorizedWork remains null; SPRINT-007 remains complete. Live SAML/Entra login not connected. G-ARCH and G-SEC remain pending.",
       "basis": "Owner statement: Rebuild Security from current main"
+    },
+    {
+      "timestamp": "2026-10-30T17:04:00-06:00",
+      "actor": "Technical owner Brett (via agent session, recorded by Cursor primary agent)",
+      "event": "G-ARCH satisfied. Technical owner closed the architecture gate for the current prototype/INTDEV architecture. Evidence: docs/reviews/g-arch-evidence.md, docs/architecture/system-boundaries.md, docs/architecture/threat-and-privacy-risk.md, ADR-0001, ADR-0002, ADR-0003. currentAuthorizedWork remains null. G-SEC, G-CAND, and G-REL remain pending. Live SAML/Entra login not connected. Branch develop remains deleted; INTDEV PROD stack deploys from dev.",
+      "basis": "Owner statement: Close G-ARCH — architecture gate (technical owner)"
     }
   ],
   "validation": {
@@ -608,7 +614,7 @@
     "validatorVersion": "4.26.0",
     "schemaVersion": "3.0.0",
     "result": "pass",
-    "timestamp": "2026-10-29T09:24:00-06:00",
+    "timestamp": "2026-10-30T17:04:00-06:00",
     "limitations": "Structural conformance only; proves canonical values and shape, not factual accuracy, evidence sufficiency, approvals, gate satisfaction, or policy compliance. Schema is the project-authored profile, not an official SGK schema."
   },
   "extensions": {

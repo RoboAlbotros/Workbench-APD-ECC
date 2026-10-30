@@ -133,4 +133,4 @@ npm start
 Serve this folder at `http://127.0.0.1:8740` (for example `python -m http.server 8740`).
 If the API is down or `.env` still has TBD placeholders, the app keeps using
 localStorage. Keep real applicant CSVs outside the repository. Entra login is
-not wired (`docs/architecture/sso-entra-id.md`). G-ARCH and G-SEC remain pending.
+not wired (`docs/architecture/sso-entra-id.md`). G-ARCH satisfied 2026-10-30; G-SEC remains pending.

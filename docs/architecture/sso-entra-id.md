@@ -79,7 +79,7 @@ This sprint does **not** implement login, token validation, or HTTP routes.
 - No tenant, client secret, or production redirect in the repository.
 - No change to the current localStorage prototype sign-in.
 - Deployment target remains `null` in `project.json`.
-- G-ARCH and G-SEC remain pending; this outline does not satisfy them.
+- G-ARCH satisfied 2026-10-30 for current architecture (ADR-0003 records auth direction). G-SEC remains pending; this outline does not satisfy G-SEC or enable live login.
 
 ## Related artifacts
 

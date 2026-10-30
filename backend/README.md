@@ -89,4 +89,4 @@ and `deploy/`.
 - No Entra / City SSO login, no client secret, no tenant configuration (SPRINT-008).
 - No bind to `0.0.0.0` — IIS is the public edge; API stays on loopback.
 - No production API authentication until Entra is wired.
-- G-ARCH and G-SEC remain pending.
+- G-ARCH satisfied 2026-10-30 (`docs/reviews/g-arch-evidence.md`). G-SEC remains pending.

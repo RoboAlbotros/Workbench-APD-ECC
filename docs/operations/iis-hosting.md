@@ -100,5 +100,5 @@ Do **not** put SQL passwords or the service-account password in GitHub secrets i
 
 - Prototype PIN login remains browser-only until SPRINT-008 (Entra). Publishing INTDEV without server auth is an accepted interim risk only if the owner records it; it does not satisfy G-SEC.
 - API must stay on loopback. Do not set `API_LISTEN_HOST` to a public address.
-- G-ARCH and G-SEC remain pending.
+- G-ARCH satisfied 2026-10-30 (`docs/reviews/g-arch-evidence.md`). G-SEC remains pending.
 - Entra redirect URIs (later) must include `https://clearancetracker.cabq.gov/...` — tenant/client IDs stay TBD.
