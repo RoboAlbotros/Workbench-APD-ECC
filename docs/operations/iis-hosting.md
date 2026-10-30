@@ -2,7 +2,7 @@
 
 Status: SPRINT-009 INTDEV site and runner applied 2026-10-22; identity, SQL, and DNS still open
 Owner: Brett (technical / operations)
-Hosts: `DTIAPPSINTDEV` (develop), `DTIAPPSINTPRD` (main)
+Hosts: `DTIAPPSINTDEV` (`dev` PROD stack + TEST stack), `DTIAPPSINTPRD` (`main`)
 Public hostname (INTDEV): `clearancetracker.cabq.gov`
 Service account: `COA\svc-clearancetracker`
 
@@ -30,7 +30,7 @@ INTDEV hosts two independent stacks so TEST and PROD work do not overwrite each 
 
 | Stack | Site root | IIS site | Host header | API service | Port | SQL database | Deploy branch |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| TEST | `D:\inetpub\clearancetracker` | `ClearanceTracker` | `clearancetracker.cabq.gov` | `ClearanceTrackerApi` | 8741 | `TRACKERAPP_TEST` | `develop` / manual |
+| TEST | `D:\inetpub\clearancetracker` | `ClearanceTracker` | `clearancetracker.cabq.gov` | `ClearanceTrackerApi` | 8741 | `TRACKERAPP_TEST` | manual (`deploy-intdev.yml` workflow_dispatch) |
 | PROD | `D:\inetpub\clearancetracker-prod` | `ClearanceTrackerProd` | `clearancetracker-prod.cabq.gov` | `ClearanceTrackerApiProd` | 8742 | `TRACKERAPP_PROD` | `dev` |
 
 One-time PROD stack create (admin on `DTIAPPSINTDEV`):
@@ -82,7 +82,7 @@ $pw = Read-Host -AsSecureString "Password for COA\svc-clearancetracker"
 
 | Branch | Workflow | Runner labels | GitHub environment |
 | --- | --- | --- | --- |
-| `develop` | [.github/workflows/deploy-intdev.yml](../../.github/workflows/deploy-intdev.yml) | `self-hosted`, `Windows`, `intdev` | `intdev` (TEST stack) |
+| (manual) | [.github/workflows/deploy-intdev.yml](../../.github/workflows/deploy-intdev.yml) | `self-hosted`, `Windows`, `intdev` | `intdev` (TEST stack; `develop` removed) |
 | `dev` | [.github/workflows/deploy-intdev-prod.yml](../../.github/workflows/deploy-intdev-prod.yml) | `self-hosted`, `Windows`, `intdev` | `intdev` (PROD stack) |
 | `main` | [.github/workflows/deploy-intprd.yml](../../.github/workflows/deploy-intprd.yml) | `self-hosted`, `Windows`, `intprd` | `intprd` |
 

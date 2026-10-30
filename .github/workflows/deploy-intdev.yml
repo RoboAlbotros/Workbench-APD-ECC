@@ -1,13 +1,11 @@
-# Deploy Clearance Tracker to DTIAPPSINTDEV on push to develop (SPRINT-009).
+# Deploy Clearance Tracker TEST stack to DTIAPPSINTDEV (SPRINT-009).
+# Branch `develop` was deleted; use workflow_dispatch until a TEST deploy branch is designated.
 # Requires a self-hosted runner on DTIAPPSINTDEV labeled [self-hosted, Windows, intdev].
 # Site path and service name come from vars; secrets stay on the server in backend\.env.
 
 name: Deploy INTDEV
 
 on:
-  push:
-    branches:
-      - develop
   workflow_dispatch:
 
 permissions:

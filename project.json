@@ -8,7 +8,7 @@
     "businessPurpose": "TBD \u2014 owner decision required. Working assumption pending approval: in-house DTI tooling workbench; first capability is the CJIS Applicant Tracker.",
     "intendedUsers": "TBD \u2014 owner decision required. Working assumption pending approval: APD/ECC staff managing CJIS applicant clearance tracking.",
     "initialCapability": "CJIS Applicant Tracker (existing browser/local-storage prototype adopted into CJISTracker/)",
-    "deploymentTarget": "DTIAPPSINTDEV (develop \u2192 clearancetracker.cabq.gov); DTIAPPSINTPRD (main). IIS + Node Windows Service under COA\\svc-clearancetracker. SPRINT-009."
+    "deploymentTarget": "DTIAPPSINTDEV (dev \u2192 clearancetracker-prod / TRACKERAPP_PROD; TEST stack manual); DTIAPPSINTPRD (main). IIS + Node Windows Service under COA\\svc-clearancetracker. SPRINT-009. Branch develop deleted."
   },
   "versioning": {
     "scheme": "semver-2.0.0",
@@ -189,7 +189,7 @@
     "supplyChain": "SPRINT-007 prototype-only trusted-source: npm package mssql from registry.npmjs.org for the localhost SQL API. Production supply-chain policy, CI pinning, and SP 800-204D expansion remain TBD. No production host is authorized.",
     "loggingAudit": "TBD \u2014 required for production per prototype README; no decision recorded.",
     "testingExpectations": "Rule 40 categories; required/not-required decisions pending security/privacy authority.",
-    "environmentSeparation": "SPRINT-009: develop\u2192DTIAPPSINTDEV (intdev); main\u2192DTIAPPSINTPRD (intprd). Secrets on each host in backend\\.env; not in git.",
+    "environmentSeparation": "SPRINT-009: dev\u2192DTIAPPSINTDEV PROD stack (intdev); main\u2192DTIAPPSINTPRD (intprd); INTDEV TEST stack is manual. Branch develop deleted. Secrets on each host in backend\\.env; not in git.",
     "backupRecovery": "TBD.",
     "vulnerabilityContact": "TBD \u2014 owner must designate intake path, severity method, response and disclosure expectations.",
     "exceptions": [],
