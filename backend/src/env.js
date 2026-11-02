@@ -95,4 +95,10 @@ function updateSamlEnv(updates) {
   updateEnvKeys(updates, SAML_ENV_KEYS);
 }
 
-module.exports = { loadDotEnv, updateSqlEnv, updateEntraEnv, updateSamlEnv };
+const AUTH_ENV_KEYS = ["API_SESSION_SECRET"];
+
+function updateAuthEnv(updates) {
+  updateEnvKeys(updates, AUTH_ENV_KEYS);
+}
+
+module.exports = { loadDotEnv, updateSqlEnv, updateEntraEnv, updateSamlEnv, updateAuthEnv };

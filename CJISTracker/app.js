@@ -48,6 +48,36 @@ function resolveSqlApiBase() {
 }
 const SQL_API_BASE = resolveSqlApiBase();
 const SQL_SILENT_REFRESH_MS = 20000;
+
+function apiFetch(path, options = {}) {
+  return fetch(`${SQL_API_BASE}${path}`, {
+    ...options,
+    credentials: "include",
+    headers: options.headers || {},
+  });
+}
+
+async function openApiSession(name, accessCode) {
+  if (!accessCode) return false;
+  try {
+    const response = await apiFetch("/api/session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, accessCode }),
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+async function closeApiSession() {
+  try {
+    await apiFetch("/api/session", { method: "DELETE" });
+  } catch {
+    /* ignore */
+  }
+}
 let persistenceMode = "local";
 let sqlPersistError = "";
 let sqlPersistInFlight = false;
@@ -1411,7 +1441,7 @@ function recordsForSql(recordSet) {
 async function persistRecordsToSql(recordSet) {
   sqlPersistInFlight = true;
   try {
-    const response = await fetch(`${SQL_API_BASE}/api/applicants`, {
+    const response = await apiFetch("/api/applicants", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ records: recordsForSql(recordSet) }),
@@ -1454,7 +1484,7 @@ function shouldPauseSqlSilentRefresh() {
 }
 
 async function fetchRemoteApplicantRecords() {
-  const listResponse = await fetch(`${SQL_API_BASE}/api/applicants`);
+  const listResponse = await apiFetch("/api/applicants");
   if (!listResponse.ok) {
     const body = await listResponse.json().catch(() => ({}));
     throw new Error(body.reason || body.error || `HTTP ${listResponse.status}`);
@@ -1515,7 +1545,7 @@ function handleSqlSilentRefreshSignal() {
 
 async function startSqlPersistence() {
   try {
-    const healthResponse = await fetch(`${SQL_API_BASE}/health`);
+    const healthResponse = await apiFetch("/health");
     const health = await healthResponse.json().catch(() => null);
     if (!health || !health.database || !health.database.connected) {
       updatePersistenceStatus();
@@ -1654,7 +1684,7 @@ async function checkDataProtectionStatus() {
   if (button) button.disabled = true;
   let health = null;
   try {
-    const response = await fetch(`${SQL_API_BASE}/health`);
+    const response = await apiFetch(currentUser ? "/api/health" : "/health");
     health = await response.json();
   } catch {
     health = null;
@@ -1991,6 +2021,7 @@ function signInManagementUser(event) {
         role: mappedRole,
         userType: managed.userType,
         secret: managed.mfaSecret,
+        accessCode: code,
       };
       managementAccessCode.value = "";
       if (mfaChallengeCode) mfaChallengeCode.value = "";
@@ -2000,7 +2031,7 @@ function signInManagementUser(event) {
       if (mfaChallengeCode) mfaChallengeCode.focus();
       return;
     }
-    finishManagedSignIn(managed.name, mappedRole, managed.userType);
+    finishManagedSignIn(managed.name, mappedRole, managed.userType, managed.accessCode);
     return;
   }
 
@@ -2024,10 +2055,10 @@ function signInManagementUser(event) {
     return;
   }
 
-  finishManagedSignIn(name, role, "");
+  finishManagedSignIn(name, role, "", code);
 }
 
-function finishManagedSignIn(name, role, userType) {
+function finishManagedSignIn(name, role, userType, accessCode) {
   pendingMfaSignIn = null;
   currentUser = userType ? { name, role, userType } : { name, role };
   managementAccessCode.value = "";
@@ -2037,6 +2068,9 @@ function finishManagedSignIn(name, role, userType) {
   updateSetupVisibility();
   updateAccessControls();
   setView(role);
+  void openApiSession(name, accessCode).then((opened) => {
+    if (opened) void startSqlPersistence();
+  });
 }
 
 function submitMfaChallenge(event) {
@@ -2048,7 +2082,7 @@ function submitMfaChallenge(event) {
     return;
   }
   const pending = pendingMfaSignIn;
-  finishManagedSignIn(pending.name, pending.role, pending.userType);
+  finishManagedSignIn(pending.name, pending.role, pending.userType, pending.accessCode);
 }
 
 function cancelMfaChallenge() {
@@ -2060,8 +2094,10 @@ function cancelMfaChallenge() {
 }
 
 function signOutManagementUser(reason) {
+  void closeApiSession();
   pendingMfaSignIn = null;
   currentUser = null;
+  persistenceMode = "local";
   currentFormMode = "edit";
   fullScreenView = null;
   closeApplicantDrawer({ restoreFocus: false });
@@ -2907,7 +2943,7 @@ function ssoPathNote(enabled, mode) {
 async function loadSsoSettings() {
   if (!isAdminGlobalUser() || !samlEntityIdInput) return;
   try {
-    const response = await fetch(`${SQL_API_BASE}/api/sso-settings`);
+    const response = await apiFetch("/api/sso-settings");
     if (!response.ok) throw new Error("status");
     applySsoSettingsForm(await response.json());
   } catch {
@@ -2933,7 +2969,7 @@ async function saveSsoFromPanel() {
   const pathNote = ssoPathNote(settings.ssoEnabled, settings.ssoMode);
   if (saveSsoSettings) saveSsoSettings.disabled = true;
   try {
-    const response = await fetch(`${SQL_API_BASE}/api/sso-settings`, {
+    const response = await apiFetch("/api/sso-settings", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(ssoSettingsPayload()),
@@ -3006,7 +3042,7 @@ function setSqlSettingsBusy(busy) {
 async function loadSqlSettings() {
   if (!isAdminGlobalUser() || !sqlServerInput) return;
   try {
-    const response = await fetch(`${SQL_API_BASE}/api/sql-settings`);
+    const response = await apiFetch("/api/sql-settings");
     if (!response.ok) throw new Error("status");
     applySqlSettingsForm(await response.json());
   } catch {
@@ -3029,7 +3065,7 @@ async function submitSqlSettings(testOnly) {
     testOnly ? "Testing Windows integrated connection…" : "Saving database settings…",
   );
   try {
-    const response = await fetch(`${SQL_API_BASE}/api/sql-settings${testOnly ? "/test" : ""}`, {
+    const response = await apiFetch(`/api/sql-settings${testOnly ? "/test" : ""}`, {
       method: testOnly ? "POST" : "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),

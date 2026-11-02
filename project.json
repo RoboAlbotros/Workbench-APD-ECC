@@ -8,7 +8,7 @@
     "businessPurpose": "TBD \u2014 owner decision required. Working assumption pending approval: in-house DTI tooling workbench; first capability is the CJIS Applicant Tracker.",
     "intendedUsers": "TBD \u2014 owner decision required. Working assumption pending approval: APD/ECC staff managing CJIS applicant clearance tracking.",
     "initialCapability": "CJIS Applicant Tracker (existing browser/local-storage prototype adopted into CJISTracker/)",
-    "deploymentTarget": "DTIAPPSINTDEV (dev \u2192 clearancetracker-prod / TRACKERAPP_PROD; TEST stack manual); DTIAPPSINTPRD (main). IIS + Node Windows Service under COA\\svc-clearancetracker. SPRINT-009. Branch develop deleted."
+    "deploymentTarget": "DTIAPPSINTDEV (PROD and TEST stacks both workflow_dispatch); DTIAPPSINTPRD (main). IIS + Node Windows Service under COA\\svc-clearancetracker. SPRINT-009. Branch develop deleted."
   },
   "versioning": {
     "scheme": "semver-2.0.0",
@@ -44,10 +44,10 @@
     "summary": {
       "outcome": "TBD \u2014 owner decision required.",
       "accountableOwner": "Jessica Solis (product owner)",
-      "nextMilestone": "SPRINT-007 complete. G-ARCH satisfied 2026-10-30. SPRINT-009 IIS/ops and dual INTDEV stacks in place; branch renamed to dev. SPRINT-008 (City SSO / Entra and server-side RBAC) remains designated, not authorized. G-SEC pending. Live SAML/Entra login not connected.",
-      "nextRequiredDecision": "G-ARCH satisfied 2026-10-30. Decide whether to authorize SPRINT-008 (C4) and/or continue SPRINT-009 ops (svc account password, SQL .env, DNS/cert). G-SEC remains pending. Ratification of relayed sprint approvals remains open. Do not invent Entra/SAML identifiers.",
+      "nextMilestone": "SPRINT-007 complete. G-ARCH satisfied 2026-10-30. INTDEV security-review remediations applied 2026-11-02 (docs/reviews/security-findings-2026-11-02.md). SPRINT-008 remains designated, not authorized. G-SEC pending. Live SAML/Entra login not connected.",
+      "nextRequiredDecision": "Bind an HTTPS certificate and enable the IIS HTTPS redirect. Decide whether to authorize SPRINT-008 (C4). G-SEC remains pending. Do not invent Entra/SAML identifiers.",
       "decisionsRequired": [],
-      "lastUpdated": "2026-10-30T17:04:00-06:00"
+      "lastUpdated": "2026-11-02T09:30:00-07:00"
     }
   },
   "release": {
@@ -183,13 +183,13 @@
   "security": {
     "classification": "Internal use only \u2014 DEC-012 (security/privacy authority Brett, 2026-10-08): no PII and no CJI/CJIS data will be stored in the system, interpreted per DEC-017 (2026-10-09) as excluding sensitive PII (DOB, SSN, driver's license) and CJI while accepting basic identity/contact fields needed for clearance tracking. DEC-020 (security/privacy authority and project owner Brett, 2026-10-14): Driver License Number is now an in-scope field in the format ST + 9 digits (no hyphens; example NM123456789). DOB and SSN remain excluded. Control ID is hidden from the UI.",
     "sensitiveData": "DEC-012 as interpreted by DEC-017 excluded sensitive PII (DOB, SSN, driver's license) and CJI. DEC-020 (security/privacy authority and project owner Brett, 2026-10-14): Driver License Number is now in-scope as Driver Lic Num (`driversLicense`), format two-letter state prefix + 9 digits with no hyphens or spaces, stored uppercase; empty is allowed. DOB and SSN remain excluded; app.js still deletes those keys on load. Control ID remains in the data model and import mapping but is hidden from the form and lists. Seed test applicants have no Driver Lic Num values. No real applicant PII is committed.",
-    "authentication": "DEC-015 (security/privacy authority Brett, 2026-10-08): production direction is City SSO (Entra ID) with server-side role-based access mirroring the three view levels (Limited/Records/Admin), targeted at a future release. Prototype local PINs are never production controls.",
+    "authentication": "DEC-015 (security/privacy authority Brett, 2026-10-08): production direction is City SSO (Entra ID) with server-side role-based access mirroring the three view levels (Limited/Records/Admin), targeted at a future release. Prototype local PINs are never production controls. 2026-11-02: browser sign-in opens an HttpOnly HMAC session for /api/*; Admin-Global is required for SQL/SSO settings. This is not City SSO and does not satisfy G-SEC.",
     "authorization": "TBD. Prototype has three local views (Limited, Records, Full Admin); production model undecided.",
     "secretsManagement": "No credentials, tokens, personal information, or production secrets in repository files (Rule 50).",
     "supplyChain": "SPRINT-007 prototype-only trusted-source: npm package mssql from registry.npmjs.org for the localhost SQL API. Production supply-chain policy, CI pinning, and SP 800-204D expansion remain TBD. No production host is authorized.",
     "loggingAudit": "TBD \u2014 required for production per prototype README; no decision recorded.",
     "testingExpectations": "Rule 40 categories; required/not-required decisions pending security/privacy authority.",
-    "environmentSeparation": "SPRINT-009: dev\u2192DTIAPPSINTDEV PROD stack (intdev); main\u2192DTIAPPSINTPRD (intprd); INTDEV TEST stack is manual. Branch develop deleted. Secrets on each host in backend\\.env; not in git.",
+    "environmentSeparation": "SPRINT-009: INTDEV TEST and PROD stacks are both workflow_dispatch; main\u2192DTIAPPSINTPRD (intprd). Branch develop deleted. Secrets on each host in backend\\.env; not in git.",
     "backupRecovery": "TBD.",
     "vulnerabilityContact": "TBD \u2014 owner must designate intake path, severity method, response and disclosure expectations.",
     "exceptions": [],
@@ -229,7 +229,92 @@
     },
     "threatModel": "Proportionate analysis recorded for current prototype/INTDEV architecture in docs/architecture/threat-and-privacy-risk.md (2026-10-30, technical owner Brett). Supports G-ARCH only. Production SSO / C4 live auth still requires refreshed threat modeling under G-SEC and SPRINT-008 (or successor).",
     "privacyImpactAssessment": "Not required under DEC-012 (no PII stored) \u2014 accountable decision by security/privacy authority Brett, 2026-10-08. MUST be revisited if data scope ever changes (DEC-014). DEC-020 (2026-10-14) is a data-scope change (Driver License Number now in-scope). Privacy Framework / PIA revisit is TBD for the security/privacy authority. A PIA has not been performed.",
-    "openFindings": []
+    "openFindings": [
+      {
+        "id": "FIND-SEC-001",
+        "severity": "high",
+        "description": "Unauthenticated /api/* and /health. Remediated 2026-11-02: signed session required for /api/*; public /health redacted.",
+        "owner": "Brett (security/privacy authority)",
+        "disposition": "remediated"
+      },
+      {
+        "id": "FIND-SEC-002",
+        "severity": "high",
+        "description": "Unauthenticated SQL/SSO settings could rewrite backend/.env. Remediated 2026-11-02: Admin-Global session required.",
+        "owner": "Brett (security/privacy authority)",
+        "disposition": "remediated"
+      },
+      {
+        "id": "FIND-SEC-003",
+        "severity": "high",
+        "description": "Unauthenticated GET/PUT /api/applicants. Remediated 2026-11-02: signed session required.",
+        "owner": "Brett (security/privacy authority)",
+        "disposition": "remediated"
+      },
+      {
+        "id": "FIND-SEC-004",
+        "severity": "high",
+        "description": "tmp-set-prod-db.ps1 could point the TEST stack .env at TRACKERAPP_PROD. Remediated 2026-11-02: script removed and gitignored.",
+        "owner": "Brett (security/privacy authority)",
+        "disposition": "remediated"
+      },
+      {
+        "id": "FIND-SEC-005",
+        "severity": "medium",
+        "description": "Unauthenticated SQL test probe. Remediated 2026-11-02: Admin-Global session required.",
+        "owner": "Brett (security/privacy authority)",
+        "disposition": "remediated"
+      },
+      {
+        "id": "FIND-SEC-006",
+        "severity": "medium",
+        "description": "Health and settings disclosed database name, auth mode, and Windows identity. Remediated 2026-11-02: public health redacted; settings require Admin-Global.",
+        "owner": "Brett (security/privacy authority)",
+        "disposition": "remediated"
+      },
+      {
+        "id": "FIND-SEC-007",
+        "severity": "medium",
+        "description": "IIS site is HTTP-only. Headers and a disabled HTTPS redirect are in place. Live HTTPS remains TBD until a certificate is bound.",
+        "owner": "Brett (operations / security)",
+        "disposition": "mitigated-pending-cert"
+      },
+      {
+        "id": "FIND-SEC-008",
+        "severity": "high",
+        "description": "Push to dev auto-deployed the INTDEV PROD stack. Remediated 2026-11-02: workflow_dispatch only.",
+        "owner": "Brett (operations)",
+        "disposition": "remediated"
+      },
+      {
+        "id": "FIND-SEC-009",
+        "severity": "medium",
+        "description": "Tmp mass-update and host-apply scripts in the workspace. Remediated 2026-11-02: tmp-* removed and gitignored.",
+        "owner": "Brett (operations)",
+        "disposition": "remediated"
+      },
+      {
+        "id": "FIND-SEC-010",
+        "severity": "medium",
+        "description": "SCP helpers staged scripts under C:\\Users\\Public. Remediated 2026-11-02: helpers removed.",
+        "owner": "Brett (operations)",
+        "disposition": "remediated"
+      },
+      {
+        "id": "FIND-SEC-011",
+        "severity": "medium",
+        "description": "openFindings was empty and GitHub branch protection is not configured. Findings are now recorded. Branch protection remains a GitHub admin action.",
+        "owner": "Brett (security/privacy authority)",
+        "disposition": "recorded-protection-pending"
+      },
+      {
+        "id": "FIND-SEC-012",
+        "severity": "low",
+        "description": "SSH inventory (address, ports, key fingerprint) was committed. Remediated 2026-11-02: docs/operations/intdev-connectivity-2026-10-22.md redacted.",
+        "owner": "Brett (operations)",
+        "disposition": "remediated"
+      }
+    ]
   },
   "compliance": {
     "references": [
@@ -256,7 +341,8 @@
     "sprint007": "docs/planning/sprints/sprint-007-wire-sql-api.md",
     "sprint008": "docs/planning/sprints/sprint-008-sso-entra-rbac.md",
     "sprint009": "docs/planning/sprints/sprint-009-iis-intdev-github-actions.md",
-    "iisHosting": "docs/operations/iis-hosting.md"
+    "iisHosting": "docs/operations/iis-hosting.md",
+    "securityFindings20261102": "docs/reviews/security-findings-2026-11-02.md"
   },
   "currentAuthorizedWork": null,
   "history": [
@@ -607,6 +693,12 @@
       "actor": "Technical owner Brett (via agent session, recorded by Cursor primary agent)",
       "event": "G-ARCH satisfied. Technical owner closed the architecture gate for the current prototype/INTDEV architecture. Evidence: docs/reviews/g-arch-evidence.md, docs/architecture/system-boundaries.md, docs/architecture/threat-and-privacy-risk.md, ADR-0001, ADR-0002, ADR-0003. currentAuthorizedWork remains null. G-SEC, G-CAND, and G-REL remain pending. Live SAML/Entra login not connected. Branch develop remains deleted; INTDEV PROD stack deploys from dev.",
       "basis": "Owner statement: Close G-ARCH — architecture gate (technical owner)"
+    },
+    {
+      "timestamp": "2026-11-02T09:30:00-07:00",
+      "actor": "Project owner Brett (via agent session, recorded by Cursor primary agent)",
+      "event": "Owner-directed remediations for the 12 INTDEV security-review findings applied on dev. API now requires a signed HttpOnly session; Admin-Global required for SQL/SSO settings; public /health redacted; tmp host-apply scripts removed; INTDEV PROD deploy is workflow_dispatch only; SSH inventory redacted. HTTPS cert and GitHub branch protection remain open. currentAuthorizedWork remains null. G-SEC remains pending. Live SAML/Entra login not connected. Evidence: docs/reviews/security-findings-2026-11-02.md.",
+      "basis": "Owner statement: address the 12 findings in the security review and confirm they have been done"
     }
   ],
   "validation": {
@@ -614,7 +706,7 @@
     "validatorVersion": "4.26.0",
     "schemaVersion": "3.0.0",
     "result": "pass",
-    "timestamp": "2026-10-30T17:04:00-06:00",
+    "timestamp": "2026-11-02T09:30:00-07:00",
     "limitations": "Structural conformance only; proves canonical values and shape, not factual accuracy, evidence sufficiency, approvals, gate satisfaction, or policy compliance. Schema is the project-authored profile, not an official SGK schema."
   },
   "extensions": {

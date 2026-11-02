@@ -3,10 +3,19 @@
 const http = require("http");
 const { loadDotEnv } = require("./env");
 const { createDb } = require("./db");
-const { handleHealth } = require("./health");
+const { handleHealth, handlePublicHealth } = require("./health");
 const { describeSqlSettings, testIntegratedSettings, saveIntegratedSettings } = require("./sql-settings");
 const { describeSsoSettings, saveSsoSettings } = require("./sso-settings");
 const { listApplicants, replaceApplicants } = require("./repositories/applicants");
+const {
+  authenticateOperator,
+  cookieHeader,
+  createSession,
+  isAdminGlobalSession,
+  isSignedIn,
+  readSession,
+  sendUnauthorized,
+} = require("./api-auth");
 
 loadDotEnv();
 
@@ -41,17 +50,19 @@ function corsHeaders(request) {
   const allowed = allowedSet.has(origin) || isLoopbackOrigin(origin) ? origin : "http://127.0.0.1:8740";
   return {
     "Access-Control-Allow-Origin": allowed,
-    "Access-Control-Allow-Methods": "GET, PUT, POST, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, PUT, POST, DELETE, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Credentials": "true",
   };
 }
 
-function sendJson(request, response, status, body) {
+function sendJson(request, response, status, body, extraHeaders = {}) {
   const payload = JSON.stringify(body);
   response.writeHead(status, {
     "Content-Type": "application/json; charset=utf-8",
     "Content-Length": Buffer.byteLength(payload),
     ...corsHeaders(request),
+    ...extraHeaders,
   });
   response.end(payload);
 }
@@ -104,6 +115,55 @@ async function handleRequest(request, response) {
 
   if (request.method === "GET" && (url.pathname === "/health" || url.pathname === "/")) {
     const pool = await db.connect();
+    sendJson(request, response, 200, handlePublicHealth(db, { connected: Boolean(pool) }));
+    return;
+  }
+
+  const session = readSession(request);
+
+  if (url.pathname === "/api/session") {
+    if (request.method === "POST") {
+      const parsed = await readJsonBody(request, response);
+      if (!parsed) return;
+      const operator = authenticateOperator(parsed.name, parsed.accessCode);
+      if (!operator) {
+        sendUnauthorized(sendJson, request, response, "invalid-credentials");
+        return;
+      }
+      const token = createSession(operator);
+      sendJson(request, response, 200, {
+        ok: true,
+        name: operator.names[0],
+        role: operator.role,
+        userType: operator.userType,
+      }, { "Set-Cookie": cookieHeader(token, request) });
+      return;
+    }
+    if (request.method === "DELETE") {
+      sendJson(request, response, 200, { ok: true }, { "Set-Cookie": cookieHeader("", request, { clear: true }) });
+      return;
+    }
+    if (request.method === "GET") {
+      if (!isSignedIn(session)) {
+        sendUnauthorized(sendJson, request, response, "session-required");
+        return;
+      }
+      sendJson(request, response, 200, {
+        ok: true,
+        name: session.name,
+        role: session.role,
+        userType: session.userType,
+      });
+      return;
+    }
+  }
+
+  if (request.method === "GET" && url.pathname === "/api/health") {
+    if (!isSignedIn(session)) {
+      sendUnauthorized(sendJson, request, response, "session-required");
+      return;
+    }
+    const pool = await db.connect();
     sendJson(request, response, 200, handleHealth(db, {
       connected: Boolean(pool),
       listen: `${process.env.API_LISTEN_HOST || "127.0.0.1"}:${process.env.API_LISTEN_PORT || "8741"}`,
@@ -112,11 +172,19 @@ async function handleRequest(request, response) {
   }
 
   if (request.method === "GET" && url.pathname === "/api/sso-settings") {
+    if (!isAdminGlobalSession(session)) {
+      sendUnauthorized(sendJson, request, response, "admin-global-required");
+      return;
+    }
     sendJson(request, response, 200, describeSsoSettings());
     return;
   }
 
   if (request.method === "PUT" && url.pathname === "/api/sso-settings") {
+    if (!isAdminGlobalSession(session)) {
+      sendUnauthorized(sendJson, request, response, "admin-global-required");
+      return;
+    }
     const parsed = await readJsonBody(request, response);
     if (!parsed) return;
     const result = saveSsoSettings(parsed);
@@ -125,11 +193,19 @@ async function handleRequest(request, response) {
   }
 
   if (request.method === "GET" && url.pathname === "/api/sql-settings") {
+    if (!isAdminGlobalSession(session)) {
+      sendUnauthorized(sendJson, request, response, "admin-global-required");
+      return;
+    }
     sendJson(request, response, 200, await describeSqlSettings(db));
     return;
   }
 
   if (request.method === "POST" && url.pathname === "/api/sql-settings/test") {
+    if (!isAdminGlobalSession(session)) {
+      sendUnauthorized(sendJson, request, response, "admin-global-required");
+      return;
+    }
     const parsed = await readJsonBody(request, response);
     if (!parsed) return;
     const result = await testIntegratedSettings(db, parsed);
@@ -138,6 +214,10 @@ async function handleRequest(request, response) {
   }
 
   if (request.method === "PUT" && url.pathname === "/api/sql-settings") {
+    if (!isAdminGlobalSession(session)) {
+      sendUnauthorized(sendJson, request, response, "admin-global-required");
+      return;
+    }
     const parsed = await readJsonBody(request, response);
     if (!parsed) return;
     const result = await saveIntegratedSettings(db, parsed);
@@ -146,6 +226,10 @@ async function handleRequest(request, response) {
   }
 
   if (request.method === "GET" && url.pathname === "/api/applicants") {
+    if (!isSignedIn(session)) {
+      sendUnauthorized(sendJson, request, response, "session-required");
+      return;
+    }
     const pool = await db.connect();
     if (!pool) {
       sendJson(request, response, 503, { error: "sql-not-connected", reason: db.lastError() });
@@ -157,6 +241,10 @@ async function handleRequest(request, response) {
   }
 
   if (request.method === "PUT" && url.pathname === "/api/applicants") {
+    if (!isSignedIn(session)) {
+      sendUnauthorized(sendJson, request, response, "session-required");
+      return;
+    }
     const pool = await db.connect();
     if (!pool) {
       sendJson(request, response, 503, { error: "sql-not-connected", reason: db.lastError() });
@@ -236,4 +324,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { main, handleHealth, handleRequest };
+module.exports = { main, handleHealth, handlePublicHealth, handleRequest };

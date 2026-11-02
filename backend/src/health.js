@@ -1,5 +1,17 @@
 "use strict";
 
+function handlePublicHealth(db, extra = {}) {
+  const connected = Boolean(extra.connected);
+  return {
+    status: connected ? "ok" : "degraded",
+    service: "cjis-tracker-backend",
+    database: {
+      connected,
+      configured: Boolean(db && db.configured),
+    },
+  };
+}
+
 function handleHealth(db, extra = {}) {
   const connected = Boolean(extra.connected);
   return {
@@ -21,7 +33,7 @@ function handleHealth(db, extra = {}) {
           : "SQL is not connected. The browser app uses localStorage until the API reports connected.",
     },
     auth: {
-      mode: "localhost-unauthenticated-prototype",
+      mode: "signed-session-prototype",
       productionDirection: "City SSO / Entra ID (DEC-015)",
       roles: ["limited", "records", "admin"],
       prototypePins: "never production",
@@ -41,4 +53,4 @@ function handleHealth(db, extra = {}) {
   };
 }
 
-module.exports = { handleHealth };
+module.exports = { handleHealth, handlePublicHealth };

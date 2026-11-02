@@ -27,6 +27,6 @@ Settings prototype fields; wiring is SPRINT-008 (not authorized).
 ## Consequences
 
 - Positive: Clear separation between prototype login and production auth path.
-- Negative: Until SPRINT-008/G-SEC, INTDEV remains an unauthenticated-API
-  prototype behind network/host controls.
+- Negative: Until SPRINT-008/G-SEC, INTDEV uses a prototype signed session,
+  not City SSO. That session does not satisfy G-SEC.
 - Follow-on: Authorize SPRINT-008; register SAML for this app; satisfy G-SEC.

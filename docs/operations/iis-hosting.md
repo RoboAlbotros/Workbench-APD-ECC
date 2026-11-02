@@ -8,7 +8,7 @@ Service account: `COA\svc-clearancetracker`
 
 ## INTDEV apply (2026-10-22)
 
-Applied on `DTIAPPSINTDEV` (`10.5.16.108`):
+Applied on `DTIAPPSINTDEV`:
 
 - Site `ClearanceTracker` at `D:\inetpub\clearancetracker`, started, binding `http *:80:clearancetracker.cabq.gov`.
 - App pool `ClearanceTrackerAppPool` runs as `ApplicationPoolIdentity` (service-account password was not available).
@@ -31,7 +31,7 @@ INTDEV hosts two independent stacks so TEST and PROD work do not overwrite each 
 | Stack | Site root | IIS site | Host header | API service | Port | SQL database | Deploy branch |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | TEST | `D:\inetpub\clearancetracker` | `ClearanceTracker` | `clearancetracker.cabq.gov` | `ClearanceTrackerApi` | 8741 | `TRACKERAPP_TEST` | manual (`deploy-intdev.yml` workflow_dispatch) |
-| PROD | `D:\inetpub\clearancetracker-prod` | `ClearanceTrackerProd` | `clearancetracker-prod.cabq.gov` | `ClearanceTrackerApiProd` | 8742 | `TRACKERAPP_PROD` | `dev` |
+| PROD | `D:\inetpub\clearancetracker-prod` | `ClearanceTrackerProd` | `clearancetracker-prod.cabq.gov` | `ClearanceTrackerApiProd` | 8742 | `TRACKERAPP_PROD` | manual (`deploy-intdev-prod.yml` workflow_dispatch) |
 
 One-time PROD stack create (admin on `DTIAPPSINTDEV`):
 
@@ -39,7 +39,7 @@ One-time PROD stack create (admin on `DTIAPPSINTDEV`):
 .\deploy\iis\Install-ClearanceTrackerProdStack.ps1
 ```
 
-Optional GitHub variable: `INTDEV_PROD_SITE_ROOT` = `D:\inetpub\clearancetracker-prod`. Add a hosts-file (or DNS) entry for `clearancetracker-prod.cabq.gov` → `10.5.16.108` the same way as the TEST hostname.
+Optional GitHub variable: `INTDEV_PROD_SITE_ROOT` = `D:\inetpub\clearancetracker-prod`. Add a hosts-file (or DNS) entry for `clearancetracker-prod.cabq.gov` the same way as the TEST hostname.
 
 ```text
 Browser → http://clearancetracker.cabq.gov
@@ -83,7 +83,7 @@ $pw = Read-Host -AsSecureString "Password for COA\svc-clearancetracker"
 | Branch | Workflow | Runner labels | GitHub environment |
 | --- | --- | --- | --- |
 | (manual) | [.github/workflows/deploy-intdev.yml](../../.github/workflows/deploy-intdev.yml) | `self-hosted`, `Windows`, `intdev` | `intdev` (TEST stack; `develop` removed) |
-| `dev` | [.github/workflows/deploy-intdev-prod.yml](../../.github/workflows/deploy-intdev-prod.yml) | `self-hosted`, `Windows`, `intdev` | `intdev` (PROD stack) |
+| (manual) | [.github/workflows/deploy-intdev-prod.yml](../../.github/workflows/deploy-intdev-prod.yml) | `self-hosted`, `Windows`, `intdev` | `intdev` (PROD stack; `workflow_dispatch` only) |
 | `main` | [.github/workflows/deploy-intprd.yml](../../.github/workflows/deploy-intprd.yml) | `self-hosted`, `Windows`, `intprd` | `intprd` |
 
 ### Runner install (each app server)
@@ -98,7 +98,10 @@ Do **not** put SQL passwords or the service-account password in GitHub secrets i
 
 ## Security notes
 
-- Prototype PIN login remains browser-only until SPRINT-008 (Entra). Publishing INTDEV without server auth is an accepted interim risk only if the owner records it; it does not satisfy G-SEC.
+- Browser sign-in now opens an HttpOnly API session. Unauthenticated `/api/*` calls are rejected. This is still a prototype control, not City SSO, and does not satisfy G-SEC.
 - API must stay on loopback. Do not set `API_LISTEN_HOST` to a public address.
+- Public `GET /health` is redacted (status + connected/configured only). Detailed health is `GET /api/health` with a session.
+- IIS security headers are set. The HTTPS redirect rule is present and **disabled** until a certificate is bound. Enable that rule after the cert is installed.
+- INTDEV PROD deploy is `workflow_dispatch` only (no automatic `dev` push deploy).
 - G-ARCH satisfied 2026-10-30 (`docs/reviews/g-arch-evidence.md`). G-SEC remains pending.
 - Entra redirect URIs (later) must include `https://clearancetracker.cabq.gov/...` — tenant/client IDs stay TBD.

@@ -5,13 +5,15 @@ Owner: Brett (technical owner). See `docs/operations/iis-hosting.md`.
 
 This folder serves a **127.0.0.1-only** HTTP API that persists applicant records
 to SQL Server. IIS reverse-proxies `/api` and `/health` on the public host.
-Prototype PIN login stays in the browser. City SSO / Entra ID (DEC-015) is
-**not** implemented here (SPRINT-008).
+Prototype PIN login stays in the browser and now opens an HttpOnly API session.
+City SSO / Entra ID (DEC-015) is **not** implemented here (SPRINT-008).
 
 ## What is true today
 
 - Bind host is `127.0.0.1` (default port `8741`). A public bind is excluded.
-- `GET /health` reports whether SQL is configured and connected.
+- `GET /health` is public and redacted (status + connected/configured only).
+- `GET /api/health`, applicants, and settings require a signed session cookie.
+- SQL and SSO settings reads/writes require an Admin-Global session.
 - `GET /api/applicants` and `PUT /api/applicants` round-trip current `app.js` fields.
 - `SQL_AUTHENTICATION=sql` (default), `windows` (NTLM for `DOMAIN\user`), or `integrated` (Windows integrated, no SQL password).
 - `GET /api/sql-settings`, `POST /api/sql-settings/test`, and `PUT /api/sql-settings` configure Windows integrated from the Admin-Global Security page. The response never includes a password.

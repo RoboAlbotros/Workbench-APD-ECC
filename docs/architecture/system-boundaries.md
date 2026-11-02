@@ -37,7 +37,7 @@ Browser (operator)
 | Interface | Protocol | AuthN today | Notes |
 | --- | --- | --- | --- |
 | Browser ↔ IIS | HTTP (HTTPS TBD) | Network / host header | No app-level auth at IIS |
-| IIS ↔ Node API | HTTP loopback | None (localhost-unauthenticated prototype) | Must remain loopback |
+| IIS ↔ Node API | HTTP loopback | HttpOnly signed session (prototype); Admin-Global for settings writes | Must remain loopback |
 | Node API ↔ SQL | TDS | Windows or SQL login from `.env` | Secrets not in git |
 | Browser localStorage | N/A | Same-origin browser | PINs, change log, some settings |
 

@@ -1,0 +1,10 @@
+# Local environment and dependencies
+backend/.env
+backend/node_modules/
+node_modules/
+
+# One-off operator scripts (never stage host-apply helpers)
+tmp-*.ps1
+tmp-*.py
+tmp-*.json
+tmp-*.txt

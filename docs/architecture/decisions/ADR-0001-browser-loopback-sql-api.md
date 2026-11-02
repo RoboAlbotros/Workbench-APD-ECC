@@ -20,6 +20,8 @@ Documents and the change log remain browser-local in this architecture phase.
 ## Consequences
 
 - Positive: shared SQL data; same-origin `/api` via IIS; no public Node bind.
-- Negative: API is unauthenticated on loopback; host compromise can mutate data;
-  browser audit trail is not server-immutable.
-- Follow-on: SPRINT-008 / G-SEC for server authn/z; optional server audit later.
+- Negative: API requires a prototype signed session on loopback (not City SSO);
+  host compromise can still mutate data; browser audit trail is not
+  server-immutable.
+- Follow-on: SPRINT-008 / G-SEC for City SSO and production authn/z; optional
+  server audit later. This ADR change does not satisfy G-SEC.
