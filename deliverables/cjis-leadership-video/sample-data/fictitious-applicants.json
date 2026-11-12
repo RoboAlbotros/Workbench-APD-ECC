@@ -1,0 +1,77 @@
+{
+  "notice": "Invented demonstration records for a City leadership video. Not City applicants. No phone numbers, email addresses, or access codes.",
+  "verifiedAgainstScreen": "2026-11-12 America/Denver",
+  "countsThrough": "2028-01-20",
+  "counts": {
+    "total": 6,
+    "active": 3,
+    "inactive": 3,
+    "fullClearance": 3,
+    "oneTimeVisit": 1,
+    "queryDue": 1,
+    "readOnlyRows": 5
+  },
+  "applicants": [
+    {
+      "name": "RIVERA, JORDAN A",
+      "department": "ECC",
+      "positionRole": "TRAINING COORDINATOR",
+      "clearanceType": "Full Clearance",
+      "status": "Active",
+      "driversLicense": "NM/DEMO1001",
+      "dateOfIiiCompletion": "2024-06-12",
+      "nextInquiryDue": "2029-06-12",
+      "securityAwarenessExpiration": "2028-06-12",
+      "purpose": "Record opened in the film. Shows the five-year calculation."
+    },
+    {
+      "name": "CHEN, MORGAN",
+      "department": "APD",
+      "positionRole": "RECORDS TECHNICIAN",
+      "clearanceType": "Full Clearance",
+      "status": "InActive",
+      "driversLicense": "NM/DEMO1002",
+      "securityAwarenessExpiration": "2026-02-01",
+      "purpose": "Shaded row because security awareness training has expired."
+    },
+    {
+      "name": "PATEL, SAM",
+      "department": "Radio Shop",
+      "positionRole": "SITE VISITOR",
+      "clearanceType": "One Time Visit",
+      "status": "Active",
+      "vendor": "SAMPLE VENDOR",
+      "driversLicense": "NM/DEMO1003",
+      "purpose": "Counted as a one-time visit and omitted from the Read Only list."
+    },
+    {
+      "name": "BROOKS, ALEX",
+      "department": "OEM",
+      "positionRole": "TECHNICIAN",
+      "clearanceType": "InProgress",
+      "status": "InActive",
+      "driversLicense": "NM/DEMO1004",
+      "purpose": "Inactive because the clearance is unfinished. Row is not shaded."
+    },
+    {
+      "name": "NGUYEN, RILEY",
+      "department": "Compliance & Oversight",
+      "positionRole": "COMPLIANCE REVIEWER",
+      "clearanceType": "Full Clearance",
+      "status": "Active",
+      "driversLicense": "NM/DEMO1005",
+      "dateOfIiiCompletion": "2021-03-15",
+      "nextInquiryDue": "2026-03-15",
+      "purpose": "The one person whose five-year inquiry is due."
+    },
+    {
+      "name": "ORTIZ, CASEY",
+      "department": "Risk Management",
+      "positionRole": "APPLICANT",
+      "clearanceType": "No Access Given",
+      "status": "InActive",
+      "driversLicense": "NM/DEMO1006",
+      "purpose": "Inactive closed outcome. Row is not shaded."
+    }
+  ]
+}
